@@ -73,6 +73,11 @@ function App() {
   // Audience Alignment Score
   const [alignmentData, setAlignmentData] = useState({})
   const [loadingAlignment, setLoadingAlignment] = useState(null)
+  // Global Search
+  const [globalSearch, setGlobalSearch] = useState("")
+  const [globalSearchResult, setGlobalSearchResult] = useState(null)
+  const [loadingGlobalSearch, setLoadingGlobalSearch] = useState(false)
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false)
   const [plannerMonth, setPlannerMonth] = useState(new Date())
   const [comparedGuests, setComparedGuests] = useState([])
   // Trending Topics
@@ -134,11 +139,11 @@ function App() {
     const today = new Date()
     const vaibhavRule = includeVaibhav
       ? `VAIBHAV SISINTY: Include him as AI Tools expert. Topic: Latest AI tools for ${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.`
-      : `VAIBHAV SISINTY: Do NOT include him (appeared less than 15 days ago).`
+      : `VAIBHAV SISINTY: Do NOT include him (appeared less than 15 days ago). Same 15-day rule applies.`
     try {
       const text = await callOpenAI(`You are a podcast guest strategist for "Figuring Out With Raj Shamani" - India's top podcast 500+ episodes. Audience: young Indians 18-35.
 PAST GUESTS (avoid completely): ${PAST_GUESTS}
-SHOWN LAST 3 DAYS (avoid): ${recentGuests.join(", ")}
+SHOWN IN LAST 15 DAYS (STRICTLY avoid all of these - no repeats for 15 days): ${recentGuests.join(", ")}
 ${vaibhavRule}
 PRIORITY GAPS: Virat Kohli, Rohit Sharma, Hardik Pandya, Sachin Tendulkar, Deepika Padukone, Priyanka Chopra, Shah Rukh Khan, Rahul Gandhi, Sundar Pichai, PV Sindhu, Neeraj Chopra
 Suggest EXACTLY 15 guests for ${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
@@ -147,7 +152,8 @@ Return JSON array EXACTLY 15 items each with: name, category, whyNow, topicAngle
 ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, useKey)
       const withScores = parseGuests(text, 15)
       if (includeVaibhav) localStorage.setItem("raj_vaibhav_last", new Date().toISOString())
-      localStorage.setItem("raj_recent_guests", JSON.stringify([...withScores.map(g => g.name), ...recentGuests].slice(0, 45)))
+      // 15-day memory: store last 225 guests (15 days x 15 guests per day)
+      localStorage.setItem("raj_recent_guests", JSON.stringify([...withScores.map(g => g.name), ...recentGuests].slice(0, 225)))
       const now = new Date().toLocaleString('en-IN')
       setGuests(withScores); setLastUpdated(now)
       // Save to guest history log
@@ -406,6 +412,58 @@ ONLY valid JSON. NO MARKDOWN.`)
       setAlignmentData(prev => ({ ...prev, [guest.name]: parsed }))
     } catch (e) { alert("Error: " + e.message) }
     setLoadingAlignment(null)
+  }
+
+  // GLOBAL SEARCH — full guest profile
+  const runGlobalSearch = async () => {
+    if (!globalSearch.trim()) return
+    if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
+    setLoadingGlobalSearch(true)
+    setGlobalSearchResult(null)
+    // Check if guest is in past guests list
+    const inPastGuests = PAST_GUESTS.toLowerCase().includes(globalSearch.toLowerCase())
+    // Check if in pipeline
+    const inPipeline = pipeline.find(g => g.name.toLowerCase().includes(globalSearch.toLowerCase()))
+    // Check if in today's guests
+    const inToday = guests.find(g => g.name.toLowerCase().includes(globalSearch.toLowerCase()))
+    // Check recent history
+    const recentGuests = JSON.parse(localStorage.getItem("raj_recent_guests") || "[]")
+    const inRecent = recentGuests.find(n => n.toLowerCase().includes(globalSearch.toLowerCase()))
+    try {
+      const text = await callOpenAI(`You are a research analyst. Provide a complete profile for: "${globalSearch}"
+Return ONLY valid JSON with these exact keys:
+{
+  "fullName": "complete name",
+  "age": "age or approximate",
+  "category": "their primary category",
+  "tagline": "one line who they are",
+  "background": "2-3 lines background and career journey",
+  "achievements": ["achievement 1", "achievement 2", "achievement 3", "achievement 4"],
+  "currentStatus": "what are they doing right now in 2024-2025",
+  "socialFollowing": "Instagram/YouTube/Twitter following approximately",
+  "netWorth": "approximate net worth or revenue if known",
+  "whyNowForRaj": "why this specific person should be on Figuring Out right now",
+  "bestAngle": "the single best conversation angle for Raj Shamani's show",
+  "audienceMatch": 1-10,
+  "controversies": "any known controversies - truth based only",
+  "audienceDemographics": "who follows them - age group and interests",
+  "viralPotential": 1-10,
+  "recommendation": "BOOK NOW or CONSIDER or SKIP",
+  "recommendationReason": "one line why"
+}
+ONLY valid JSON. NO MARKDOWN. Be factual and specific.`)
+      const cleaned = text.replace(/```json|```/g, "").trim()
+      const parsed = JSON.parse(cleaned)
+      setGlobalSearchResult({
+        ...parsed,
+        inPastGuests,
+        inPipeline: inPipeline || null,
+        inToday: inToday || null,
+        inRecent: !!inRecent,
+        searchedName: globalSearch
+      })
+    } catch (e) { alert("Error: " + e.message) }
+    setLoadingGlobalSearch(false)
   }
 
   const replaceGuest = async (index) => {
@@ -684,6 +742,116 @@ Return ONLY the WhatsApp message text. No JSON. No labels. Just the message.`)
       )}
 
       <div style={{ padding: isMobile ? "14px" : "24px", maxWidth: "1300px", margin: "0 auto" }}>
+
+        {/* Global Search Bar */}
+        <div style={{ background: "#080810", borderBottom: "1px solid #1f2937", padding: "10px 24px", display: "flex", gap: "10px", alignItems: "center" }}>
+          <div style={{ flex: 1, display: "flex", gap: "8px", alignItems: "center", background: "#111827", borderRadius: "10px", padding: "8px 14px", border: "1px solid #374151", maxWidth: "600px" }}>
+            <span style={{ fontSize: "16px" }}>🔍</span>
+            <input
+              placeholder="Global Search — type any guest name to get full profile..."
+              value={globalSearch}
+              onChange={e => setGlobalSearch(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && runGlobalSearch()}
+              style={{ flex: 1, background: "transparent", border: "none", color: "#fff", fontSize: "13px", outline: "none" }}
+            />
+            {globalSearch && <span onClick={() => { setGlobalSearch(""); setGlobalSearchResult(null) }} style={{ cursor: "pointer", color: "#6b7280", fontSize: "18px" }}>×</span>}
+          </div>
+          <button onClick={runGlobalSearch} disabled={loadingGlobalSearch || !globalSearch.trim()}
+            style={{ padding: "8px 20px", borderRadius: "10px", background: globalSearch.trim() ? "linear-gradient(135deg,#7c3aed,#2563eb)" : "#1f2937", color: globalSearch.trim() ? "#fff" : "#4b5563", border: "none", cursor: globalSearch.trim() ? "pointer" : "not-allowed", fontSize: "13px", fontWeight: "bold", whiteSpace: "nowrap" }}>
+            {loadingGlobalSearch ? "⏳ Searching..." : "Search"}
+          </button>
+        </div>
+
+        {/* Global Search Result */}
+        {globalSearchResult && (
+          <div style={{ background: "#0d0d1a", borderBottom: "1px solid #1f2937", padding: "20px 24px" }}>
+            <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
+              {/* Status Badges */}
+              <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap", alignItems: "center" }}>
+                <h3 style={{ margin: 0, color: "#fff", fontSize: "18px" }}>{globalSearchResult.fullName}</h3>
+                <span style={{ fontSize: "12px", background: "#1e1e3f", color: "#a78bfa", padding: "2px 10px", borderRadius: "20px" }}>{globalSearchResult.category}</span>
+                {globalSearchResult.inPastGuests && <span style={{ fontSize: "11px", background: "#14532d", color: "#4ade80", padding: "2px 10px", borderRadius: "20px", fontWeight: "bold" }}>✅ Already on Show</span>}
+                {!globalSearchResult.inPastGuests && <span style={{ fontSize: "11px", background: "#1e3a5f", color: "#60a5fa", padding: "2px 10px", borderRadius: "20px", fontWeight: "bold" }}>✨ Never on Show</span>}
+                {globalSearchResult.inPipeline && <span style={{ fontSize: "11px", background: "#78350f", color: "#fbbf24", padding: "2px 10px", borderRadius: "20px", fontWeight: "bold" }}>📋 In Pipeline — {globalSearchResult.inPipeline.status}</span>}
+                {globalSearchResult.inRecent && !globalSearchResult.inPipeline && <span style={{ fontSize: "11px", background: "#2a1a1a", color: "#f87171", padding: "2px 10px", borderRadius: "20px", fontWeight: "bold" }}>⏳ Suggested Recently</span>}
+                <span style={{ fontSize: "11px", fontWeight: "bold", padding: "2px 10px", borderRadius: "20px", background: globalSearchResult.recommendation === "BOOK NOW" ? "#14532d" : globalSearchResult.recommendation === "CONSIDER" ? "#78350f" : "#7f1d1d", color: globalSearchResult.recommendation === "BOOK NOW" ? "#4ade80" : globalSearchResult.recommendation === "CONSIDER" ? "#fbbf24" : "#f87171" }}>
+                  {globalSearchResult.recommendation}
+                </span>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: "12px", marginBottom: "16px" }}>
+                {/* Profile */}
+                <div style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #1f2937" }}>
+                  <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "8px", textTransform: "uppercase" }}>Profile</div>
+                  <p style={{ margin: "0 0 6px", fontSize: "13px", color: "#d1d5db", lineHeight: "1.6" }}>{globalSearchResult.background}</p>
+                  <div style={{ fontSize: "12px", color: "#9ca3af" }}>Age: {globalSearchResult.age}</div>
+                  <div style={{ fontSize: "12px", color: "#9ca3af" }}>Following: {globalSearchResult.socialFollowing}</div>
+                  <div style={{ fontSize: "12px", color: "#9ca3af" }}>Net Worth: {globalSearchResult.netWorth}</div>
+                </div>
+
+                {/* For Raj's Show */}
+                <div style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #166534" }}>
+                  <div style={{ fontSize: "11px", color: "#4ade80", fontWeight: "bold", marginBottom: "8px", textTransform: "uppercase" }}>For Raj's Show</div>
+                  <div style={{ fontSize: "12px", color: "#f59e0b", marginBottom: "4px" }}>Why Now:</div>
+                  <p style={{ margin: "0 0 8px", fontSize: "12px", color: "#d1d5db", lineHeight: "1.5" }}>{globalSearchResult.whyNowForRaj}</p>
+                  <div style={{ fontSize: "12px", color: "#60a5fa", marginBottom: "4px" }}>Best Angle:</div>
+                  <p style={{ margin: "0 0 8px", fontSize: "12px", color: "#d1d5db", lineHeight: "1.5" }}>{globalSearchResult.bestAngle}</p>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <span style={{ fontSize: "11px", background: "#1f2937", padding: "3px 8px", borderRadius: "6px", color: globalSearchResult.audienceMatch >= 8 ? "#00ff88" : globalSearchResult.audienceMatch >= 6 ? "#ffaa00" : "#ff6666" }}>Audience: {globalSearchResult.audienceMatch}/10</span>
+                    <span style={{ fontSize: "11px", background: "#1f2937", padding: "3px 8px", borderRadius: "6px", color: globalSearchResult.viralPotential >= 8 ? "#00ff88" : globalSearchResult.viralPotential >= 6 ? "#ffaa00" : "#ff6666" }}>Viral: {globalSearchResult.viralPotential}/10</span>
+                  </div>
+                </div>
+
+                {/* Achievements */}
+                <div style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #1f2937" }}>
+                  <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "8px", textTransform: "uppercase" }}>Key Achievements</div>
+                  {globalSearchResult.achievements && globalSearchResult.achievements.map((a, ai) => (
+                    <div key={ai} style={{ fontSize: "12px", color: "#d1d5db", padding: "3px 0", borderBottom: "1px solid #1f2937", display: "flex", gap: "6px" }}>
+                      <span style={{ color: "#4ade80" }}>▸</span> {a}
+                    </div>
+                  ))}
+                  {globalSearchResult.controversies && globalSearchResult.controversies !== "None" && (
+                    <div style={{ marginTop: "8px", padding: "6px 8px", background: "#2a1a1a", borderRadius: "6px", fontSize: "11px", color: "#f87171" }}>
+                      ⚠️ {globalSearchResult.controversies}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <button onClick={() => addToPipeline({ name: globalSearchResult.fullName, category: globalSearchResult.category, whyNow: globalSearchResult.whyNowForRaj, topicAngle: globalSearchResult.bestAngle, virality: globalSearchResult.viralPotential, relevance: globalSearchResult.audienceMatch, value: 8, total: ((globalSearchResult.viralPotential + globalSearchResult.audienceMatch + 8) / 3).toFixed(1), priority: ((globalSearchResult.viralPotential + globalSearchResult.audienceMatch + 8) / 3) >= 8 ? "High" : "Medium", status: "New", lastAppeared: globalSearchResult.inPastGuests ? "Previously" : "Never", isAISlot: false, addedDate: new Date().toLocaleDateString("en-IN") }, "search")}
+                  style={{ padding: "8px 16px", borderRadius: "8px", background: "#1a2e3f", color: "#38bdf8", border: "1px solid #0369a1", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>
+                  + Add to Pipeline
+                </button>
+                <button onClick={() => generateResearch({ name: globalSearchResult.fullName, category: globalSearchResult.category })}
+                  style={{ padding: "8px 16px", borderRadius: "8px", background: "#1e3a5f", color: "#60a5fa", border: "1px solid #1e40af", cursor: "pointer", fontSize: "13px" }}>
+                  📋 Research
+                </button>
+                <button onClick={() => generateOutreach({ name: globalSearchResult.fullName, category: globalSearchResult.category, whyNow: globalSearchResult.whyNowForRaj, topicAngle: globalSearchResult.bestAngle })}
+                  style={{ padding: "8px 16px", borderRadius: "8px", background: "#1a2e1a", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "13px" }}>
+                  ✉️ Outreach
+                </button>
+                <button onClick={() => generateQuestions({ name: globalSearchResult.fullName, category: globalSearchResult.category })}
+                  style={{ padding: "8px 16px", borderRadius: "8px", background: "#2d1a3e", color: "#c084fc", border: "1px solid #6b21a8", cursor: "pointer", fontSize: "13px" }}>
+                  ❓ Questions
+                </button>
+                <button onClick={() => { setSelectedGuest({ name: globalSearchResult.fullName, category: globalSearchResult.category }); generateWhatsapp({ name: globalSearchResult.fullName, category: globalSearchResult.category }); setView("whatsapp") }}
+                  style={{ padding: "8px 16px", borderRadius: "8px", background: "#1a2e1a", color: "#25d366", border: "1px solid #128c7e", cursor: "pointer", fontSize: "13px" }}>
+                  💬 WhatsApp
+                </button>
+                <button onClick={() => generateBrief({ name: globalSearchResult.fullName, category: globalSearchResult.category })}
+                  style={{ padding: "8px 16px", borderRadius: "8px", background: "#1a1a0a", color: "#fbbf24", border: "1px solid #92400e", cursor: "pointer", fontSize: "13px" }}>
+                  📄 Brief
+                </button>
+                <button onClick={() => setGlobalSearchResult(null)}
+                  style={{ padding: "8px 16px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "13px" }}>
+                  ✕ Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Search & Filter Bar */}
       {view === "home" && guests.length > 0 && (
