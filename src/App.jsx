@@ -9,13 +9,20 @@ const CATEGORIES = [
   { id:"actor", label:"Actor", color:"#d97706" },
   { id:"actress", label:"Actress", color:"#db2777" },
   { id:"singer", label:"Singer", color:"#7c3aed" },
-  { id:"artist", label:"Artist", color:"#0891b2" },
   { id:"entrepreneur", label:"Entrepreneur", color:"#ca8a04" },
+  { id:"startup", label:"Startup Founder", color:"#f97316" },
   { id:"business", label:"Business", color:"#2563eb" },
-  { id:"teacher", label:"Teacher", color:"#16a34a" },
   { id:"techy", label:"Tech Expert", color:"#6366f1" },
+  { id:"finance", label:"Finance/Investor", color:"#10b981" },
+  { id:"economist", label:"Economist", color:"#0891b2" },
+  { id:"doctor", label:"Doctor/Health", color:"#ef4444" },
+  { id:"intellectual", label:"Intellectual/Author", color:"#8b5cf6" },
+  { id:"lawyer", label:"Lawyer/Legal", color:"#6b7280" },
+  { id:"comedian", label:"Comedian", color:"#f59e0b" },
+  { id:"military", label:"Military/Defence", color:"#64748b" },
+  { id:"spirituality", label:"Spirituality", color:"#a78bfa" },
+  { id:"educator", label:"Educator/IAS", color:"#16a34a" },
   { id:"athlete", label:"Athlete", color:"#ea580c" },
-  { id:"olympic", label:"Olympic", color:"#eab308" },
   { id:"international", label:"International", color:"#0ea5e9" },
   { id:"social", label:"Social Media", color:"#ec4899" },
 ]
@@ -45,6 +52,27 @@ function App() {
   const [noteText, setNoteText] = useState("")
   const [copiedEmail, setCopiedEmail] = useState(false)
   const [copiedWA, setCopiedWA] = useState(false)
+  // Search & Filter
+  const [searchQuery, setSearchQuery] = useState("")
+  const [filterPriority, setFilterPriority] = useState("All")
+  const [filterStatus, setFilterStatus] = useState("All")
+  // Guest History Log
+  const [guestHistory, setGuestHistory] = useState([])
+  const [historyView, setHistoryView] = useState(false)
+  // Episode Title Suggester
+  const [titles, setTitles] = useState([])
+  const [loadingTitles, setLoadingTitles] = useState(false)
+  const [titleGuest, setTitleGuest] = useState(null)
+  const [showTitles, setShowTitles] = useState(false)
+  // Pre-Interview Brief
+  const [brief, setBrief] = useState("")
+  const [loadingBrief, setLoadingBrief] = useState(false)
+  const [briefGuest, setBriefGuest] = useState(null)
+  const [showBrief, setShowBrief] = useState(false)
+  const [copiedBrief, setCopiedBrief] = useState(false)
+  // Audience Alignment Score
+  const [alignmentData, setAlignmentData] = useState({})
+  const [loadingAlignment, setLoadingAlignment] = useState(null)
   const [plannerMonth, setPlannerMonth] = useState(new Date())
   const [comparedGuests, setComparedGuests] = useState([])
   // Trending Topics
@@ -122,6 +150,12 @@ ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, useKey)
       localStorage.setItem("raj_recent_guests", JSON.stringify([...withScores.map(g => g.name), ...recentGuests].slice(0, 45)))
       const now = new Date().toLocaleString('en-IN')
       setGuests(withScores); setLastUpdated(now)
+      // Save to guest history log
+      const existingHistory = JSON.parse(localStorage.getItem("raj_guest_history") || "[]")
+      const historyEntry = { date: now, guests: withScores.map(g => ({ name: g.name, category: g.category, total: g.total, priority: g.priority })) }
+      const updatedHistory = [historyEntry, ...existingHistory].slice(0, 30)
+      setGuestHistory(updatedHistory)
+      localStorage.setItem("raj_guest_history", JSON.stringify(updatedHistory))
       localStorage.setItem("raj_guests", JSON.stringify(withScores))
       localStorage.setItem("raj_last_updated", now)
       localStorage.setItem("raj_last_date", new Date().toLocaleDateString('en-IN'))
@@ -229,6 +263,8 @@ ONLY valid JSON. NO MARKDOWN.`)
     if (date) setLastUpdated(date)
     if (savedPipeline) setPipeline(JSON.parse(savedPipeline))
     if (savedNotes) setNotes(JSON.parse(savedNotes))
+    const savedHistory = localStorage.getItem("raj_guest_history")
+    if (savedHistory) setGuestHistory(JSON.parse(savedHistory))
     if (saved) {
       setGuests(JSON.parse(saved))
       if (lastDate !== today && key) {
@@ -267,6 +303,109 @@ ONLY valid JSON. NO MARKDOWN.`)
     const updated = { ...notes, [guestName]: [...(notes[guestName] || []), { text: noteText, date: new Date().toLocaleString('en-IN') }] }
     setNotes(updated); localStorage.setItem("raj_notes", JSON.stringify(updated))
     setNoteText(""); setEditingNote(null)
+  }
+
+  // EXPORT TO CSV (Excel compatible)
+  const exportToCSV = (data, filename) => {
+    const headers = ["Name", "Category", "Score", "Priority", "Virality", "Relevance", "Value", "Status", "Why Now", "Topic Angle", "First Time"]
+    const rows = data.map(g => [
+      g.name, g.category, g.total, g.priority, g.virality, g.relevance, g.value,
+      g.status || "New", (g.whyNow || "").replace(/,/g, ";"), (g.topicAngle || "").replace(/,/g, ";"),
+      g.lastAppeared === "Never" ? "Yes" : "No"
+    ])
+    const csv = [headers, ...rows].map(r => r.join(",")).join("\n")
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url; a.download = filename; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportGuestsToCSV = () => exportToCSV(guests, `raj-guests-${new Date().toLocaleDateString("en-IN").replace(/\//g, "-")}.csv`)
+  const exportPipelineToCSV = () => exportToCSV(pipeline, `raj-pipeline-${new Date().toLocaleDateString("en-IN").replace(/\//g, "-")}.csv`)
+
+  // EPISODE TITLE SUGGESTER
+  const generateTitles = async (guest) => {
+    if (!apiKey) return
+    setLoadingTitles(true)
+    setTitleGuest(guest)
+    setTitles([])
+    setShowTitles(true)
+    try {
+      const text = await callOpenAI(`You are a viral YouTube/podcast title expert for "Figuring Out With Raj Shamani".
+Guest: ${guest.name} (${guest.category})
+Topic Angle: ${guest.topicAngle}
+Why Now: ${guest.whyNow}
+Audience: Young Indians 18-35
+
+Generate 5 different viral episode title options. Each title should:
+- Be curiosity-driven and emotional
+- Under 70 characters
+- Work for YouTube, Spotify and Instagram
+- Mix different styles: question, bold statement, controversy, story, number-based
+
+Return ONLY valid JSON array of 5 strings. Each string is one title. NO MARKDOWN.`)
+      const cleaned = text.replace(/\`\`\`json|\`\`\`/g, "").trim()
+      const parsed = JSON.parse(cleaned)
+      setTitles(Array.isArray(parsed) ? parsed : [])
+    } catch (e) { alert("Error: " + e.message) }
+    setLoadingTitles(false)
+  }
+
+  // PRE-INTERVIEW BRIEF GENERATOR
+  const generateBrief = async (guest) => {
+    if (!apiKey) return
+    setLoadingBrief(true)
+    setBriefGuest(guest)
+    setBrief("")
+    setShowBrief(true)
+    try {
+      const text = await callOpenAI(`Generate a one-page Pre-Interview Brief for Raj Shamani before interviewing ${guest.name} (${guest.category}).
+
+Include:
+1. GUEST SNAPSHOT (3 lines — who they are, what they are known for, current status)
+2. COMMUNICATION STYLE (how they speak, what style works best with them)
+3. TOPICS THEY LOVE TALKING ABOUT (3-4 topics they always engage deeply on)
+4. SENSITIVE TOPICS TO AVOID (things that make them defensive or uncomfortable)
+5. BEST CONVERSATION OPENERS (2-3 specific openers that will get them talking immediately)
+6. VIRAL MOMENT TRIGGERS (what kind of questions/topics tend to create emotional/viral moments with this guest)
+7. DO's AND DON'Ts (5 quick bullets each)
+8. ENERGY LEVEL (are they high energy, calm, intellectual, emotional — how to match them)
+
+Be specific to ${guest.name}. Not generic. Factual and practical.`)
+      setBrief(text)
+    } catch (e) { alert("Error: " + e.message) }
+    setLoadingBrief(false)
+  }
+
+  // AUDIENCE ALIGNMENT SCORE
+  const generateAlignment = async (guest) => {
+    if (!apiKey) return
+    setLoadingAlignment(guest.name)
+    try {
+      const text = await callOpenAI(`Analyse audience alignment between "${guest.name}" (${guest.category}) and "Figuring Out With Raj Shamani".
+Raj's audience: Young Indians 18-35, interested in growth, business, real stories, truth.
+
+Score each factor from 1-10:
+1. Age Group Match (does guest appeal to 18-35 age group?)
+2. Interest Match (does guest's content match growth/business/truth themes?)
+3. Aspirational Value (do young Indians look up to this person?)
+4. Controversy Quotient (will this create buzz without being too risky?)
+5. Shareability (will young Indians share this episode?)
+
+Also give:
+- Overall Alignment Score (average of 5)
+- One line: Why this guest FITS or DOESN'T FIT Raj's audience
+- Recommendation: BOOK NOW / CONSIDER / SKIP
+
+Return ONLY valid JSON:
+{ "ageMatch": 1-10, "interestMatch": 1-10, "aspirational": 1-10, "controversy": 1-10, "shareability": 1-10, "overall": 1-10, "verdict": "one line", "recommendation": "BOOK NOW or CONSIDER or SKIP" }
+ONLY valid JSON. NO MARKDOWN.`)
+      const cleaned = text.replace(/\`\`\`json|\`\`\`/g, "").trim()
+      const parsed = JSON.parse(cleaned)
+      setAlignmentData(prev => ({ ...prev, [guest.name]: parsed }))
+    } catch (e) { alert("Error: " + e.message) }
+    setLoadingAlignment(null)
   }
 
   const replaceGuest = async (index) => {
@@ -392,7 +531,13 @@ Return ONLY the WhatsApp message text. No JSON. No labels. Just the message.`)
 
   const priorityColor = (p) => p === "High" ? "#00ff88" : p === "Medium" ? "#ffaa00" : "#ff6666"
   const statusColor = (s) => s === "Booked" ? "#00ff88" : s === "Contacted" ? "#ffaa00" : s === "Declined" ? "#ff6666" : "#666"
-  const displayGuests = activeCategory === "all" ? guests : categoryGuests
+  const filteredDisplayGuests = (activeCategory === "all" ? guests : categoryGuests).filter(g => {
+    const matchSearch = !searchQuery || g.name.toLowerCase().includes(searchQuery.toLowerCase()) || g.category.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchPriority = filterPriority === "All" || g.priority === filterPriority
+    const matchStatus = filterStatus === "All" || g.status === filterStatus
+    return matchSearch && matchPriority && matchStatus
+  })
+  const displayGuests = filteredDisplayGuests
 
   const filteredPipeline = pipeline
     .filter(g => pipelineFilter === "All" || g.status === pipelineFilter)
@@ -457,6 +602,34 @@ Return ONLY the WhatsApp message text. No JSON. No labels. Just the message.`)
           </select>
         </div>
         <div style={{ marginBottom: "8px" }}><ActionButtons g={g} /></div>
+        {/* Audience Alignment Score */}
+        {alignmentData[g.name] ? (
+          <div style={{ marginBottom: "8px", background: "#0d1117", borderRadius: "8px", padding: "10px 12px", border: `1px solid ${alignmentData[g.name].overall >= 8 ? "#166534" : alignmentData[g.name].overall >= 6 ? "#92400e" : "#7f1d1d"}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold" }}>AUDIENCE ALIGNMENT</span>
+              <span style={{ fontSize: "18px", fontWeight: "bold", color: alignmentData[g.name].overall >= 8 ? "#00ff88" : alignmentData[g.name].overall >= 6 ? "#ffaa00" : "#ff6666" }}>{alignmentData[g.name].overall}/10</span>
+            </div>
+            <div style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "4px" }}>{alignmentData[g.name].verdict}</div>
+            <span style={{ fontSize: "11px", fontWeight: "bold", padding: "2px 8px", borderRadius: "6px", background: alignmentData[g.name].recommendation === "BOOK NOW" ? "#14532d" : alignmentData[g.name].recommendation === "CONSIDER" ? "#78350f" : "#7f1d1d", color: alignmentData[g.name].recommendation === "BOOK NOW" ? "#4ade80" : alignmentData[g.name].recommendation === "CONSIDER" ? "#fbbf24" : "#f87171" }}>
+              {alignmentData[g.name].recommendation}
+            </span>
+          </div>
+        ) : (
+          <button onClick={() => generateAlignment(g)} disabled={loadingAlignment === g.name}
+            style={{ width: "100%", marginBottom: "8px", padding: "7px", borderRadius: "8px", background: "#0d1117", color: "#60a5fa", border: "1px solid #1e3a5f", cursor: loadingAlignment === g.name ? "not-allowed" : "pointer", fontSize: "12px" }}>
+            {loadingAlignment === g.name ? "⏳ Analysing..." : "🎯 Audience Alignment Score"}
+          </button>
+        )}
+        {/* Title Suggester Button */}
+        <button onClick={() => generateTitles(g)}
+          style={{ width: "100%", marginBottom: "8px", padding: "7px", borderRadius: "8px", background: "#1a0a2e", color: "#c084fc", border: "1px solid #6b21a8", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>
+          🎬 Suggest Episode Titles
+        </button>
+        {/* Pre-Interview Brief Button */}
+        <button onClick={() => generateBrief(g)}
+          style={{ width: "100%", marginBottom: "8px", padding: "7px", borderRadius: "8px", background: "#1a1a0a", color: "#fbbf24", border: "1px solid #92400e", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>
+          📄 Pre-Interview Brief
+        </button>
         {showAddToPipeline && <button onClick={() => addToPipeline(g, "category")} style={{ width: "100%", marginBottom: "6px", padding: "8px", borderRadius: "8px", background: "#1a2e3f", color: "#38bdf8", border: "1px solid #0369a1", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>Add to Pipeline</button>}
         {source === "main" && <button onClick={() => addToPipeline(g, "daily")} style={{ width: "100%", marginBottom: "6px", padding: "7px", borderRadius: "8px", background: "#1a2e3f", color: "#38bdf8", border: "1px solid #0369a1", cursor: "pointer", fontSize: "12px" }}>Add to Pipeline</button>}
         {!g.isAISlot && source === "main" && <button onClick={() => replaceGuest(i)} disabled={replacingIndex === i} style={{ width: "100%", marginBottom: "6px", padding: "7px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: replacingIndex === i ? "not-allowed" : "pointer", fontSize: "12px" }}>{replacingIndex === i ? "Finding..." : "Replace This Guest"}</button>}
@@ -490,6 +663,7 @@ Return ONLY the WhatsApp message text. No JSON. No labels. Just the message.`)
           <button onClick={() => setView("planner")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "planner" ? "#14532d" : "#1e1e3f", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📅 Planner</button>
           <button onClick={() => { setView("trending"); if (trends.length === 0) fetchTrends() }} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "trending" ? "#7c2d12" : "#1e1e3f", color: "#fb923c", border: "1px solid #9a3412", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>🔥 Trending</button>
           <button onClick={() => { setView("competitors"); if (competitors.length === 0) fetchCompetitors() }} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "competitors" ? "#1e1b4b" : "#1e1e3f", color: "#818cf8", border: "1px solid #3730a3", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>🏆 Competitors</button>
+          <button onClick={() => setHistoryView(!historyView)} style={{ padding: "7px 12px", borderRadius: "8px", background: historyView ? "#1a1a2e" : "#1e1e3f", color: "#f59e0b", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📜 History</button>
           {comparedGuests.length >= 2 && <button onClick={() => setView("compare")} style={{ padding: "7px 12px", borderRadius: "8px", background: "linear-gradient(135deg,#4c1d95,#1e3a5f)", color: "#c4b5fd", border: "1px solid #7c3aed", cursor: "pointer", fontSize: isMobile ? "12px" : "13px", fontWeight: "bold" }}>⚖️ Compare ({comparedGuests.length})</button>}
           <button onClick={() => generateGuests()} disabled={loading} style={{ padding: "8px 14px", borderRadius: "8px", background: loading ? "#333" : "linear-gradient(135deg,#7c3aed,#2563eb)", color: "#fff", border: "none", cursor: loading ? "not-allowed" : "pointer", fontSize: isMobile ? "12px" : "13px", fontWeight: "bold" }}>{loading ? "⏳ Loading..." : "🔄 Refresh"}</button>
         </div>
@@ -511,7 +685,43 @@ Return ONLY the WhatsApp message text. No JSON. No labels. Just the message.`)
 
       <div style={{ padding: isMobile ? "14px" : "24px", maxWidth: "1300px", margin: "0 auto" }}>
 
-        {/* Home View */}
+        {/* Search & Filter Bar */}
+      {view === "home" && guests.length > 0 && (
+        <div style={{ background: "#0d0d1a", borderBottom: "1px solid #1f2937", padding: "10px 24px", display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+          <input
+            placeholder="🔍 Search guests by name or category..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{ flex: 2, minWidth: "200px", padding: "8px 14px", borderRadius: "8px", background: "#1f2937", color: "#fff", border: "1px solid #374151", fontSize: "13px", outline: "none" }}
+          />
+          <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)}
+            style={{ padding: "8px 12px", borderRadius: "8px", background: "#1f2937", color: filterPriority === "High" ? "#00ff88" : filterPriority === "Medium" ? "#ffaa00" : filterPriority === "Low" ? "#ff6666" : "#9ca3af", border: "1px solid #374151", fontSize: "13px", cursor: "pointer" }}>
+            <option value="All">All Priority</option>
+            <option value="High">🟢 High</option>
+            <option value="Medium">🟡 Medium</option>
+            <option value="Low">🔴 Low</option>
+          </select>
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+            style={{ padding: "8px 12px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", fontSize: "13px", cursor: "pointer" }}>
+            <option value="All">All Status</option>
+            <option value="New">🆕 New</option>
+            <option value="Contacted">📤 Contacted</option>
+            <option value="Booked">✅ Booked</option>
+            <option value="Declined">❌ Declined</option>
+          </select>
+          {(searchQuery || filterPriority !== "All" || filterStatus !== "All") && (
+            <button onClick={() => { setSearchQuery(""); setFilterPriority("All"); setFilterStatus("All") }}
+              style={{ padding: "8px 14px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "12px" }}>
+              Clear
+            </button>
+          )}
+          <button onClick={exportGuestsToCSV} style={{ padding: "8px 14px", borderRadius: "8px", background: "#1a2e1a", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>
+            📥 Export CSV
+          </button>
+        </div>
+      )}
+
+      {/* Home View */}
         {view === "home" && (
           <div>
             {guests.length > 0 && (
@@ -648,9 +858,14 @@ Return ONLY the WhatsApp message text. No JSON. No labels. Just the message.`)
         {/* Pipeline View */}
         {view === "pipeline" && (
           <div>
-            <div style={{ marginBottom: "20px" }}>
+            <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+              <div>
               <h2 style={{ margin: "0 0 4px", color: "#38bdf8" }}>📋 Guest Pipeline — CRM</h2>
               <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>Track, manage and follow up with all your podcast guests</p>
+              </div>
+              <button onClick={exportPipelineToCSV} style={{ padding: "8px 16px", borderRadius: "8px", background: "#1a2e1a", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>
+                📥 Export Pipeline CSV
+              </button>
             </div>
             <div style={{ display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap" }}>
               {["All", "New", "Contacted", "Booked", "Declined"].map(s => (
@@ -1233,6 +1448,121 @@ Return ONLY the WhatsApp message text. No JSON. No labels. Just the message.`)
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Guest History Log Overlay */}
+      {historyView && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, overflowY: "auto", padding: "24px" }}>
+          <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+              <div>
+                <h2 style={{ margin: "0 0 4px", color: "#f59e0b" }}>📜 Guest History Log</h2>
+                <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>All guests ever suggested by AI — last 30 sessions</p>
+              </div>
+              <button onClick={() => setHistoryView(false)} style={{ padding: "8px 20px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "14px", fontWeight: "bold" }}>✕ Close</button>
+            </div>
+            {guestHistory.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px", color: "#555", background: "#111827", borderRadius: "12px" }}>
+                <div style={{ fontSize: "40px", marginBottom: "16px" }}>📭</div>
+                <p>No history yet. Generate guests to start building history.</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {guestHistory.map((entry, ei) => (
+                  <div key={ei} style={{ background: "#111827", borderRadius: "12px", border: "1px solid #1f2937", overflow: "hidden" }}>
+                    <div style={{ padding: "12px 16px", background: "#0d0d1a", borderBottom: "1px solid #1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "13px", color: "#f59e0b", fontWeight: "bold" }}>📅 {entry.date}</span>
+                      <span style={{ fontSize: "12px", color: "#555" }}>{entry.guests.length} guests suggested</span>
+                    </div>
+                    <div style={{ padding: "12px 16px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                      {entry.guests.map((g, gi) => (
+                        <div key={gi} style={{ background: "#1f2937", borderRadius: "8px", padding: "6px 12px", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontSize: "13px", color: "#fff", fontWeight: "bold" }}>{g.name}</span>
+                          <span style={{ fontSize: "11px", background: "#1e1e3f", color: "#a78bfa", padding: "1px 6px", borderRadius: "10px" }}>{g.category}</span>
+                          <span style={{ fontSize: "12px", fontWeight: "bold", color: g.priority === "High" ? "#00ff88" : g.priority === "Medium" ? "#ffaa00" : "#ff6666" }}>{g.total}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Episode Title Suggester Overlay */}
+      {showTitles && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.88)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+          <div style={{ background: "#111827", borderRadius: "16px", padding: "28px", maxWidth: "600px", width: "100%", border: "1px solid #6b21a8" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <div>
+                <h2 style={{ margin: "0 0 4px", color: "#c084fc" }}>🎬 Episode Title Suggestions</h2>
+                <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>Guest: {titleGuest?.name}</p>
+              </div>
+              <button onClick={() => setShowTitles(false)} style={{ padding: "6px 14px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "13px" }}>✕ Close</button>
+            </div>
+            {loadingTitles ? (
+              <div style={{ textAlign: "center", padding: "40px", color: "#666" }}>⏳ Generating viral titles...</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {titles.map((title, ti) => (
+                  <div key={ti} style={{ background: "#1a0a2e", borderRadius: "10px", padding: "14px 16px", border: "1px solid #4c1d95", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
+                    <span style={{ fontSize: "14px", color: "#e9d5ff", flex: 1, lineHeight: "1.5" }}>{title}</span>
+                    <button onClick={() => { navigator.clipboard.writeText(title) }}
+                      style={{ padding: "5px 12px", borderRadius: "6px", background: "#2d1a3e", color: "#c084fc", border: "1px solid #6b21a8", cursor: "pointer", fontSize: "11px", whiteSpace: "nowrap" }}>
+                      Copy
+                    </button>
+                  </div>
+                ))}
+                {titles.length > 0 && (
+                  <button onClick={() => { navigator.clipboard.writeText(titles.join("\n")) }}
+                    style={{ marginTop: "8px", padding: "10px", borderRadius: "8px", background: "linear-gradient(135deg,#4c1d95,#2563eb)", color: "#fff", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>
+                    📋 Copy All Titles
+                  </button>
+                )}
+                <button onClick={() => generateTitles(titleGuest)}
+                  style={{ padding: "8px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "12px" }}>
+                  🔄 Regenerate
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Pre-Interview Brief Overlay */}
+      {showBrief && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.88)", zIndex: 2000, overflowY: "auto", padding: "24px" }}>
+          <div style={{ background: "#111827", borderRadius: "16px", padding: "28px", maxWidth: "750px", margin: "0 auto", border: "1px solid #92400e" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
+              <div>
+                <h2 style={{ margin: "0 0 4px", color: "#fbbf24" }}>📄 Pre-Interview Brief</h2>
+                <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>Guest: {briefGuest?.name} • For Raj's eyes only</p>
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button onClick={() => { navigator.clipboard.writeText(brief); setCopiedBrief(true); setTimeout(() => setCopiedBrief(false), 2000) }}
+                  style={{ padding: "8px 16px", borderRadius: "8px", background: copiedBrief ? "#1a3a2a" : "#1e3a5f", color: copiedBrief ? "#4ade80" : "#60a5fa", border: "none", cursor: "pointer", fontSize: "12px" }}>
+                  {copiedBrief ? "✅ Copied!" : "📋 Copy Brief"}
+                </button>
+                <button onClick={() => setShowBrief(false)} style={{ padding: "8px 16px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "13px" }}>✕ Close</button>
+              </div>
+            </div>
+            {loadingBrief ? (
+              <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>⏳ Generating pre-interview brief...</div>
+            ) : (
+              <div>
+                <div style={{ whiteSpace: "pre-wrap", lineHeight: "1.9", color: "#d1d5db", fontSize: "14px", background: "#0d1117", borderRadius: "10px", padding: "20px", border: "1px solid #1f2937", marginBottom: "16px" }}>
+                  {brief}
+                </div>
+                <button onClick={() => generateBrief(briefGuest)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "12px" }}>
+                  🔄 Regenerate Brief
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
