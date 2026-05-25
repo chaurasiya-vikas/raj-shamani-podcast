@@ -86,6 +86,10 @@ function App() {
   const [trendGuests, setTrendGuests] = useState({})
   const [loadingTrendGuest, setLoadingTrendGuest] = useState(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [unlocked, setUnlocked] = useState(() => localStorage.getItem("raj_unlocked") === "true")
+  const [passInput, setPassInput] = useState("")
+  const [passError, setPassError] = useState(false)
+  const SECRET = "FiguringOut2024" 
   // Competitors
   const [competitors, setCompetitors] = useState([])
   const [loadingCompetitors, setLoadingCompetitors] = useState(false)
@@ -700,6 +704,38 @@ Return ONLY the WhatsApp message text. No JSON. No labels. Just the message.`)
 
   const heatColor = (h) => h >= 8 ? "#ff4444" : h >= 6 ? "#ff8800" : "#ffcc00"
 
+  // PASSWORD SCREEN
+  if (!unlocked) return (
+    <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#fff", fontFamily: "'Segoe UI',sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ textAlign: "center", padding: "40px", maxWidth: "400px", width: "100%" }}>
+        <div style={{ fontSize: "50px", marginBottom: "16px" }}>🎙️</div>
+        <h1 style={{ margin: "0 0 8px", fontSize: "22px", background: "linear-gradient(90deg,#a855f7,#3b82f6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Figuring Out</h1>
+        <p style={{ margin: "0 0 32px", fontSize: "14px", color: "#555" }}>Guest Intelligence System — Private Access</p>
+        <input
+          type="password"
+          placeholder="Enter access password"
+          value={passInput}
+          onChange={e => { setPassInput(e.target.value); setPassError(false) }}
+          onKeyDown={e => {
+            if (e.key === "Enter") {
+              if (passInput === SECRET) { setUnlocked(true); localStorage.setItem("raj_unlocked", "true") }
+              else setPassError(true)
+            }
+          }}
+          style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", background: "#111827", color: "#fff", border: `1px solid ${passError ? "#ef4444" : "#374151"}`, fontSize: "14px", boxSizing: "border-box", outline: "none", marginBottom: "12px", textAlign: "center", letterSpacing: "2px" }}
+        />
+        {passError && <p style={{ color: "#ef4444", fontSize: "13px", margin: "0 0 12px" }}>Incorrect password. Please try again.</p>}
+        <button onClick={() => {
+          if (passInput === SECRET) { setUnlocked(true); localStorage.setItem("raj_unlocked", "true") }
+          else setPassError(true)
+        }} style={{ width: "100%", padding: "12px", borderRadius: "10px", background: "linear-gradient(135deg,#7c3aed,#2563eb)", color: "#fff", border: "none", cursor: "pointer", fontSize: "15px", fontWeight: "bold" }}>
+          Enter
+        </button>
+        <p style={{ margin: "24px 0 0", fontSize: "12px", color: "#333" }}>Built specifically for Figuring Out With Raj Shamani</p>
+      </div>
+    </div>
+  )
+
   return (
     <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#fff", fontFamily: "'Segoe UI',sans-serif" }}>
 
@@ -743,22 +779,51 @@ Return ONLY the WhatsApp message text. No JSON. No labels. Just the message.`)
 
       <div style={{ padding: isMobile ? "14px" : "24px", maxWidth: "1300px", margin: "0 auto" }}>
 
-        {/* Global Search Bar */}
-        <div style={{ background: "#080810", borderBottom: "1px solid #1f2937", padding: "10px 24px", display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: "200px", display: "flex", gap: "8px", alignItems: "center", background: "#111827", borderRadius: "10px", padding: "8px 14px", border: "1px solid #374151" }}>
-            <span style={{ fontSize: "15px" }}>🔍</span>
+        {/* Global Search + Filters — Single Line */}
+        <div style={{ background: "#080810", borderBottom: "1px solid #1f2937", padding: "8px 24px", display: "flex", gap: "8px", alignItems: "center", flexWrap: isMobile ? "wrap" : "nowrap" }}>
+          {/* Global Search — half width */}
+          <div style={{ flex: 2, minWidth: "160px", display: "flex", gap: "6px", alignItems: "center", background: "#111827", borderRadius: "8px", padding: "7px 12px", border: "1px solid #374151" }}>
+            <span style={{ fontSize: "14px" }}>🔍</span>
             <input
-              placeholder="Global Search — type any name for full profile + history check..."
+              placeholder="Global Search — any guest name..."
               value={globalSearch}
               onChange={e => setGlobalSearch(e.target.value)}
               onKeyDown={e => e.key === "Enter" && runGlobalSearch()}
-              style={{ flex: 1, background: "transparent", border: "none", color: "#fff", fontSize: "13px", outline: "none" }}
+              style={{ flex: 1, background: "transparent", border: "none", color: "#fff", fontSize: "12px", outline: "none" }}
             />
-            {globalSearch && <span onClick={() => { setGlobalSearch(""); setGlobalSearchResult(null) }} style={{ cursor: "pointer", color: "#6b7280", fontSize: "18px" }}>×</span>}
+            {globalSearch && <span onClick={() => { setGlobalSearch(""); setGlobalSearchResult(null) }} style={{ cursor: "pointer", color: "#6b7280", fontSize: "16px" }}>×</span>}
           </div>
           <button onClick={runGlobalSearch} disabled={loadingGlobalSearch || !globalSearch.trim()}
-            style={{ padding: "8px 18px", borderRadius: "10px", background: globalSearch.trim() ? "linear-gradient(135deg,#7c3aed,#2563eb)" : "#1f2937", color: globalSearch.trim() ? "#fff" : "#4b5563", border: "none", cursor: globalSearch.trim() ? "pointer" : "not-allowed", fontSize: "13px", fontWeight: "bold", whiteSpace: "nowrap" }}>
-            {loadingGlobalSearch ? "Searching..." : "Search"}
+            style={{ padding: "7px 14px", borderRadius: "8px", background: globalSearch.trim() ? "linear-gradient(135deg,#7c3aed,#2563eb)" : "#1f2937", color: globalSearch.trim() ? "#fff" : "#4b5563", border: "none", cursor: globalSearch.trim() ? "pointer" : "not-allowed", fontSize: "12px", fontWeight: "bold", whiteSpace: "nowrap" }}>
+            {loadingGlobalSearch ? "..." : "Search"}
+          </button>
+          {/* Divider */}
+          <div style={{ width: "1px", height: "24px", background: "#1f2937", flexShrink: 0 }} />
+          {/* Filters */}
+          <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)}
+            style={{ padding: "7px 10px", borderRadius: "8px", background: "#111827", color: filterPriority === "High" ? "#00ff88" : filterPriority === "Medium" ? "#ffaa00" : filterPriority === "Low" ? "#ff6666" : "#9ca3af", border: "1px solid #374151", fontSize: "12px", cursor: "pointer", flexShrink: 0 }}>
+            <option value="All">All Priority</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+            style={{ padding: "7px 10px", borderRadius: "8px", background: "#111827", color: "#9ca3af", border: "1px solid #374151", fontSize: "12px", cursor: "pointer", flexShrink: 0 }}>
+            <option value="All">All Status</option>
+            <option value="New">New</option>
+            <option value="Contacted">Contacted</option>
+            <option value="Booked">Booked</option>
+            <option value="Declined">Declined</option>
+          </select>
+          {(filterPriority !== "All" || filterStatus !== "All") && (
+            <button onClick={() => { setFilterPriority("All"); setFilterStatus("All") }}
+              style={{ padding: "7px 10px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "12px", flexShrink: 0 }}>
+              Clear
+            </button>
+          )}
+          <button onClick={exportGuestsToCSV}
+            style={{ padding: "7px 12px", borderRadius: "8px", background: "#1a2e1a", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "12px", fontWeight: "bold", whiteSpace: "nowrap", flexShrink: 0 }}>
+            Export CSV
           </button>
         </div>
 
@@ -853,35 +918,7 @@ Return ONLY the WhatsApp message text. No JSON. No labels. Just the message.`)
           </div>
         )}
 
-        {/* Filter Bar - Priority, Status, Export */}
-      {view === "home" && guests.length > 0 && (
-        <div style={{ background: "#0d0d1a", borderBottom: "1px solid #1f2937", padding: "8px 24px", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-          <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)}
-            style={{ padding: "7px 12px", borderRadius: "8px", background: "#1f2937", color: filterPriority === "High" ? "#00ff88" : filterPriority === "Medium" ? "#ffaa00" : filterPriority === "Low" ? "#ff6666" : "#9ca3af", border: "1px solid #374151", fontSize: "12px", cursor: "pointer" }}>
-            <option value="All">All Priority</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
-          </select>
-          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-            style={{ padding: "7px 12px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", fontSize: "12px", cursor: "pointer" }}>
-            <option value="All">All Status</option>
-            <option value="New">New</option>
-            <option value="Contacted">Contacted</option>
-            <option value="Booked">Booked</option>
-            <option value="Declined">Declined</option>
-          </select>
-          {(filterPriority !== "All" || filterStatus !== "All") && (
-            <button onClick={() => { setFilterPriority("All"); setFilterStatus("All") }}
-              style={{ padding: "7px 12px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "12px" }}>
-              Clear
-            </button>
-          )}
-          <button onClick={exportGuestsToCSV} style={{ padding: "7px 14px", borderRadius: "8px", background: "#1a2e1a", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "12px", fontWeight: "bold", marginLeft: "auto" }}>
-            Export CSV
-          </button>
-        </div>
-      )}
+
 
       {/* Home View */}
         {view === "home" && (
