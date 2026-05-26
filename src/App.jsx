@@ -86,10 +86,16 @@ function App() {
   const [trendGuests, setTrendGuests] = useState({})
   const [loadingTrendGuest, setLoadingTrendGuest] = useState(null)
   const [isMobile, setIsMobile] = useState(false)
-  const [unlocked, setUnlocked] = useState(() => localStorage.getItem("raj_unlocked") === "true")
+  const SESSION_DURATION = 30 * 60 * 1000 // 30 minutes in ms
+  const SECRET = "FiguringOut2024"
+  const checkSession = () => {
+    const lastActive = localStorage.getItem("raj_last_active")
+    if (!lastActive) return false
+    return (Date.now() - parseInt(lastActive)) < SESSION_DURATION
+  }
+  const [unlocked, setUnlocked] = useState(() => checkSession())
   const [passInput, setPassInput] = useState("")
   const [passError, setPassError] = useState(false)
-  const SECRET = "FiguringOut2024" 
   // Competitors
   const [competitors, setCompetitors] = useState([])
   const [loadingCompetitors, setLoadingCompetitors] = useState(false)
@@ -100,6 +106,32 @@ function App() {
     window.addEventListener("resize", check)
     return () => window.removeEventListener("resize", check)
   }, [])
+
+  // Session management — update lastActive on any activity
+  useEffect(() => {
+    if (!unlocked) return
+    const updateActive = () => localStorage.setItem("raj_last_active", Date.now().toString())
+    // Update on any interaction
+    window.addEventListener("click", updateActive)
+    window.addEventListener("keydown", updateActive)
+    window.addEventListener("scroll", updateActive)
+    window.addEventListener("mousemove", updateActive)
+    // Check session every 60 seconds
+    const interval = setInterval(() => {
+      if (!checkSession()) {
+        setUnlocked(false)
+        localStorage.removeItem("raj_last_active")
+        setPassInput("")
+      }
+    }, 60000)
+    return () => {
+      window.removeEventListener("click", updateActive)
+      window.removeEventListener("keydown", updateActive)
+      window.removeEventListener("scroll", updateActive)
+      window.removeEventListener("mousemove", updateActive)
+      clearInterval(interval)
+    }
+  }, [unlocked])
 
   const shouldIncludeVaibhav = () => {
     const today = new Date()
@@ -710,7 +742,7 @@ Return ONLY the WhatsApp message text. No JSON. No labels. Just the message.`)
       <div style={{ textAlign: "center", padding: "40px", maxWidth: "400px", width: "100%" }}>
         <div style={{ fontSize: "50px", marginBottom: "16px" }}>🎙️</div>
         <h1 style={{ margin: "0 0 8px", fontSize: "22px", background: "linear-gradient(90deg,#a855f7,#3b82f6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Figuring Out</h1>
-        <p style={{ margin: "0 0 32px", fontSize: "14px", color: "#555" }}>Guest Intelligence System — Private Access</p>
+        <p style={{ margin: "0 0 32px", fontSize: "14px", color: "#555" }}>Guest Intelligence System — Private Access<br/><span style={{fontSize:"12px", color:"#333"}}>Session expires after 30 minutes of inactivity</span></p>
         <input
           type="password"
           placeholder="Enter access password"
@@ -718,16 +750,20 @@ Return ONLY the WhatsApp message text. No JSON. No labels. Just the message.`)
           onChange={e => { setPassInput(e.target.value); setPassError(false) }}
           onKeyDown={e => {
             if (e.key === "Enter") {
-              if (passInput === SECRET) { setUnlocked(true); localStorage.setItem("raj_unlocked", "true") }
-              else setPassError(true)
+              if (passInput === SECRET) {
+                setUnlocked(true)
+                localStorage.setItem("raj_last_active", Date.now().toString())
+              } else setPassError(true)
             }
           }}
           style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", background: "#111827", color: "#fff", border: `1px solid ${passError ? "#ef4444" : "#374151"}`, fontSize: "14px", boxSizing: "border-box", outline: "none", marginBottom: "12px", textAlign: "center", letterSpacing: "2px" }}
         />
         {passError && <p style={{ color: "#ef4444", fontSize: "13px", margin: "0 0 12px" }}>Incorrect password. Please try again.</p>}
         <button onClick={() => {
-          if (passInput === SECRET) { setUnlocked(true); localStorage.setItem("raj_unlocked", "true") }
-          else setPassError(true)
+          if (passInput === SECRET) {
+            setUnlocked(true)
+            localStorage.setItem("raj_last_active", Date.now().toString())
+          } else setPassError(true)
         }} style={{ width: "100%", padding: "12px", borderRadius: "10px", background: "linear-gradient(135deg,#7c3aed,#2563eb)", color: "#fff", border: "none", cursor: "pointer", fontSize: "15px", fontWeight: "bold" }}>
           Enter
         </button>
