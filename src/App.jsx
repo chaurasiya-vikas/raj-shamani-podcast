@@ -112,12 +112,11 @@ function App() {
     return diffDays >= 15
   }
 
-  const callOpenAI = async (prompt, key) => {
-    const useKey = key || apiKey
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const callOpenAI = async (prompt) => {
+    const res = await fetch("/api/openai", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${useKey}` },
-      body: JSON.stringify({ model: "gpt-4o-mini", messages: [{ role: "user", content: prompt }], max_tokens: 3000 })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt })
     })
     const data = await res.json()
     return data.choices[0].message.content
