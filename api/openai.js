@@ -10,12 +10,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" })
   }
 
-  const { prompt, userEmail } = req.body
+  const { prompt, userEmail, feature } = req.body
 
-  // Rate limiting - 50 calls per day per user
+  // Rate limiting
   if (userEmail) {
     const today = new Date().toISOString().split('T')[0]
-    
     const { data } = await supabase
       .from('usage_limits')
       .select('call_count')
@@ -24,28 +23,42 @@ export default async function handler(req, res) {
       .single()
 
     if (data && data.call_count >= 50) {
+      await supabase.from('request_logs').insert({
+        user_email: userEmail, feature, status: 'rate_limited'
+      })
       return res.status(429).json({ error: "Daily limit reached. Try again tomorrow." })
     }
 
-    await supabase.rpc('increment_usage', { 
-      p_email: userEmail, 
-      p_date: today 
-    })
+    await supabase.rpc('increment_usage', { p_email: userEmail, p_date: today })
   }
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 3000
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 3000
+      })
     })
-  })
 
-  const data = await response.json()
-  res.status(200).json(data)
+    const data = await response.json()
+
+    // Log success
+    await supabase.from('request_logs').insert({
+      user_email: userEmail, feature: feature || 'unknown', status: 'success'
+    })
+
+    res.status(200).json(data)
+  } catch (error) {
+    // Log failure
+    await supabase.from('request_logs').insert({
+      user_email: userEmail, feature: feature || 'unknown', status: 'error'
+    })
+    res.status(500).json({ error: "Something went wrong" })
+  }
 }
