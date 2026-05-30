@@ -112,11 +112,11 @@ function App() {
     return diffDays >= 15
   }
 
-  const callOpenAI = async (prompt) => {
+  const callOpenAI = async (prompt, feature = "unknown") => {
     const res = await fetch("/api/openai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, userEmail: user?.email, feature: "guest_suggestions" })
+      body: JSON.stringify({ prompt, userEmail: user?.email, feature })
     })
     const data = await res.json()
     return data.choices[0].message.content
@@ -274,7 +274,7 @@ ${vaibhavRule}
 PRIORITY GAPS: Virat Kohli, Rohit Sharma, Hardik Pandya, Sachin Tendulkar, Deepika Padukone, Priyanka Chopra, Shah Rukh Khan, Rahul Gandhi, Sundar Pichai, PV Sindhu, Neeraj Chopra
 Suggest EXACTLY 15 guests for ${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
 Return JSON array EXACTLY 15 items each with: name, category, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared("Never" or year), repeatReason, isAISlot(true only for Vaibhav)
-ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, )
+ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, "guest_suggestions" )
       const withScores = parseGuests(text, 15)
       if (includeVaibhav) localStorage.setItem("raj_vaibhav_last", new Date().toISOString())
       const newRecentGuests = [...withScores.map(g => g.name), ...recentGuests].slice(0, 225)
