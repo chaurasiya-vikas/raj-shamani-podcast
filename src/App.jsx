@@ -258,8 +258,7 @@ function App() {
   }
 
   const generateGuests = useCallback(async (keyOverride) => {
-    const useKey = keyOverride || apiKey
-    if (!useKey) { alert("Please enter your OpenAI API key first!"); return }
+
     setLoading(true); setView("home"); setActiveCategory("all")
     const recentGuests = await loadRecentGuestsFromSupabase()
     const includeVaibhav = shouldIncludeVaibhav()
