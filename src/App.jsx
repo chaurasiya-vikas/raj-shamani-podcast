@@ -116,7 +116,7 @@ function App() {
     const res = await fetch("/api/openai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, userEmail: user?.email })
+      body: JSON.stringify({ prompt, userEmail: user?.email, feature: "guest_suggestions" })
     })
     const data = await res.json()
     return data.choices[0].message.content
