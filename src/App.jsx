@@ -274,7 +274,7 @@ ${vaibhavRule}
 PRIORITY GAPS: Virat Kohli, Rohit Sharma, Hardik Pandya, Sachin Tendulkar, Deepika Padukone, Priyanka Chopra, Shah Rukh Khan, Rahul Gandhi, Sundar Pichai, PV Sindhu, Neeraj Chopra
 Suggest EXACTLY 15 guests for ${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
 Return JSON array EXACTLY 15 items each with: name, category, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared("Never" or year), repeatReason, isAISlot(true only for Vaibhav)
-ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, useKey)
+ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, )
       const withScores = parseGuests(text, 15)
       if (includeVaibhav) localStorage.setItem("raj_vaibhav_last", new Date().toISOString())
       const newRecentGuests = [...withScores.map(g => g.name), ...recentGuests].slice(0, 225)
