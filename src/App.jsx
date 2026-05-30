@@ -290,7 +290,7 @@ ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, "guest_suggestions" )
       localStorage.setItem("raj_last_date", new Date().toLocaleDateString('en-IN'))
     } catch (e) { alert("Error: " + e.message) }
     setLoading(false)
-  }, [apiKey])
+  }, [])
 
   const generateCategoryGuests = async (cat) => {
     if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
