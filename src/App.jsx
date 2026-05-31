@@ -4,7 +4,7 @@ import { useAuth } from "./AuthContext"
 import AdminDashboard from './pages/AdminDashboard'
 import AdminRoute from './components/AdminRoute'
 
-const PAST_GUESTS = `Kunal Shah, Sanjyot Keer, Ashok Ramachandran, Anant Ladha, Nikhil Kamath, Arjun Vaidya, CA Rachana Ranade, Vineeta Singh, Ashneer Grover, Ghazal Alagh, Harsh Mariwala, Anupam Mittal, Ranveer Allahbadia, Ritesh Agarwal, Kaivalya Vohra, Pranjal Kamra, Nithin Kamath, KING, Vishal Gondal, Trishneet Arora, Ankush Sachdeva, Peyush Bansal, Kunal Bahl, Byju Raveendran, Abhijit Iyer-Mitra, Abhishek Bachchan, MC Stan, Yo Yo Honey Singh, Palki Sharma, Armaan Malik, Vikram Sampath, Nitin Gadkari, Shivraj Singh Chouhan, Anil Agarwal, Raghuram Rajan, Zakir Khan, Bhuvan Bam, Namita Thapar, Ananth Narayanan, Pankaj Tripathi, Taapsee Pannu, Sanjana Sanghi, Digital Deepak, Pratham Mittal, Shashank Kumar, Sambhav Jain, Papa CJ, Ayush Jaiswal, Ritesh Malik, Sandeep Jethwani, Finance With Sharan, Srikanth Velamakanni, Harsh Pant, Sahil Bloom, Vandana Shah, Mukesh Bansal, Divya Gokulnath, Rana Daggubati, Ronnie Screwvala, Badshah, Karishma Mehta, Rajnish Kumar, Amit Jain, Sandeep Nailwal, Shantanu Deshpande, Akash Sinha, Deepak Garg, Rajiv Talreja, Anshul Rustaggi, Labour Law Advisor, Raj Das, Sumeet Mehta, Sanjeev Barnwal, NoBroker Founders, Anshuman Singh, Sai Krishna, Zeeshan Sheikh, Ashish Kashyap, Lakshyaraj Singh Mewar, Ex IPS Meeran Chadha Borwankar, Rajpal Yadav, Dinesh Thakkar, C Sivasankaran, Shefali Shah, Prashant Desai, Dr Jaishree Sharad, Col Danvir Singh, The Chainsmokers, Krish Ashok, Kartik Aaryan, Saloni Khanna, Diljit Dosanjh, Ali Fazal, Sunil Chhetri, Vipul Shah, Vicky Kaushal, Sabeer Bhatia, Rajkummar Rao, Tamannaah Bhatia, Praveen Teotia, Navdeep Singh, Kailash Kher, Lalit Modi, Ananya Panday, Arjun Kapoor, Aakash Gupta, Amit Trivedi, MrBeast, Sunidhi Chauhan, Farhan Akhtar, Kangana Ranaut, Baba Ramdev, Shahid Kapoor, Sanjiv Goenka, Martin Garrix, Khan Sir, Hussain Zaidi, Sohum Shah, Nani, Karan Johar, Bill Gates, Ramandeep Singh, Rakul Preet Singh, Aamir Khan, Vijay Mallya, Smriti Irani, Yuzi Chahal, Praggnanandhaa, Bharti Singh, Avadh Ojha, Karan Aujla, Rinku Singh, Shikhar Dhawan, Ishant Sharma, MS Dhoni, Falguni Pathak, Ravi Kishan, Anupam Kher, Abhinav Singh, Saurabh Mukherjea, Boman Irani, Himesh Reshammiya, Deepinder Goyal, Jack Dorsey, Simon Sinek, Michael Phelps, Sunita Williams, Shreya Ghosal, Joe Dispenza, Mark Manson, Lakshya Sen, Saurav Ganguly, Paresh Rawal, Nawazuddin Siddiqui, Jhanvi Kapoor, Ankur Warikoo, Vaibhav Sisinty, Kiara Advani, Ruchir Sharma, Karnal Singh, Col Shivender Kanwar, Dr Tarang Krishna, Lt Gen Shokin Chauhan, Vishal Mishra, Yashashwi Jaiswal, Vikas Divyakirti, Keshav Inani, Ashish Chanchlani, Shiv Shivakumar, Anu Malik, Pawan Sehrawat, Eric Nam, Jackson Wang, Jayant Sinha, Ajai Chowdhry, IAS Abhishek Singh, Srijan Pal Singh, Vivek Atray, Shantanu Gupta`
+const PAST_GUESTS = `Kunal Shah, Sanjyot Keer, Ashok Ramachandran, Anant Ladha, Nikhil Kamath, Arjun Vaidya, CA Rachana Ranade, Vineeta Singh, Ashneer Grover, Ghazal Alagh, Harsh Mariwala, Anupam Mittal, Ranveer Allahbadia, Ritesh Agarwal, Kaivalya Vohra, Pranjal Kamra, Nithin Kamath, KING, Vishal Gondal, Trishneet Arora, Ankush Sachdeva, Peyush Bansal, Kunal Bahl, Byju Raveendran, Abhijit Iyer-Mitra, Abhishek Bachchan, MC Stan, Yo Yo Honey Singh, Palki Sharma, Armaan Malik, Vikram Sampath, Nitin Gadkari, Shivraj Singh Chouhan, Anil Agarwal, Raghuram Rajan, Zakir Khan, Bhuvan Bam, Namita Thapar, Ananth Narayanan, Pankaj Tripathi, Taapsee Pannu, Sanjana Sanghi, Digital Deepak, Pratham Mittal, Shashank Kumar, Sambhav Jain, Papa CJ, Ayush Jaiswal, Ritesh Malik, Sandeep Jethwani, Finance With Sharan, Srikanth Velamakanni, Harsh Pant, Sahil Bloom, Vandana Shah, Mukesh Bansal, Divya Gokulnath, Rana Daggubati, Ronnie Screwvala, Badshah, Karishma Mehta, Rajnish Kumar, Amit Jain, Sandeep Nailwal, Shantanu Deshpande, Akash Sinha, Deepak Garg, Rajiv Talreja, Anshul Rustaggi, Labour Law Advisor, Raj Das, Sumeet Mehta, Sanjeev Barnwal, NoBroker Founders, Anshuman Singh, Sai Krishna, Zeeshan Sheikh, Ashish Kashyap, Lakshyaraj Singh Mewar, Ex IPS Meeran Chadha Borwankar, Rajpal Yadav, Dinesh Thakkar, C Sivasankaran, Shefali Shah, Prashant Desai, Dr Jaishree Sharad, Col Danvir Singh, The Chainsmokers, Krish Ashok, Kartik Aaryan, Saloni Khanna, Diljit Dosanjh, Ali Fazal, Sunil Chhetri, Vipul Shah, Vicky Kaushal, Sabeer Bhatia, Rajkummar Rao, Tamannaah Bhatia, Praveen Teotia, Navdeep Singh, Kailash Kher, Lalit Modi, Ananya Panday, Arjun Kapoor, Aakash Gupta, Amit Trivedi, MrBeast, Sunidhi Chauhan, Farhan Akhtar, Kangana Ranaut, Baba Ramdev, Shahid Kapoor, Sanjiv Goenka, Martin Garrix, Khan Sir, Hussain Zaidi, Sohum Shah, Nani, Karan Johar, Bill Gates, Ramandeep Singh, Rakul Preet Singh, Aamir Khan, Vijay Mallya, Smriti Irani, Yuzi Chahal, Praggnanandhaa, Bharti Singh, Avadh Ojha, Karan Aujla, Rinku Singh, Shikhar Dhawan, Ishant Sharma, MS Dhoni, Falguni Pathak, Ravi Kishan, Anupam Kher, Abhinav Singh, Saurabh Mukherjea, Boman Irani, Himesh Reshammiya, Deepinder Goyal, Jack Dorsey, Simon Sinek, Michael Phelps, Sunita Williams, Shreya Ghosal, Joe Dispenza, Mark Manson, Lakshya Sen, Saurav Ganguly, Paresh Rawal, Nawazuddin Siddiqui, Jhanvi Kapoor, Ankur Warikoo, Vaibhav Sisinty, Kiara Advani, Ruchir Sharma, Karnal Singh, Col Shivender Kanwar, Dr Tarang Krishna, Lt Gen Shokin Chauhan, Vishal Mishra, Yashashwi Jaiswal, Vikas Divyakirti, Keshav Inani, Ashish Chanchlani, Shiv Shivakumar, Anu Malik, Pawan Sehrawat, Eric Nam, Jackson Wang, Jayant Sinha, Ajai Chowdhry, IAS Abhishek Singh, Srijan Pal Singh, Vivek Atray, Shantanu Gupta, Jayant Mundra, Jason Redman, Chris Williamson, Mokksh Sani, Varun Limaye, Dr. Sweta, Mahendra Singh Dhoni, Vishwa Mohan, Dr. Joe Dispenza`
 
 const CATEGORIES = [
   { id:"all", label:"Daily Mix", color:"#7c3aed" },
@@ -99,6 +99,14 @@ function App() {
   const [competitors, setCompetitors] = useState([])
   const [loadingCompetitors, setLoadingCompetitors] = useState(false)
   const [syncStatus, setSyncStatus] = useState("")
+  // Sentiment Analyzer
+  const [sentimentGuest, setSentimentGuest] = useState("")
+  const [sentimentResult, setSentimentResult] = useState(null)
+  const [loadingSentiment, setLoadingSentiment] = useState(false)
+  // Availability Predictor
+  const [availabilityGuest, setAvailabilityGuest] = useState("")
+  const [availabilityResult, setAvailabilityResult] = useState(null)
+  const [loadingAvailability, setLoadingAvailability] = useState(false)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -260,7 +268,6 @@ function App() {
   }
 
   const generateGuests = useCallback(async (keyOverride) => {
-
     setLoading(true); setView("home"); setActiveCategory("all")
     const recentGuests = await loadRecentGuestsFromSupabase()
     const includeVaibhav = shouldIncludeVaibhav()
@@ -270,13 +277,21 @@ function App() {
       : `VAIBHAV SISINTY: Do NOT include him (appeared less than 15 days ago).`
     try {
       const text = await callOpenAI(`You are a podcast guest strategist for "Figuring Out With Raj Shamani" - India's top podcast 500+ episodes. Audience: young Indians 18-35.
-PAST GUESTS (avoid completely): ${PAST_GUESTS}
-SHOWN IN LAST 15 DAYS (STRICTLY avoid): ${recentGuests.join(", ")}
+
+CORE PHILOSOPHY: Raj Shamani does NOT chase celebrities or famous names. His belief is "Stop chasing famous names, find exclusive voices no one else has." Suggest guests who are deeply knowledgeable, have unique lived experiences, contrarian perspectives, or untold stories — NOT just whoever is trending on Page 3. Prioritise founders mid-journey, domain experts, unheard voices, niche specialists, and people with transformational stories.
+
+STRICT RULES:
+1. NEVER suggest anyone from this PAST GUESTS list: ${PAST_GUESTS}
+2. NEVER suggest anyone who appeared in the last 15 days: ${recentGuests.join(", ")} — ZERO exceptions unless a major national/global emergency directly involves them (war, terrorist attack, national economic crisis, etc.)
+3. NEVER suggest any deceased person. All guests must be alive today.
+4. Do NOT suggest mainstream Bollywood A-listers, cricketers with 10M+ followers, or politicians already overexposed on all podcasts.
+5. Focus on exclusive, underrepresented voices — the guest who makes the audience say "I've never heard this person on a podcast before."
+
 ${vaibhavRule}
-PRIORITY GAPS: Virat Kohli, Rohit Sharma, Hardik Pandya, Sachin Tendulkar, Deepika Padukone, Priyanka Chopra, Shah Rukh Khan, Rahul Gandhi, Sundar Pichai, PV Sindhu, Neeraj Chopra
+
 Suggest EXACTLY 15 guests for ${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
 Return JSON array EXACTLY 15 items each with: name, category, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared("Never" or year), repeatReason, isAISlot(true only for Vaibhav)
-ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, "guest_suggestions" )
+ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, "guest_suggestions")
       const withScores = parseGuests(text, 15)
       if (includeVaibhav) localStorage.setItem("raj_vaibhav_last", new Date().toISOString())
       const newRecentGuests = [...withScores.map(g => g.name), ...recentGuests].slice(0, 225)
@@ -302,8 +317,12 @@ ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, "guest_suggestions" )
     const recentGuests = await loadRecentGuestsFromSupabase()
     try {
       const text = await callOpenAI(`Podcast guest strategist for "Figuring Out With Raj Shamani".
-Category: ${cat.label}. Avoid: ${PAST_GUESTS}, ${recentGuests.join(", ")}, ${allNames}
-Suggest EXACTLY 5 best ${cat.label} guests for ${new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
+CORE PHILOSOPHY: Find exclusive voices, NOT famous celebrities. Raj believes "Stop chasing famous names, find exclusive voices no one else has."
+Category: ${cat.label}. 
+STRICTLY Avoid (past guests): ${PAST_GUESTS}
+STRICTLY Avoid (shown recently): ${recentGuests.join(", ")}, ${allNames}
+NEVER suggest deceased people. All guests must be alive.
+Suggest EXACTLY 5 best exclusive ${cat.label} voices for ${new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
 Return EXACTLY 5 items JSON array each with: name, category, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared("Never" or year), repeatReason, isAISlot(false)
 ONLY valid JSON. EXACTLY 5 ITEMS. NO MARKDOWN.`)
       setCategoryGuests(parseGuests(text, 5))
@@ -315,10 +334,19 @@ ONLY valid JSON. EXACTLY 5 ITEMS. NO MARKDOWN.`)
     if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
     setLoadingTrends(true); setTrends([]); setTrendGuests({})
     try {
-      const text = await callOpenAI(`You are a news analyst for India. Today is ${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
-List the TOP 8 trending topics in India RIGHT NOW across: politics, cricket, Bollywood, business, sports, social issues, technology, entertainment.
-Return ONLY valid JSON array of 8 items: { "topic": "", "headline": "", "category": "", "heat": 1-10 }
-ONLY valid JSON. NO MARKDOWN.`)
+      const text = await callOpenAI(`You are a senior news analyst. Today is ${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+
+List the TOP 10 most significant trending topics RIGHT NOW — EXACTLY 6 from India and EXACTLY 4 International.
+
+INDIA topics must cover: politics, cricket, business/startups, Bollywood/entertainment, social issues, technology — pick whichever 6 are genuinely trending with real news hooks today.
+
+INTERNATIONAL topics must cover: global geopolitics, world economy, international sports, global tech/AI — pick the 4 most relevant to Indian audiences.
+
+Each topic must have a REAL, SPECIFIC headline — not generic. Example: "SEBI tightens F&O rules amid retail losses" not just "Stock Market."
+
+Return ONLY valid JSON array of EXACTLY 10 items:
+{ "topic": "", "headline": "", "category": "", "heat": 1-10, "scope": "India" or "International" }
+ONLY valid JSON. NO MARKDOWN.`, "trending_topics")
       const cleaned = text.replace(/```json|```/g, "").trim()
       setTrends(JSON.parse(cleaned))
     } catch (e) { alert("Error fetching trends: " + e.message) }
@@ -329,9 +357,11 @@ ONLY valid JSON. NO MARKDOWN.`)
     if (!apiKey) return
     setLoadingTrendGuest(trend.topic)
     try {
-      const text = await callOpenAI(`Trending topic in India: "${trend.topic}" — ${trend.headline}
-Which ONE podcast guest would be PERFECT for "Figuring Out With Raj Shamani"?
-Must NOT be from: ${PAST_GUESTS}
+      const text = await callOpenAI(`Trending topic: "${trend.topic}" — ${trend.headline} [${trend.scope}]
+Which ONE exclusive podcast guest would be PERFECT for "Figuring Out With Raj Shamani"?
+PHILOSOPHY: NOT a famous celebrity. Find the domain expert, the insider, the person with the real story — someone audiences haven't heard yet.
+Must NOT be from past guests: ${PAST_GUESTS}
+Must be alive. Must be a real person with real expertise on this exact topic.
 Return ONLY valid JSON: { "name": "", "category": "", "whyNow": "", "topicAngle": "", "virality": 1-10, "relevance": 1-10, "value": 1-10, "lastAppeared": "Never", "repeatReason": "", "isAISlot": false }
 ONLY valid JSON. NO MARKDOWN.`)
       const cleaned = text.replace(/```json|```/g, "").trim()
@@ -358,6 +388,82 @@ ONLY valid JSON. NO MARKDOWN.`)
       setCompetitors(merged)
     } catch (e) { alert("Error: " + e.message) }
     setLoadingCompetitors(false)
+  }
+
+  // ─── SENTIMENT ANALYZER ───────────────────────────────────────────────────
+  const analyzeSentiment = async () => {
+    if (!sentimentGuest.trim()) { alert("Please enter a guest name!"); return }
+    if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
+    setLoadingSentiment(true); setSentimentResult(null)
+    try {
+      const text = await callOpenAI(`You are a social media intelligence analyst. Analyze the current PUBLIC SENTIMENT around "${sentimentGuest}" across Twitter/X, YouTube comments, Reddit India, and Indian news media.
+
+Be specific, factual and data-driven. Today is ${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+
+Return ONLY valid JSON:
+{
+  "name": "",
+  "overallSentiment": "Positive" or "Neutral" or "Negative" or "Mixed",
+  "overallScore": 1-10,
+  "positivePercent": 0-100,
+  "negativePercent": 0-100,
+  "neutralPercent": 0-100,
+  "audienceLoveScore": 1-10,
+  "controversyLevel": "Low" or "Medium" or "High",
+  "twitterSentiment": "Positive/Neutral/Negative with 1 line reason",
+  "youtubeSentiment": "Positive/Neutral/Negative with 1 line reason",
+  "redditSentiment": "Positive/Neutral/Negative with 1 line reason",
+  "newsSentiment": "Positive/Neutral/Negative with 1 line reason",
+  "recentControversies": ["list up to 3 real controversies or empty array"],
+  "positiveHighlights": ["list up to 3 things audiences love about them"],
+  "bestTimeToFeature": "Now / Wait 1 month / Wait 3 months — with reason",
+  "podcastRisk": "Low / Medium / High — with 1 line reason",
+  "rajRecommendation": "BOOK NOW / CONSIDER / WAIT / SKIP",
+  "rajRecommendationReason": "1-2 line specific reason for Raj's show"
+}
+ONLY valid JSON. NO MARKDOWN.`, "sentiment_analyzer")
+      const cleaned = text.replace(/```json|```/g, "").trim()
+      setSentimentResult(JSON.parse(cleaned))
+    } catch (e) { alert("Error: " + e.message) }
+    setLoadingSentiment(false)
+  }
+
+  // ─── AVAILABILITY PREDICTOR ───────────────────────────────────────────────
+  const predictAvailability = async () => {
+    if (!availabilityGuest.trim()) { alert("Please enter a guest name!"); return }
+    if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
+    setLoadingAvailability(true); setAvailabilityResult(null)
+    try {
+      const text = await callOpenAI(`You are a talent booking analyst for Indian podcasts. Predict the availability and reachability of "${availabilityGuest}" for "Figuring Out With Raj Shamani" podcast.
+
+Analyse based on: their known schedule patterns, how frequently they appear on podcasts, what motivates them to say yes, who manages them, best outreach timing, and historical patterns of similar guests.
+
+Today is ${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+
+Return ONLY valid JSON:
+{
+  "name": "",
+  "availabilityScore": 1-10,
+  "availabilityLabel": "Very Easy / Easy / Moderate / Hard / Very Hard",
+  "bestMonthToReach": "e.g. July-August 2025",
+  "bestDayOfWeek": "e.g. Tuesday or Wednesday",
+  "bestTimeOfDay": "e.g. Morning 10-11am",
+  "podcastFrequency": "How often they do podcasts — e.g. Monthly / Rarely / Frequently",
+  "lastKnownPodcast": "Name of last podcast they appeared on (if known)",
+  "typicalResponseTime": "e.g. 1-2 weeks / 1 month / Unpredictable",
+  "whoToContact": "e.g. Direct DM on Instagram / Manager / PR Agency / LinkedIn",
+  "motivators": ["list 3 things that would make them say YES to Raj's show"],
+  "dealBreakers": ["list 2-3 things that might make them say NO"],
+  "bookingDifficulty": "Low / Medium / High",
+  "suggestedApproach": "2-3 line specific outreach strategy for Raj's team",
+  "windowAlert": "Any upcoming window when they might be MORE available — e.g. post book launch, off-season, etc.",
+  "confidenceLevel": "Low / Medium / High — how confident this prediction is"
+}
+ONLY valid JSON. NO MARKDOWN.`, "availability_predictor")
+      const cleaned = text.replace(/```json|```/g, "").trim()
+      setAvailabilityResult(JSON.parse(cleaned))
+    } catch (e) { alert("Error: " + e.message) }
+    setLoadingAvailability(false)
   }
 
   useEffect(() => {
@@ -496,8 +602,10 @@ ONLY valid JSON. NO MARKDOWN.`)
     const existingNames = guests.map(g => g.name).join(", ")
     const recentGuests = await loadRecentGuestsFromSupabase()
     try {
-      const text = await callOpenAI(`Suggest 1 fresh podcast guest for "Figuring Out With Raj Shamani".
+      const text = await callOpenAI(`Suggest 1 fresh exclusive podcast guest for "Figuring Out With Raj Shamani".
+PHILOSOPHY: NOT a celebrity. Find an exclusive voice — domain expert, insider, someone with a unique untold story.
 Avoid: ${PAST_GUESTS}, ${existingNames}, ${recentGuests.join(", ")}
+Must be alive. Must NOT be a deceased person.
 Return JSON: name, category, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared, repeatReason, isAISlot(false)
 ONLY valid JSON. NO MARKDOWN.`)
       const cleaned = text.replace(/```json|```/g, "").trim()
@@ -579,6 +687,8 @@ Return ONLY the message text. No JSON. No labels.`)
   const priorityColor = (p) => p === "High" ? "#00ff88" : p === "Medium" ? "#ffaa00" : "#ff6666"
   const statusColor = (s) => s === "Booked" ? "#00ff88" : s === "Contacted" ? "#ffaa00" : s === "Declined" ? "#ff6666" : "#666"
   const heatColor = (h) => h >= 8 ? "#ff4444" : h >= 6 ? "#ff8800" : "#ffcc00"
+  const sentimentColor = (s) => s === "Positive" ? "#00ff88" : s === "Negative" ? "#ff6666" : s === "Mixed" ? "#ffaa00" : "#9ca3af"
+  const availabilityColor = (s) => s === "Very Easy" || s === "Easy" ? "#00ff88" : s === "Moderate" ? "#ffaa00" : "#ff6666"
 
   const filteredDisplayGuests = (activeCategory === "all" ? guests : categoryGuests).filter(g => {
     const matchSearch = !searchQuery || g.name.toLowerCase().includes(searchQuery.toLowerCase()) || g.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -696,6 +806,8 @@ Return ONLY the message text. No JSON. No labels.`)
           <button onClick={() => setView("planner")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "planner" ? "#14532d" : "#1e1e3f", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📅 Planner</button>
           <button onClick={() => { setView("trending"); if (trends.length === 0) fetchTrends() }} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "trending" ? "#7c2d12" : "#1e1e3f", color: "#fb923c", border: "1px solid #9a3412", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>🔥 Trending</button>
           <button onClick={() => { setView("competitors"); if (competitors.length === 0) fetchCompetitors() }} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "competitors" ? "#1e1b4b" : "#1e1e3f", color: "#818cf8", border: "1px solid #3730a3", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>🏆 Competitors</button>
+          <button onClick={() => setView("sentiment")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "sentiment" ? "#0f3320" : "#1e1e3f", color: "#34d399", border: "1px solid #065f46", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📊 Sentiment</button>
+          <button onClick={() => setView("availability")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "availability" ? "#1c1400" : "#1e1e3f", color: "#fcd34d", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>🗓️ Availability</button>
           <button onClick={() => setHistoryView(!historyView)} style={{ padding: "7px 12px", borderRadius: "8px", background: historyView ? "#1a1a2e" : "#1e1e3f", color: "#f59e0b", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📜 History</button>
           {comparedGuests.length >= 2 && <button onClick={() => setView("compare")} style={{ padding: "7px 12px", borderRadius: "8px", background: "linear-gradient(135deg,#4c1d95,#1e3a5f)", color: "#c4b5fd", border: "1px solid #7c3aed", cursor: "pointer", fontSize: isMobile ? "12px" : "13px", fontWeight: "bold" }}>⚖️ Compare ({comparedGuests.length})</button>}
           {user?.email === "chaurasiyavikas1234@gmail.com" && <button onClick={() => setView("admin")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "admin" ? "#6366f1" : "#1e1e3f", color: "#fff", border: "1px solid #6366f1", cursor: "pointer" }}>🛡️ Admin</button>}
@@ -822,13 +934,14 @@ Return ONLY the message text. No JSON. No labels.`)
                 </div>
               </div>
             )}
-            {loadingCategory && <div style={{ textAlign: "center", padding: "60px", color: "#666", fontSize: "16px" }}>Finding best guests in this category...</div>}
+            {loadingCategory && <div style={{ textAlign: "center", padding: "60px", color: "#666", fontSize: "16px" }}>Finding exclusive voices in this category...</div>}
             {!loadingCategory && guests.length === 0 && activeCategory === "all" && (
               <div style={{ textAlign: "center", padding: isMobile ? "40px 16px" : "80px 20px" }}>
                 <div style={{ fontSize: "60px", marginBottom: "20px" }}>🎯</div>
                 <h2 style={{ fontSize: isMobile ? "20px" : "24px", color: "#a78bfa" }}>Welcome to Guest Intelligence System</h2>
                 <p style={{ color: "#666", marginBottom: "8px", fontSize: "14px" }}>500+ past guests tracked • 15 fresh daily suggestions • ☁️ Cloud Synced</p>
-                <p style={{ color: "#555", marginBottom: "30px", fontSize: "12px" }}>Priority: Virat Kohli • Rohit Sharma • Deepika • SRK • Sachin • Rahul Gandhi</p>
+                <p style={{ color: "#34d399", marginBottom: "4px", fontSize: "13px", fontStyle: "italic" }}>"Stop chasing famous names, find exclusive voices no one else has"</p>
+                <p style={{ color: "#555", marginBottom: "30px", fontSize: "11px" }}>— Raj Shamani's philosophy</p>
                 <button onClick={() => generateGuests()} style={{ padding: "14px 32px", borderRadius: "12px", background: "linear-gradient(135deg,#7c3aed,#2563eb)", color: "#fff", border: "none", cursor: "pointer", fontSize: "16px", fontWeight: "bold" }}>🚀 Generate Guest List</button>
               </div>
             )}
@@ -846,13 +959,13 @@ Return ONLY the message text. No JSON. No labels.`)
             <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
               <div>
                 <h2 style={{ margin: "0 0 4px", color: "#fb923c" }}>🔥 Trending Topics Dashboard</h2>
-                <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>What's trending in India today — AI suggests the perfect guest for each trend</p>
+                <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>6 India + 4 International — AI suggests the perfect exclusive guest for each trend</p>
               </div>
               <button onClick={fetchTrends} disabled={loadingTrends} style={{ padding: "10px 20px", borderRadius: "8px", background: loadingTrends ? "#333" : "linear-gradient(135deg,#9a3412,#7c2d12)", color: "#fb923c", border: "1px solid #9a3412", cursor: loadingTrends ? "not-allowed" : "pointer", fontSize: "13px", fontWeight: "bold" }}>
                 {loadingTrends ? "⏳ Fetching Trends..." : "🔄 Refresh Trends"}
               </button>
             </div>
-            {loadingTrends && <div style={{ textAlign: "center", padding: "60px", color: "#666" }}><div style={{ fontSize: "40px", marginBottom: "16px" }}>📡</div><p>Analyzing what's trending in India today...</p></div>}
+            {loadingTrends && <div style={{ textAlign: "center", padding: "60px", color: "#666" }}><div style={{ fontSize: "40px", marginBottom: "16px" }}>📡</div><p>Analyzing trending topics — India & International...</p></div>}
             {!loadingTrends && trends.length === 0 && (
               <div style={{ textAlign: "center", padding: "60px 20px" }}>
                 <div style={{ fontSize: "50px", marginBottom: "16px" }}>🔥</div>
@@ -861,58 +974,296 @@ Return ONLY the message text. No JSON. No labels.`)
               </div>
             )}
             {trends.length > 0 && (
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(420px,1fr))", gap: "16px" }}>
-                {trends.map((trend, ti) => (
-                  <div key={ti} style={{ background: "#111827", borderRadius: "12px", border: `1px solid ${heatColor(trend.heat)}33`, overflow: "hidden" }}>
-                    <div style={{ padding: "16px", borderBottom: "1px solid #1f2937", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", flexWrap: "wrap" }}>
-                          <span style={{ fontSize: "18px", fontWeight: "bold", color: heatColor(trend.heat) }}>🔥 {trend.topic}</span>
-                          <span style={{ fontSize: "11px", background: "#1e1e3f", color: "#a78bfa", padding: "2px 8px", borderRadius: "20px" }}>{trend.category}</span>
-                        </div>
-                        <p style={{ margin: 0, fontSize: "13px", color: "#9ca3af", lineHeight: "1.5" }}>{trend.headline}</p>
-                      </div>
-                      <div style={{ textAlign: "center", minWidth: "44px" }}>
-                        <div style={{ fontSize: "20px", fontWeight: "bold", color: heatColor(trend.heat) }}>{trend.heat}</div>
-                        <div style={{ fontSize: "10px", color: "#555" }}>heat</div>
-                        <div style={{ width: "40px", height: "4px", background: "#1f2937", borderRadius: "2px", marginTop: "4px", overflow: "hidden" }}>
-                          <div style={{ width: `${trend.heat * 10}%`, height: "100%", background: heatColor(trend.heat), borderRadius: "2px" }} />
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ padding: "16px" }}>
-                      {!trendGuests[trend.topic] && loadingTrendGuest !== trend.topic && (
-                        <button onClick={() => findGuestForTrend(trend)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "linear-gradient(135deg,#1a2e1a,#14532d)", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>🎯 Find Perfect Guest for This Trend</button>
-                      )}
-                      {loadingTrendGuest === trend.topic && <div style={{ textAlign: "center", padding: "16px", color: "#666", fontSize: "13px" }}>⏳ Finding the perfect guest...</div>}
-                      {trendGuests[trend.topic] && (() => {
-                        const g = trendGuests[trend.topic]
-                        return (
-                          <div style={{ background: "#0d1117", borderRadius: "8px", padding: "14px", border: `1px solid ${priorityColor(g.priority)}33` }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
-                              <div>
-                                <div style={{ fontWeight: "bold", fontSize: "15px", color: "#fff", marginBottom: "4px" }}>{g.name}</div>
-                                <span style={{ fontSize: "11px", background: "#1e1e3f", color: "#a78bfa", padding: "2px 8px", borderRadius: "20px" }}>{g.category}</span>
-                              </div>
-                              <div style={{ textAlign: "right" }}>
-                                <div style={{ fontSize: "22px", fontWeight: "bold", color: priorityColor(g.priority) }}>{g.total}</div>
-                                <div style={{ fontSize: "10px", color: priorityColor(g.priority) }}>{g.priority}</div>
-                              </div>
-                            </div>
-                            <p style={{ fontSize: "12px", color: "#9ca3af", margin: "0 0 6px", lineHeight: "1.5" }}><span style={{ color: "#f59e0b" }}>Why:</span> {g.whyNow}</p>
-                            <p style={{ fontSize: "12px", color: "#9ca3af", margin: "0 0 12px", lineHeight: "1.5" }}><span style={{ color: "#60a5fa" }}>Angle:</span> {g.topicAngle}</p>
-                            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                              <button onClick={() => addToPipeline(g, "trending")} style={{ flex: 1, padding: "7px", borderRadius: "7px", background: "#1a2e3f", color: "#38bdf8", border: "1px solid #0369a1", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>+ Pipeline</button>
-                              <button onClick={() => generateResearch(g)} style={{ flex: 1, padding: "7px", borderRadius: "7px", background: "#1e3a5f", color: "#60a5fa", border: "1px solid #1e40af", cursor: "pointer", fontSize: "12px" }}>Research</button>
-                              <button onClick={() => generateOutreach(g)} style={{ flex: 1, padding: "7px", borderRadius: "7px", background: "#1a2e1a", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "12px" }}>Outreach</button>
-                              <button onClick={() => toggleCompare(g)} style={{ flex: 1, padding: "7px", borderRadius: "7px", background: comparedGuests.find(c => c.name === g.name) ? "#1a3a2a" : "#1a1a2e", color: comparedGuests.find(c => c.name === g.name) ? "#4ade80" : "#a78bfa", border: "1px solid #4c1d95", cursor: "pointer", fontSize: "12px" }}>Compare</button>
-                            </div>
-                          </div>
-                        )
-                      })()}
+              <div>
+                {/* India Trends */}
+                {trends.filter(t => t.scope === "India").length > 0 && (
+                  <div style={{ marginBottom: "32px" }}>
+                    <h3 style={{ color: "#fb923c", fontSize: "15px", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      🇮🇳 India Trending
+                      <span style={{ fontSize: "11px", background: "#7c2d12", color: "#fb923c", padding: "2px 8px", borderRadius: "10px" }}>{trends.filter(t => t.scope === "India").length} topics</span>
+                    </h3>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(420px,1fr))", gap: "16px" }}>
+                      {trends.filter(t => t.scope === "India").map((trend, ti) => renderTrendCard(trend, ti))}
                     </div>
                   </div>
-                ))}
+                )}
+                {/* International Trends */}
+                {trends.filter(t => t.scope === "International").length > 0 && (
+                  <div>
+                    <h3 style={{ color: "#60a5fa", fontSize: "15px", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      🌍 International Trending
+                      <span style={{ fontSize: "11px", background: "#1e3a5f", color: "#60a5fa", padding: "2px 8px", borderRadius: "10px" }}>{trends.filter(t => t.scope === "International").length} topics</span>
+                    </h3>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(420px,1fr))", gap: "16px" }}>
+                      {trends.filter(t => t.scope === "International").map((trend, ti) => renderTrendCard(trend, ti))}
+                    </div>
+                  </div>
+                )}
+                {/* Fallback if scope not set */}
+                {trends.filter(t => !t.scope).length > 0 && (
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(420px,1fr))", gap: "16px" }}>
+                    {trends.filter(t => !t.scope).map((trend, ti) => renderTrendCard(trend, ti))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* SENTIMENT ANALYZER VIEW */}
+        {view === "sentiment" && (
+          <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+            <div style={{ marginBottom: "24px" }}>
+              <h2 style={{ margin: "0 0 4px", color: "#34d399" }}>📊 Guest Social Media Sentiment Analyzer</h2>
+              <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>Analyze public perception of any guest across Twitter, YouTube, Reddit & News before booking them</p>
+            </div>
+            <div style={{ background: "#111827", borderRadius: "12px", padding: "20px", border: "1px solid #065f46", marginBottom: "20px" }}>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <input
+                  placeholder="Enter guest name — e.g. Zerodha Nithin Kamath, Ashneer Grover..."
+                  value={sentimentGuest}
+                  onChange={e => setSentimentGuest(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && analyzeSentiment()}
+                  style={{ flex: 1, minWidth: "220px", padding: "12px 16px", borderRadius: "8px", background: "#1f2937", color: "#fff", border: "1px solid #374151", fontSize: "14px", outline: "none" }}
+                />
+                <button onClick={analyzeSentiment} disabled={loadingSentiment || !sentimentGuest.trim()}
+                  style={{ padding: "12px 24px", borderRadius: "8px", background: sentimentGuest.trim() ? "linear-gradient(135deg,#065f46,#047857)" : "#1f2937", color: sentimentGuest.trim() ? "#34d399" : "#4b5563", border: "none", cursor: sentimentGuest.trim() ? "pointer" : "not-allowed", fontSize: "14px", fontWeight: "bold", whiteSpace: "nowrap" }}>
+                  {loadingSentiment ? "⏳ Analyzing..." : "🔍 Analyze Sentiment"}
+                </button>
+              </div>
+            </div>
+
+            {loadingSentiment && (
+              <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>
+                <div style={{ fontSize: "40px", marginBottom: "16px" }}>📡</div>
+                <p>Scanning Twitter, YouTube, Reddit & News for {sentimentGuest}...</p>
+              </div>
+            )}
+
+            {sentimentResult && (
+              <div>
+                {/* Header */}
+                <div style={{ background: "#0d1117", borderRadius: "12px", padding: "20px", border: `1px solid ${sentimentColor(sentimentResult.overallSentiment)}44`, marginBottom: "16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
+                    <div>
+                      <h3 style={{ margin: "0 0 6px", fontSize: "20px", color: "#fff" }}>{sentimentResult.name}</h3>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: "13px", fontWeight: "bold", padding: "3px 12px", borderRadius: "20px", background: sentimentColor(sentimentResult.overallSentiment) + "22", color: sentimentColor(sentimentResult.overallSentiment), border: `1px solid ${sentimentColor(sentimentResult.overallSentiment)}44` }}>
+                          {sentimentResult.overallSentiment} Sentiment
+                        </span>
+                        <span style={{ fontSize: "13px", padding: "3px 12px", borderRadius: "20px", background: sentimentResult.controversyLevel === "High" ? "#7f1d1d" : sentimentResult.controversyLevel === "Medium" ? "#78350f" : "#14532d", color: sentimentResult.controversyLevel === "High" ? "#f87171" : sentimentResult.controversyLevel === "Medium" ? "#fbbf24" : "#4ade80" }}>
+                          {sentimentResult.controversyLevel} Controversy
+                        </span>
+                        <span style={{ fontSize: "13px", fontWeight: "bold", padding: "3px 12px", borderRadius: "20px", background: sentimentResult.rajRecommendation === "BOOK NOW" ? "#14532d" : sentimentResult.rajRecommendation === "CONSIDER" ? "#78350f" : sentimentResult.rajRecommendation === "WAIT" ? "#1e3a5f" : "#7f1d1d", color: sentimentResult.rajRecommendation === "BOOK NOW" ? "#4ade80" : sentimentResult.rajRecommendation === "CONSIDER" ? "#fbbf24" : sentimentResult.rajRecommendation === "WAIT" ? "#60a5fa" : "#f87171" }}>
+                          {sentimentResult.rajRecommendation}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: "40px", fontWeight: "bold", color: sentimentColor(sentimentResult.overallSentiment) }}>{sentimentResult.overallScore}/10</div>
+                      <div style={{ fontSize: "11px", color: "#555" }}>Overall Score</div>
+                    </div>
+                  </div>
+                  {/* Sentiment Bar */}
+                  <div style={{ marginBottom: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                      <span style={{ fontSize: "11px", color: "#00ff88" }}>Positive {sentimentResult.positivePercent}%</span>
+                      <span style={{ fontSize: "11px", color: "#9ca3af" }}>Neutral {sentimentResult.neutralPercent}%</span>
+                      <span style={{ fontSize: "11px", color: "#ff6666" }}>Negative {sentimentResult.negativePercent}%</span>
+                    </div>
+                    <div style={{ height: "10px", borderRadius: "5px", overflow: "hidden", display: "flex" }}>
+                      <div style={{ width: `${sentimentResult.positivePercent}%`, background: "#00ff88" }} />
+                      <div style={{ width: `${sentimentResult.neutralPercent}%`, background: "#4b5563" }} />
+                      <div style={{ width: `${sentimentResult.negativePercent}%`, background: "#ff6666" }} />
+                    </div>
+                  </div>
+                  <p style={{ margin: 0, fontSize: "13px", color: "#9ca3af", lineHeight: "1.5" }}>{sentimentResult.rajRecommendationReason}</p>
+                </div>
+
+                {/* Platform Breakdown */}
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "10px", marginBottom: "16px" }}>
+                  {[
+                    { label: "Twitter/X", value: sentimentResult.twitterSentiment, icon: "𝕏" },
+                    { label: "YouTube", value: sentimentResult.youtubeSentiment, icon: "▶️" },
+                    { label: "Reddit", value: sentimentResult.redditSentiment, icon: "🔴" },
+                    { label: "News", value: sentimentResult.newsSentiment, icon: "📰" }
+                  ].map((p, pi) => (
+                    <div key={pi} style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #1f2937" }}>
+                      <div style={{ fontSize: "16px", marginBottom: "4px" }}>{p.icon}</div>
+                      <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "4px" }}>{p.label}</div>
+                      <div style={{ fontSize: "12px", color: "#d1d5db", lineHeight: "1.4" }}>{p.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Positives & Controversies */}
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  <div style={{ background: "#0d1f0d", borderRadius: "10px", padding: "16px", border: "1px solid #166534" }}>
+                    <div style={{ fontSize: "11px", color: "#4ade80", fontWeight: "bold", marginBottom: "10px" }}>✅ WHAT AUDIENCES LOVE</div>
+                    {sentimentResult.positiveHighlights && sentimentResult.positiveHighlights.map((h, hi) => (
+                      <div key={hi} style={{ display: "flex", gap: "8px", marginBottom: "6px", fontSize: "12px", color: "#d1d5db" }}>
+                        <span style={{ color: "#4ade80" }}>▸</span> {h}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ background: sentimentResult.recentControversies?.length > 0 ? "#1a0a0a" : "#0d1117", borderRadius: "10px", padding: "16px", border: `1px solid ${sentimentResult.recentControversies?.length > 0 ? "#7f1d1d" : "#1f2937"}` }}>
+                    <div style={{ fontSize: "11px", color: "#f87171", fontWeight: "bold", marginBottom: "10px" }}>⚠️ RECENT CONTROVERSIES</div>
+                    {sentimentResult.recentControversies && sentimentResult.recentControversies.length > 0
+                      ? sentimentResult.recentControversies.map((c, ci) => (
+                          <div key={ci} style={{ display: "flex", gap: "8px", marginBottom: "6px", fontSize: "12px", color: "#fca5a5" }}>
+                            <span style={{ color: "#f87171" }}>▸</span> {c}
+                          </div>
+                        ))
+                      : <div style={{ fontSize: "12px", color: "#4ade80" }}>No major controversies found ✓</div>
+                    }
+                  </div>
+                </div>
+
+                {/* Timing & Risk */}
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: "10px", marginBottom: "16px" }}>
+                  <div style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #1f2937" }}>
+                    <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "6px" }}>⏰ BEST TIME TO FEATURE</div>
+                    <div style={{ fontSize: "13px", color: "#fbbf24", lineHeight: "1.5" }}>{sentimentResult.bestTimeToFeature}</div>
+                  </div>
+                  <div style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #1f2937" }}>
+                    <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "6px" }}>🎯 AUDIENCE LOVE SCORE</div>
+                    <div style={{ fontSize: "28px", fontWeight: "bold", color: sentimentResult.audienceLoveScore >= 8 ? "#00ff88" : sentimentResult.audienceLoveScore >= 6 ? "#ffaa00" : "#ff6666" }}>{sentimentResult.audienceLoveScore}/10</div>
+                  </div>
+                  <div style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: `1px solid ${sentimentResult.podcastRisk?.includes("Low") ? "#166534" : sentimentResult.podcastRisk?.includes("High") ? "#7f1d1d" : "#92400e"}` }}>
+                    <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "6px" }}>🛡️ PODCAST RISK</div>
+                    <div style={{ fontSize: "13px", color: sentimentResult.podcastRisk?.includes("Low") ? "#4ade80" : sentimentResult.podcastRisk?.includes("High") ? "#f87171" : "#fbbf24", lineHeight: "1.5" }}>{sentimentResult.podcastRisk}</div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <button onClick={() => { setSentimentGuest(""); setSentimentResult(null) }} style={{ padding: "10px 20px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "13px" }}>🔄 Analyze Another Guest</button>
+                  <button onClick={() => { setAvailabilityGuest(sentimentResult.name); setView("availability") }} style={{ padding: "10px 20px", borderRadius: "8px", background: "#1c1400", color: "#fcd34d", border: "1px solid #92400e", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>🗓️ Check Availability →</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* AVAILABILITY PREDICTOR VIEW */}
+        {view === "availability" && (
+          <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+            <div style={{ marginBottom: "24px" }}>
+              <h2 style={{ margin: "0 0 4px", color: "#fcd34d" }}>🗓️ Guest Availability Predictor</h2>
+              <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>Predict when and how to reach any guest — based on their patterns, schedule & motivation</p>
+            </div>
+            <div style={{ background: "#111827", borderRadius: "12px", padding: "20px", border: "1px solid #92400e", marginBottom: "20px" }}>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <input
+                  placeholder="Enter guest name — e.g. Deepinder Goyal, Faye D'Souza..."
+                  value={availabilityGuest}
+                  onChange={e => setAvailabilityGuest(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && predictAvailability()}
+                  style={{ flex: 1, minWidth: "220px", padding: "12px 16px", borderRadius: "8px", background: "#1f2937", color: "#fff", border: "1px solid #374151", fontSize: "14px", outline: "none" }}
+                />
+                <button onClick={predictAvailability} disabled={loadingAvailability || !availabilityGuest.trim()}
+                  style={{ padding: "12px 24px", borderRadius: "8px", background: availabilityGuest.trim() ? "linear-gradient(135deg,#78350f,#92400e)" : "#1f2937", color: availabilityGuest.trim() ? "#fcd34d" : "#4b5563", border: "none", cursor: availabilityGuest.trim() ? "pointer" : "not-allowed", fontSize: "14px", fontWeight: "bold", whiteSpace: "nowrap" }}>
+                  {loadingAvailability ? "⏳ Predicting..." : "🔮 Predict Availability"}
+                </button>
+              </div>
+            </div>
+
+            {loadingAvailability && (
+              <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>
+                <div style={{ fontSize: "40px", marginBottom: "16px" }}>🔮</div>
+                <p>Analyzing availability patterns for {availabilityGuest}...</p>
+              </div>
+            )}
+
+            {availabilityResult && (
+              <div>
+                {/* Header */}
+                <div style={{ background: "#0d1117", borderRadius: "12px", padding: "20px", border: `1px solid ${availabilityColor(availabilityResult.availabilityLabel)}44`, marginBottom: "16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+                    <div>
+                      <h3 style={{ margin: "0 0 8px", fontSize: "20px", color: "#fff" }}>{availabilityResult.name}</h3>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: "13px", fontWeight: "bold", padding: "3px 12px", borderRadius: "20px", background: availabilityColor(availabilityResult.availabilityLabel) + "22", color: availabilityColor(availabilityResult.availabilityLabel), border: `1px solid ${availabilityColor(availabilityResult.availabilityLabel)}44` }}>
+                          {availabilityResult.availabilityLabel}
+                        </span>
+                        <span style={{ fontSize: "13px", padding: "3px 12px", borderRadius: "20px", background: availabilityResult.bookingDifficulty === "Low" ? "#14532d" : availabilityResult.bookingDifficulty === "High" ? "#7f1d1d" : "#78350f", color: availabilityResult.bookingDifficulty === "Low" ? "#4ade80" : availabilityResult.bookingDifficulty === "High" ? "#f87171" : "#fbbf24" }}>
+                          {availabilityResult.bookingDifficulty} Difficulty
+                        </span>
+                        <span style={{ fontSize: "11px", padding: "2px 10px", borderRadius: "20px", background: "#1f2937", color: "#9ca3af" }}>
+                          Confidence: {availabilityResult.confidenceLevel}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: "40px", fontWeight: "bold", color: availabilityColor(availabilityResult.availabilityLabel) }}>{availabilityResult.availabilityScore}/10</div>
+                      <div style={{ fontSize: "11px", color: "#555" }}>Availability Score</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Best Times */}
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "10px", marginBottom: "16px" }}>
+                  {[
+                    { label: "Best Month", value: availabilityResult.bestMonthToReach, icon: "📅" },
+                    { label: "Best Day", value: availabilityResult.bestDayOfWeek, icon: "📆" },
+                    { label: "Best Time", value: availabilityResult.bestTimeOfDay, icon: "⏰" },
+                    { label: "Response Time", value: availabilityResult.typicalResponseTime, icon: "📬" }
+                  ].map((item, idx) => (
+                    <div key={idx} style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #1f2937", textAlign: "center" }}>
+                      <div style={{ fontSize: "20px", marginBottom: "4px" }}>{item.icon}</div>
+                      <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "4px" }}>{item.label}</div>
+                      <div style={{ fontSize: "12px", color: "#fcd34d", lineHeight: "1.4", fontWeight: "bold" }}>{item.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Contact & Approach */}
+                <div style={{ background: "#0d1a1a", borderRadius: "10px", padding: "16px", border: "1px solid #065f46", marginBottom: "12px" }}>
+                  <div style={{ fontSize: "11px", color: "#34d399", fontWeight: "bold", marginBottom: "8px" }}>📲 HOW TO CONTACT</div>
+                  <div style={{ fontSize: "13px", color: "#fcd34d", fontWeight: "bold", marginBottom: "10px" }}>{availabilityResult.whoToContact}</div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "6px" }}>🎯 SUGGESTED APPROACH</div>
+                  <div style={{ fontSize: "13px", color: "#d1d5db", lineHeight: "1.6" }}>{availabilityResult.suggestedApproach}</div>
+                </div>
+
+                {/* Podcast Frequency */}
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                  <div style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #1f2937" }}>
+                    <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "6px" }}>🎙️ PODCAST FREQUENCY</div>
+                    <div style={{ fontSize: "13px", color: "#c084fc" }}>{availabilityResult.podcastFrequency}</div>
+                    {availabilityResult.lastKnownPodcast && <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px" }}>Last seen on: {availabilityResult.lastKnownPodcast}</div>}
+                  </div>
+                  {availabilityResult.windowAlert && (
+                    <div style={{ background: "#0d1a0d", borderRadius: "10px", padding: "14px", border: "1px solid #166534" }}>
+                      <div style={{ fontSize: "11px", color: "#4ade80", fontWeight: "bold", marginBottom: "6px" }}>🚨 OPPORTUNITY WINDOW</div>
+                      <div style={{ fontSize: "13px", color: "#86efac", lineHeight: "1.5" }}>{availabilityResult.windowAlert}</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Motivators & Deal Breakers */}
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  <div style={{ background: "#0d1f0d", borderRadius: "10px", padding: "16px", border: "1px solid #166534" }}>
+                    <div style={{ fontSize: "11px", color: "#4ade80", fontWeight: "bold", marginBottom: "10px" }}>✅ WHAT WILL MAKE THEM SAY YES</div>
+                    {availabilityResult.motivators && availabilityResult.motivators.map((m, mi) => (
+                      <div key={mi} style={{ display: "flex", gap: "8px", marginBottom: "6px", fontSize: "12px", color: "#d1d5db" }}>
+                        <span style={{ color: "#4ade80" }}>▸</span> {m}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ background: "#1a0a0a", borderRadius: "10px", padding: "16px", border: "1px solid #7f1d1d" }}>
+                    <div style={{ fontSize: "11px", color: "#f87171", fontWeight: "bold", marginBottom: "10px" }}>🚫 WHAT MIGHT MAKE THEM SAY NO</div>
+                    {availabilityResult.dealBreakers && availabilityResult.dealBreakers.map((d, di) => (
+                      <div key={di} style={{ display: "flex", gap: "8px", marginBottom: "6px", fontSize: "12px", color: "#fca5a5" }}>
+                        <span style={{ color: "#f87171" }}>▸</span> {d}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <button onClick={() => { setAvailabilityGuest(""); setAvailabilityResult(null) }} style={{ padding: "10px 20px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "13px" }}>🔄 Check Another Guest</button>
+                  <button onClick={() => { setSentimentGuest(availabilityResult.name); setView("sentiment") }} style={{ padding: "10px 20px", borderRadius: "8px", background: "#0f3320", color: "#34d399", border: "1px solid #065f46", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>📊 Check Sentiment →</button>
+                  <button onClick={() => generateOutreach({ name: availabilityResult.name, category: "Guest", whyNow: availabilityResult.suggestedApproach, topicAngle: "" })} style={{ padding: "10px 20px", borderRadius: "8px", background: "#1a2e1a", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>✉️ Generate Outreach Email</button>
+                </div>
               </div>
             )}
           </div>
@@ -1527,7 +1878,61 @@ Return ONLY the message text. No JSON. No labels.`)
 
     </div>
   )
+
+  function renderTrendCard(trend, ti) {
+    return (
+      <div key={ti} style={{ background: "#111827", borderRadius: "12px", border: `1px solid ${heatColor(trend.heat)}33`, overflow: "hidden" }}>
+        <div style={{ padding: "16px", borderBottom: "1px solid #1f2937", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "16px", fontWeight: "bold", color: heatColor(trend.heat) }}>🔥 {trend.topic}</span>
+              <span style={{ fontSize: "11px", background: "#1e1e3f", color: "#a78bfa", padding: "2px 8px", borderRadius: "20px" }}>{trend.category}</span>
+              {trend.scope && <span style={{ fontSize: "10px", background: trend.scope === "India" ? "#7c2d12" : "#1e1b4b", color: trend.scope === "India" ? "#fb923c" : "#818cf8", padding: "2px 8px", borderRadius: "20px", fontWeight: "bold" }}>{trend.scope === "India" ? "🇮🇳" : "🌍"} {trend.scope}</span>}
+            </div>
+            <p style={{ margin: 0, fontSize: "13px", color: "#9ca3af", lineHeight: "1.5" }}>{trend.headline}</p>
+          </div>
+          <div style={{ textAlign: "center", minWidth: "44px" }}>
+            <div style={{ fontSize: "20px", fontWeight: "bold", color: heatColor(trend.heat) }}>{trend.heat}</div>
+            <div style={{ fontSize: "10px", color: "#555" }}>heat</div>
+            <div style={{ width: "40px", height: "4px", background: "#1f2937", borderRadius: "2px", marginTop: "4px", overflow: "hidden" }}>
+              <div style={{ width: `${trend.heat * 10}%`, height: "100%", background: heatColor(trend.heat), borderRadius: "2px" }} />
+            </div>
+          </div>
+        </div>
+        <div style={{ padding: "16px" }}>
+          {!trendGuests[trend.topic] && loadingTrendGuest !== trend.topic && (
+            <button onClick={() => findGuestForTrend(trend)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "linear-gradient(135deg,#1a2e1a,#14532d)", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>🎯 Find Exclusive Guest for This Trend</button>
+          )}
+          {loadingTrendGuest === trend.topic && <div style={{ textAlign: "center", padding: "16px", color: "#666", fontSize: "13px" }}>⏳ Finding the perfect exclusive guest...</div>}
+          {trendGuests[trend.topic] && (() => {
+            const g = trendGuests[trend.topic]
+            return (
+              <div style={{ background: "#0d1117", borderRadius: "8px", padding: "14px", border: `1px solid ${priorityColor(g.priority)}33` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                  <div>
+                    <div style={{ fontWeight: "bold", fontSize: "15px", color: "#fff", marginBottom: "4px" }}>{g.name}</div>
+                    <span style={{ fontSize: "11px", background: "#1e1e3f", color: "#a78bfa", padding: "2px 8px", borderRadius: "20px" }}>{g.category}</span>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: "22px", fontWeight: "bold", color: priorityColor(g.priority) }}>{g.total}</div>
+                    <div style={{ fontSize: "10px", color: priorityColor(g.priority) }}>{g.priority}</div>
+                  </div>
+                </div>
+                <p style={{ fontSize: "12px", color: "#9ca3af", margin: "0 0 6px", lineHeight: "1.5" }}><span style={{ color: "#f59e0b" }}>Why:</span> {g.whyNow}</p>
+                <p style={{ fontSize: "12px", color: "#9ca3af", margin: "0 0 12px", lineHeight: "1.5" }}><span style={{ color: "#60a5fa" }}>Angle:</span> {g.topicAngle}</p>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  <button onClick={() => addToPipeline(g, "trending")} style={{ flex: 1, padding: "7px", borderRadius: "7px", background: "#1a2e3f", color: "#38bdf8", border: "1px solid #0369a1", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>+ Pipeline</button>
+                  <button onClick={() => generateResearch(g)} style={{ flex: 1, padding: "7px", borderRadius: "7px", background: "#1e3a5f", color: "#60a5fa", border: "1px solid #1e40af", cursor: "pointer", fontSize: "12px" }}>Research</button>
+                  <button onClick={() => generateOutreach(g)} style={{ flex: 1, padding: "7px", borderRadius: "7px", background: "#1a2e1a", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "12px" }}>Outreach</button>
+                  <button onClick={() => toggleCompare(g)} style={{ flex: 1, padding: "7px", borderRadius: "7px", background: comparedGuests.find(c => c.name === g.name) ? "#1a3a2a" : "#1a1a2e", color: comparedGuests.find(c => c.name === g.name) ? "#4ade80" : "#a78bfa", border: "1px solid #4c1d95", cursor: "pointer", fontSize: "12px" }}>Compare</button>
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      </div>
+    )
+  }
 }
 
 export default App
-
