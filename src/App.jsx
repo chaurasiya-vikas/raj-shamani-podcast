@@ -706,7 +706,6 @@ Return ONLY the message text. No JSON. No labels.`)
       {/* Category Bar */}
       {view === "home" && (
         <div style={{ background: "#0d0d1a", borderBottom: "1px solid #222", padding: "10px 16px", overflowX: "auto" }}>
-          {view === "admin" && user?.email === "chaurasiyavikas1234@gmail.com" && <AdminDashboard />}
           <div style={{ display: "flex", gap: "6px", minWidth: "max-content" }}>
             {CATEGORIES.map(cat => (
               <button key={cat.id} onClick={() => generateCategoryGuests(cat)}
@@ -717,6 +716,7 @@ Return ONLY the message text. No JSON. No labels.`)
           </div>
         </div>
       )}
+      {view === "admin" && user?.email === "chaurasiyavikas1234@gmail.com" && <AdminDashboard />}
 
       <div style={{ padding: isMobile ? "14px" : "24px", maxWidth: "1300px", margin: "0 auto" }}>
 
