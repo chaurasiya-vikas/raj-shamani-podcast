@@ -1,4 +1,4 @@
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../AuthContext'
 import { Navigate } from 'react-router-dom'
 
 const ADMIN_EMAIL = 'chaurasiyavikas1234@gmail.com'
