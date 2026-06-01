@@ -112,7 +112,10 @@ function App() {
   const [sponsorResult, setSponsorResult] = useState(null)
   const [loadingSponsors, setLoadingSponsors] = useState(false)
   const [darkMode, setDarkMode] = useState(true)
-
+// Episode Performance Predictor
+const [perfGuest, setPerfGuest] = useState("")
+const [perfResult, setPerfResult] = useState(null)
+const [perfLoading, setPerfLoading] = useState(false)
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
@@ -470,7 +473,32 @@ ONLY valid JSON. NO MARKDOWN.`, "availability_predictor")
     } catch (e) { alert("Error: " + e.message) }
     setLoadingAvailability(false)
   }
+// — EPISODE PERFORMANCE PREDICTOR —
+const predictPerformance = async () => {
+  if (!perfGuest.trim()) { alert("Please enter a guest name!"); return }
+  setPerfLoading(true); setPerfResult(null)
+  try {
+    const text = await callOpenAI(`You are a YouTube podcast performance analyst for Indian creators. Predict episode performance if Raj Shamani interviews "${perfGuest}".
 
+Return ONLY valid JSON:
+{
+  "guestName": "",
+  "predictedViews": "e.g. 1.2M",
+  "confidenceScore": "e.g. 82%",
+  "engagementRate": "e.g. 8.4%",
+  "avgWatchTime": "e.g. 14 mins",
+  "viralityChance": "Low / Medium / High",
+  "comparableGuests": ["guest1", "guest2"],
+  "topReasons": ["reason1", "reason2", "reason3"],
+  "riskFactors": ["risk1", "risk2"],
+  "recommendation": "STRONG YES / YES / MAYBE / NO"
+}
+ONLY valid JSON. NO MARKDOWN.`, "performance_predictor")
+    const cleaned = text.replace(/```json|```/g, "").trim()
+    setPerfResult(JSON.parse(cleaned))
+  } catch (e) { alert("Error: " + e.message) }
+  setPerfLoading(false)
+}
   const matchSponsors = async () => {
     if (!sponsorGuest.trim()) { alert("Please enter a guest name!"); return }
     if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
@@ -845,6 +873,7 @@ Return ONLY the message text. No JSON. No labels.`)
           <button onClick={() => setView("sentiment")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "sentiment" ? "#0f3320" : "#1e1e3f", color: "#34d399", border: "1px solid #065f46", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📊 Sentiment</button>
           <button onClick={() => setView("availability")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "availability" ? "#1c1400" : "#1e1e3f", color: "#fcd34d", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>🗓️ Availability</button>
           <button onClick={() => setView("sponsors")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "sponsors" ? "#1a0533" : "#1e1e3f", color: "#e879f9", border: "1px solid #7e22ce", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>💰 Sponsors</button>
+          <button onClick={() => setView("performance")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "performance" ? "#6c63ff" : "transparent", color: "white", border: "1px solid #444", cursor: "pointer", fontSize: "12px" }}>📊 Performance</button>
           <button onClick={() => setDarkMode(!darkMode)} style={{ padding: "7px 12px", borderRadius: "8px", background: "#1e1e3f", color: darkMode ? "#fcd34d" : "#818cf8", border: "1px solid #444", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>{darkMode ? "☀️ Light" : "🌙 Dark"}</button>
           <button onClick={() => setHistoryView(!historyView)} style={{ padding: "7px 12px", borderRadius: "8px", background: historyView ? "#1a1a2e" : "#1e1e3f", color: "#f59e0b", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📜 History</button>
           {comparedGuests.length >= 2 && <button onClick={() => setView("compare")} style={{ padding: "7px 12px", borderRadius: "8px", background: "linear-gradient(135deg,#4c1d95,#1e3a5f)", color: "#c4b5fd", border: "1px solid #7c3aed", cursor: "pointer", fontSize: isMobile ? "12px" : "13px", fontWeight: "bold" }}>⚖️ Compare ({comparedGuests.length})</button>}
@@ -1349,6 +1378,54 @@ Return ONLY the message text. No JSON. No labels.`)
             )}
           </div>
         )}
+        {/* EPISODE PERFORMANCE PREDICTOR VIEW */}
+{view === "performance" && (
+  <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
+    <h2 style={{ color: "#6c63ff", marginBottom: "8px" }}>📊 Episode Performance Predictor</h2>
+    <p style={{ color: "#888", marginBottom: "24px" }}>Predict views, engagement & watch time before booking a guest</p>
+    <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
+      <input value={perfGuest} onChange={e => setPerfGuest(e.target.value)} onKeyDown={e => e.key === "Enter" && predictPerformance()} placeholder="Enter guest name..." style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid #333", background: "#1a1a2e", color: "white", fontSize: "14px" }} />
+      <button onClick={predictPerformance} disabled={perfLoading} style={{ padding: "12px 24px", borderRadius: "8px", background: "#6c63ff", color: "white", border: "none", cursor: "pointer", fontSize: "14px" }}>{perfLoading ? "Predicting..." : "Predict"}</button>
+    </div>
+    {perfResult && (
+      <div>
+        <div style={{ background: "#1a0533", border: "1px solid #6c63ff", borderRadius: "12px", padding: "24px", marginBottom: "16px" }}>
+          <h3 style={{ color: "#6c63ff", margin: "0 0 16px" }}>{perfResult.guestName}</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "16px", marginBottom: "16px" }}>
+            <div style={{ background: "#0d0d1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#4ade80" }}>{perfResult.predictedViews}</div>
+              <div style={{ color: "#888", fontSize: "12px" }}>Predicted Views</div>
+            </div>
+            <div style={{ background: "#0d0d1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#fcd34d" }}>{perfResult.confidenceScore}</div>
+              <div style={{ color: "#888", fontSize: "12px" }}>Confidence</div>
+            </div>
+            <div style={{ background: "#0d0d1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#38bdf8" }}>{perfResult.engagementRate}</div>
+              <div style={{ color: "#888", fontSize: "12px" }}>Engagement Rate</div>
+            </div>
+            <div style={{ background: "#0d0d1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#f472b6" }}>{perfResult.avgWatchTime}</div>
+              <div style={{ color: "#888", fontSize: "12px" }}>Avg Watch Time</div>
+            </div>
+          </div>
+          <p style={{ color: "#aaa", margin: "0 0 8px" }}>🔥 Virality: <span style={{ color: "#fcd34d", fontWeight: "bold" }}>{perfResult.viralityChance}</span></p>
+          <p style={{ color: "#aaa", margin: "0 0 16px" }}>✅ Recommendation: <span style={{ color: "#4ade80", fontWeight: "bold" }}>{perfResult.recommendation}</span></p>
+          <div style={{ marginBottom: "12px" }}>
+            <p style={{ color: "#6c63ff", fontWeight: "bold", margin: "0 0 6px" }}>📈 Top Reasons:</p>
+            {perfResult.topReasons?.map((r, i) => <p key={i} style={{ color: "#ccc", margin: "0 0 4px", fontSize: "13px" }}>• {r}</p>)}
+          </div>
+          <div style={{ marginBottom: "12px" }}>
+            <p style={{ color: "#f87171", fontWeight: "bold", margin: "0 0 6px" }}>⚠️ Risk Factors:</p>
+            {perfResult.riskFactors?.map((r, i) => <p key={i} style={{ color: "#ccc", margin: "0 0 4px", fontSize: "13px" }}>• {r}</p>)}
+          </div>
+          <p style={{ color: "#aaa", margin: "0" }}>🎙️ Comparable Guests: <span style={{ color: "#38bdf8" }}>{perfResult.comparableGuests?.join(", ")}</span></p>
+        </div>
+        <button onClick={() => { setPerfGuest(""); setPerfResult(null) }} style={{ padding: "10px 20px", borderRadius: "8px", background: "transparent", color: "#888", border: "1px solid #333", cursor: "pointer" }}>Clear</button>
+      </div>
+    )}
+  </div>
+)}
         {/* PIPELINE VIEW */}
         {view === "pipeline" && (
           <div>
