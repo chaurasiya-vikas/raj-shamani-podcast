@@ -120,6 +120,16 @@ const [perfLoading, setPerfLoading] = useState(false)
 const [roiGuest, setRoiGuest] = useState("")
 const [roiResult, setRoiResult] = useState(null)
 const [roiLoading, setRoiLoading] = useState(false)
+// Sponsor Matchmaker V2
+const [sponsorGuestType, setSponsorGuestType] = useState("")
+const [sponsorTheme, setSponsorTheme] = useState("")
+const [sponsorAudience, setSponsorAudience] = useState("")
+const [sponsorObjective, setSponsorObjective] = useState("")
+const [sponsorBudgetTier, setSponsorBudgetTier] = useState("")
+const [sponsorMarket, setSponsorMarket] = useState("")
+const [sponsorCustomBrands, setSponsorCustomBrands] = useState("")
+const [sponsorExcluded, setSponsorExcluded] = useState([])
+const [sponsorSavedToPipeline, setSponsorSavedToPipeline] = useState(false)
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
@@ -547,36 +557,83 @@ ONLY valid JSON. NO MARKDOWN.`, "roi_calculator")
   } catch (e) { alert("Error: " + e.message) }
   setRoiLoading(false)
 }
-  const matchSponsors = async () => {
-    if (!sponsorGuest.trim()) { alert("Please enter a guest name!"); return }
-    if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
-    setLoadingSponsors(true); setSponsorResult(null)
-    try {
-      const text = await callOpenAI(`You are a podcast monetization expert. For the guest "${sponsorGuest}" on "Figuring Out With Raj Shamani" podcast (3M+ subscribers, audience: Indian 18-35 year olds, aspirational entrepreneurs), suggest the best sponsors.
-Return ONLY valid JSON:
+
+
+const matchSponsors = async () => {
+  if (!sponsorGuest.trim()) { alert("Please enter a guest name!"); return }
+  if (!sponsorGuestType) { alert("Please select guest type!"); return }
+  if (!sponsorTheme) { alert("Please select content theme!"); return }
+  if (!sponsorAudience) { alert("Please select audience type!"); return }
+  if (!sponsorObjective) { alert("Please select sponsor objective!"); return }
+  if (!sponsorBudgetTier) { alert("Please select budget tier!"); return }
+  if (!sponsorMarket) { alert("Please select market!"); return }
+  setLoadingSponsors(true)
+  setSponsorResult(null)
+  setSponsorExcluded([])
+  setSponsorSavedToPipeline(false)
+  try {
+    const customNote = sponsorCustomBrands.trim()
+      ? `Also consider including these brands if relevant: ${sponsorCustomBrands}.`
+      : ""
+    const text = await callOpenAI(`You are a senior podcast monetization strategist for India's top business podcast "Figuring Out" by Raj Shamani.
+
+EPISODE DETAILS:
+- Guest: ${sponsorGuest}
+- Guest Type: ${sponsorGuestType}
+- Content Theme: ${sponsorTheme}
+- Audience: ${sponsorAudience}
+- Sponsor Objective: ${sponsorObjective}
+- Budget Tier: ${sponsorBudgetTier}
+- Market: ${sponsorMarket}
+${customNote}
+
+SCORING INSTRUCTIONS:
+For each sponsor, score them on these 6 dimensions (1-10 each):
+1. Audience Overlap — how well the sponsor's target customer matches this episode's audience
+2. Category Match — how relevant the sponsor's industry is to the episode theme
+3. Brand Affinity — how well the brand's values align with Raj Shamani's brand
+4. Budget Likelihood — how likely this sponsor can afford this episode given the budget tier
+5. Recency Relevance — is this brand actively running podcast/creator campaigns right now
+6. Mismatch Risk — inverse score, 10 means very low risk of brand-guest conflict
+
+Compute fitScore as the average of all 6 dimensions.
+
+Return ONLY valid JSON, NO markdown:
 {
   "guestName": "",
-  "audienceMatch": "1 line describing guest's audience overlap with Raj's",
+  "episodeSummary": "2 line summary of why this episode is monetizable",
   "sponsors": [
     {
       "brand": "",
       "category": "",
-      "fitScore": 1-10,
-      "whyFit": "1 line reason",
-      "estimatedDealINR": "e.g. ₹2-5 Lakhs",
-      "contactAngle": "1 line pitch angle",
-      "pitchLine": "One ready-to-send pitch sentence"
+      "fitScore": 8.5,
+      "scoringBreakdown": {
+        "audienceOverlap": 9,
+        "categoryMatch": 8,
+        "brandAffinity": 9,
+        "budgetLikelihood": 8,
+        "recencyRelevance": 8,
+        "mismatchRisk": 9
+      },
+      "whyFit": "2 line specific reason tied to guest and theme",
+      "sponsorFormat": "Pre-roll / Mid-roll / Title Sponsor / Segment Sponsor",
+      "estimatedDealINR": "e.g. ₹3-6 Lakhs",
+      "contactAngle": "1 line on how to approach this brand",
+      "pitchLine": "One ready-to-send pitch sentence",
+      "confidence": "High / Medium / Low"
     }
   ],
-  "totalEpisodeValue": "e.g. ₹8-15 Lakhs",
-  "bestSponsorCategory": ""
+  "totalEpisodeValue": "e.g. ₹18-30 Lakhs",
+  "bestSponsorCategory": "",
+  "strategistNote": "2 line overall monetization strategy for this episode"
 }
-Suggest exactly 6 sponsors. ONLY valid JSON. NO MARKDOWN.`, "sponsor_matchmaker")
-      const cleaned = text.replace(/```json|```/g, "").trim()
-      setSponsorResult(JSON.parse(cleaned))
-    } catch (e) { alert("Error: " + e.message) }
-    setLoadingSponsors(false)
-  }
+
+Suggest exactly 6 sponsors ranked by fitScore. ONLY valid JSON. NO MARKDOWN.`, "sponsor_matchmaker")
+    const cleaned = text.replace(/```json|```/g, "").trim()
+    setSponsorResult(JSON.parse(cleaned))
+  } catch (e) { alert("Error: " + e.message) }
+  setLoadingSponsors(false)
+}
 
   useEffect(() => {
     const key = localStorage.getItem("raj_api_key")
@@ -1386,47 +1443,175 @@ Return ONLY the message text. No JSON. No labels.`)
         )}
 {/* SPONSOR MATCHMAKER VIEW */}
 {view === "sponsors" && (
-          <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
-            <h2 style={{ color: "#e879f9", marginBottom: "8px" }}>💰 Sponsor Matchmaker</h2>
-            <p style={{ color: "#888", marginBottom: "20px" }}>Enter a guest name to find perfect sponsors + estimated deal value</p>
-            <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
-              <input value={sponsorGuest} onChange={e => setSponsorGuest(e.target.value)} onKeyDown={e => e.key === "Enter" && matchSponsors()} placeholder="e.g. Nikhil Kamath, Falguni Nayar..." style={{ flex: 1, padding: "12px", borderRadius: "8px", background: "#111", border: "1px solid #7e22ce", color: "#fff", fontSize: "15px" }} />
-              <button onClick={matchSponsors} disabled={loadingSponsors} style={{ padding: "12px 24px", borderRadius: "8px", background: loadingSponsors ? "#333" : "linear-gradient(135deg,#7e22ce,#a21caf)", color: "#fff", border: "none", cursor: loadingSponsors ? "not-allowed" : "pointer", fontWeight: "bold" }}>{loadingSponsors ? "⏳ Matching..." : "🔍 Find Sponsors"}</button>
-            </div>
-            {sponsorResult && (
-              <div>
-                <div style={{ background: "#1a0533", border: "1px solid #7e22ce", borderRadius: "12px", padding: "16px", marginBottom: "20px" }}>
-                  <h3 style={{ color: "#e879f9", margin: "0 0 6px" }}>{sponsorResult.guestName}</h3>
-                  <p style={{ color: "#ccc", margin: "0 0 8px" }}>{sponsorResult.audienceMatch}</p>
-                  <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                    <span style={{ color: "#4ade80", fontWeight: "bold" }}>💵 Episode Value: {sponsorResult.totalEpisodeValue}</span>
-                    <span style={{ color: "#fcd34d" }}>🏆 Best Category: {sponsorResult.bestSponsorCategory}</span>
-                  </div>
-                </div>
-                <div style={{ display: "grid", gap: "14px" }}>
-                  {sponsorResult.sponsors.map((s, i) => (
-                    <div key={i} style={{ background: "#0d0d1a", border: "1px solid #2d1b4e", borderRadius: "10px", padding: "16px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
-                        <div>
-                          <span style={{ color: "#e879f9", fontWeight: "bold", fontSize: "16px" }}>{s.brand}</span>
-                          <span style={{ color: "#888", fontSize: "12px", marginLeft: "10px" }}>{s.category}</span>
-                        </div>
-                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                          <span style={{ color: "#4ade80", fontWeight: "bold" }}>{s.estimatedDealINR}</span>
-                          <span style={{ background: "#7e22ce", color: "#fff", padding: "3px 10px", borderRadius: "20px", fontSize: "12px" }}>Fit: {s.fitScore}/10</span>
-                        </div>
-                      </div>
-                      <p style={{ color: "#ccc", margin: "0 0 6px", fontSize: "13px" }}>{s.whyFit}</p>
-                      <p style={{ color: "#fcd34d", margin: "0 0 10px", fontSize: "13px" }}>📨 {s.pitchLine}</p>
-                      <p style={{ color: "#818cf8", fontSize: "12px", margin: 0 }}>💡 {s.contactAngle}</p>
-                    </div>
-                  ))}
-                </div>
-                <button onClick={() => { setSponsorGuest(""); setSponsorResult(null) }} style={{ marginTop: "20px", padding: "10px 20px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "13px" }}>🔄 Check Another Guest</button>
-              </div>
-            )}
+  <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
+    <h2 style={{ color: "#e879f9", marginBottom: "8px" }}>💰 Sponsor Matchmaker V2</h2>
+    <p style={{ color: "#888", marginBottom: "24px" }}>Fill in episode details to get scored, structured sponsor recommendations.</p>
+
+    {/* INPUT FORM */}
+    <div style={{ background: "#1a0533", border: "1px solid #7e22ce", borderRadius: "12px", padding: "24px", marginBottom: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px" }}>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Guest Name *</label>
+          <input value={sponsorGuest} onChange={e => setSponsorGuest(e.target.value)}
+            placeholder="e.g. Nikhil Kamath"
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0117", border: "1px solid #4a1572", color: "white", fontSize: "14px", boxSizing: "border-box" }} />
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Guest Type *</label>
+          <select value={sponsorGuestType} onChange={e => setSponsorGuestType(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0117", border: "1px solid #4a1572", color: "white", fontSize: "14px" }}>
+            <option value="">Select guest type</option>
+            <option>CEO / Founder</option>
+            <option>Creator / Influencer</option>
+            <option>Actor / Entertainer</option>
+            <option>Cricketer / Athlete</option>
+            <option>Politician / Bureaucrat</option>
+            <option>Domain Expert</option>
+            <option>Investor / VC</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Content Theme *</label>
+          <select value={sponsorTheme} onChange={e => setSponsorTheme(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0117", border: "1px solid #4a1572", color: "white", fontSize: "14px" }}>
+            <option value="">Select theme</option>
+            <option>Entrepreneurship</option>
+            <option>Finance / Investing</option>
+            <option>Tech / AI</option>
+            <option>Sports / Fitness</option>
+            <option>Lifestyle / Self-help</option>
+            <option>Politics / Society</option>
+            <option>Entertainment</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Audience Type *</label>
+          <select value={sponsorAudience} onChange={e => setSponsorAudience(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0117", border: "1px solid #4a1572", color: "white", fontSize: "14px" }}>
+            <option value="">Select audience</option>
+            <option>Students / College</option>
+            <option>Young Professionals</option>
+            <option>Founders / Entrepreneurs</option>
+            <option>SMB Owners</option>
+            <option>Urban Mass Audience</option>
+            <option>Investors / HNI</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Sponsor Objective *</label>
+          <select value={sponsorObjective} onChange={e => setSponsorObjective(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0117", border: "1px solid #4a1572", color: "white", fontSize: "14px" }}>
+            <option value="">Select objective</option>
+            <option>Brand Awareness</option>
+            <option>Lead Generation</option>
+            <option>App Installs</option>
+            <option>Premium Positioning</option>
+            <option>Trust Building</option>
+            <option>Product Launch</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Budget Tier *</label>
+          <select value={sponsorBudgetTier} onChange={e => setSponsorBudgetTier(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0117", border: "1px solid #4a1572", color: "white", fontSize: "14px" }}>
+            <option value="">Select budget tier</option>
+            <option>Low (₹50K–2L)</option>
+            <option>Medium (₹2L–8L)</option>
+            <option>Premium (₹8L–25L+)</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Market *</label>
+          <select value={sponsorMarket} onChange={e => setSponsorMarket(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0117", border: "1px solid #4a1572", color: "white", fontSize: "14px" }}>
+            <option value="">Select market</option>
+            <option>India</option>
+            <option>Global</option>
+            <option>English-speaking</option>
+            <option>Regional India</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Custom Brands (optional)</label>
+          <input value={sponsorCustomBrands} onChange={e => setSponsorCustomBrands(e.target.value)}
+            placeholder="e.g. Zerodha, CRED, Razorpay"
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0117", border: "1px solid #4a1572", color: "white", fontSize: "14px", boxSizing: "border-box" }} />
+        </div>
+
+      </div>
+
+      <button onClick={matchSponsors} disabled={loadingSponsors}
+        style={{ marginTop: "20px", width: "100%", padding: "14px", borderRadius: "8px", background: loadingSponsors ? "#333" : "linear-gradient(135deg,#7e22ce,#e879f9)", color: "white", fontWeight: "bold", fontSize: "16px", border: "none", cursor: "pointer" }}>
+        {loadingSponsors ? "🔍 Analyzing sponsors..." : "💰 Find Sponsor Matches"}
+      </button>
+    </div>
+
+    {/* RESULTS */}
+    {sponsorResult && (
+      <div>
+        <div style={{ background: "#1a0533", border: "1px solid #7e22ce", borderRadius: "12px", padding: "20px", marginBottom: "20px" }}>
+          <h3 style={{ color: "#e879f9", margin: "0 0 8px" }}>{sponsorResult.guestName}</h3>
+          <p style={{ color: "#ccc", margin: "0 0 12px" }}>{sponsorResult.episodeSummary}</p>
+          <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+            <span style={{ color: "#4ade80", fontWeight: "bold" }}>💰 Total Value: {sponsorResult.totalEpisodeValue}</span>
+            <span style={{ color: "#fcd34d" }}>🏆 Best Category: {sponsorResult.bestSponsorCategory}</span>
           </div>
-        )}
+          <p style={{ color: "#aaa", margin: "12px 0 0", fontStyle: "italic" }}>💡 {sponsorResult.strategistNote}</p>
+        </div>
+
+        {sponsorResult.sponsors.filter(s => !sponsorExcluded.includes(s.brand)).map((s, i) => (
+          <div key={i} style={{ background: "#0d0117", border: "1px solid #4a1572", borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "8px" }}>
+              <div>
+                <h4 style={{ color: "#e879f9", margin: "0 0 4px" }}>{s.brand}</h4>
+                <span style={{ color: "#888", fontSize: "13px" }}>{s.category}</span>
+              </div>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <span style={{ background: s.fitScore >= 8 ? "#14532d" : s.fitScore >= 6 ? "#1c1c00" : "#2d1414", color: s.fitScore >= 8 ? "#4ade80" : s.fitScore >= 6 ? "#fcd34d" : "#f87171", padding: "4px 10px", borderRadius: "20px", fontWeight: "bold" }}>⭐ {s.fitScore}/10</span>
+                <span style={{ background: s.confidence === "High" ? "#14532d" : s.confidence === "Medium" ? "#1c1c00" : "#2d1414", color: s.confidence === "High" ? "#4ade80" : s.confidence === "Medium" ? "#fcd34d" : "#f87171", padding: "4px 10px", borderRadius: "20px", fontSize: "13px" }}>{s.confidence}</span>
+                <button onClick={() => setSponsorExcluded([...sponsorExcluded, s.brand])}
+                  style={{ background: "#2d1414", color: "#f87171", border: "none", borderRadius: "6px", padding: "4px 10px", cursor: "pointer", fontSize: "13px" }}>✕ Remove</button>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: "8px", margin: "12px 0" }}>
+              {Object.entries(s.scoringBreakdown).map(([k, v]) => (
+                <div key={k} style={{ background: "#1a0533", borderRadius: "6px", padding: "8px 10px", display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "#aaa", fontSize: "12px" }}>{k.replace(/([A-Z])/g, ' $1').trim()}</span>
+                  <span style={{ color: "#e879f9", fontWeight: "bold", fontSize: "12px" }}>{v}/10</span>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "14px" }}>📌 {s.whyFit}</p>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", fontSize: "13px" }}>
+              <span style={{ color: "#4ade80" }}>💵 {s.estimatedDealINR}</span>
+              <span style={{ color: "#38bdf8" }}>🎙️ {s.sponsorFormat}</span>
+            </div>
+            <p style={{ color: "#fcd34d", margin: "8px 0 4px", fontSize: "13px" }}>🎯 {s.contactAngle}</p>
+            <p style={{ color: "#aaa", margin: "0", fontSize: "13px", fontStyle: "italic" }}>"{s.pitchLine}"</p>
+          </div>
+        ))}
+
+        {sponsorSavedToPipeline
+          ? <p style={{ color: "#4ade80", textAlign: "center", marginTop: "12px" }}>✅ Saved to pipeline!</p>
+          : <button onClick={() => { setPipeline([...pipeline, { name: sponsorResult.guestName, status: "New", notes: `Sponsors: ${sponsorResult.sponsors.map(s=>s.brand).join(", ")}`, date: "" }]); setSponsorSavedToPipeline(true) }}
+              style={{ width: "100%", padding: "12px", marginTop: "12px", borderRadius: "8px", background: "#14532d", color: "#4ade80", fontWeight: "bold", border: "1px solid #4ade80", cursor: "pointer" }}>
+              💾 Save to Pipeline
+            </button>
+        }
+      </div>
+    )}
+  </div>
+)}
         {/* EPISODE PERFORMANCE PREDICTOR VIEW */}
 {view === "performance" && (
   <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
