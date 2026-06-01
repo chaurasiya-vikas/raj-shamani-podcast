@@ -116,6 +116,10 @@ function App() {
 const [perfGuest, setPerfGuest] = useState("")
 const [perfResult, setPerfResult] = useState(null)
 const [perfLoading, setPerfLoading] = useState(false)
+// Guest ROI Calculator
+const [roiGuest, setRoiGuest] = useState("")
+const [roiResult, setRoiResult] = useState(null)
+const [roiLoading, setRoiLoading] = useState(false)
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
@@ -499,6 +503,50 @@ ONLY valid JSON. NO MARKDOWN.`, "performance_predictor")
   } catch (e) { alert("Error: " + e.message) }
   setPerfLoading(false)
 }
+// — GUEST ROI CALCULATOR —
+const calculateROI = async () => {
+  if (!roiGuest.trim()) { alert("Please enter a guest name!"); return }
+  setRoiLoading(true); setRoiResult(null)
+  try {
+    const text = await callOpenAI(`You are a podcast business analyst for Indian YouTube podcasts. Calculate the complete ROI for Raj Shamani's "Figuring Out" podcast if they interview "${roiGuest}".
+
+Raj's podcast context: 2-5M views per episode average, India-based, business/entrepreneur focus, YouTube monetized.
+
+Return ONLY valid JSON:
+{
+  "guestName": "",
+  "costs": {
+    "editorSalary": "e.g. ₹25,000",
+    "researcherCost": "e.g. ₹8,000",
+    "studioCost": "e.g. ₹5,000",
+    "thumbnailDesigner": "e.g. ₹3,000",
+    "clipsEditor": "e.g. ₹10,000",
+    "outreachCoordination": "e.g. ₹4,000",
+    "miscExpenses": "e.g. ₹2,000",
+    "totalCost": "e.g. ₹57,000"
+  },
+  "revenue": {
+    "youtubAdRevenue": "e.g. ₹1,20,000",
+    "sponsorshipValue": "e.g. ₹5,00,000",
+    "brandDealPotential": "e.g. ₹2,00,000",
+    "clipsViralValue": "e.g. ₹50,000",
+    "longTermBrandValue": "e.g. ₹1,00,000",
+    "totalRevenue": "e.g. ₹9,70,000"
+  },
+  "netROI": "e.g. ₹9,13,000",
+  "roiPercentage": "e.g. 1,502%",
+  "roiGrade": "A / B / C / D",
+  "verdict": "WORTH IT / THINK TWICE / SKIP",
+  "verdictReason": "2-3 line specific reason",
+  "bestSponsorCategory": "e.g. Fintech / EdTech",
+  "breakEvenViews": "e.g. 80,000 views"
+}
+ONLY valid JSON. NO MARKDOWN.`, "roi_calculator")
+    const cleaned = text.replace(/```json|```/g, "").trim()
+    setRoiResult(JSON.parse(cleaned))
+  } catch (e) { alert("Error: " + e.message) }
+  setRoiLoading(false)
+}
   const matchSponsors = async () => {
     if (!sponsorGuest.trim()) { alert("Please enter a guest name!"); return }
     if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
@@ -874,6 +922,7 @@ Return ONLY the message text. No JSON. No labels.`)
           <button onClick={() => setView("availability")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "availability" ? "#1c1400" : "#1e1e3f", color: "#fcd34d", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>🗓️ Availability</button>
           <button onClick={() => setView("sponsors")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "sponsors" ? "#1a0533" : "#1e1e3f", color: "#e879f9", border: "1px solid #7e22ce", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>💰 Sponsors</button>
           <button onClick={() => setView("performance")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "performance" ? "#6c63ff" : "transparent", color: "white", border: "1px solid #444", cursor: "pointer", fontSize: "12px" }}>📊 Performance</button>
+          <button onClick={() => setView("roi")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "roi" ? "#f59e0b" : "transparent", color: "white", border: "1px solid #444", cursor: "pointer", fontSize: "12px" }}>💰 ROI Calculator</button>
           <button onClick={() => setDarkMode(!darkMode)} style={{ padding: "7px 12px", borderRadius: "8px", background: "#1e1e3f", color: darkMode ? "#fcd34d" : "#818cf8", border: "1px solid #444", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>{darkMode ? "☀️ Light" : "🌙 Dark"}</button>
           <button onClick={() => setHistoryView(!historyView)} style={{ padding: "7px 12px", borderRadius: "8px", background: historyView ? "#1a1a2e" : "#1e1e3f", color: "#f59e0b", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📜 History</button>
           {comparedGuests.length >= 2 && <button onClick={() => setView("compare")} style={{ padding: "7px 12px", borderRadius: "8px", background: "linear-gradient(135deg,#4c1d95,#1e3a5f)", color: "#c4b5fd", border: "1px solid #7c3aed", cursor: "pointer", fontSize: isMobile ? "12px" : "13px", fontWeight: "bold" }}>⚖️ Compare ({comparedGuests.length})</button>}
@@ -1422,6 +1471,67 @@ Return ONLY the message text. No JSON. No labels.`)
           <p style={{ color: "#aaa", margin: "0" }}>🎙️ Comparable Guests: <span style={{ color: "#38bdf8" }}>{perfResult.comparableGuests?.join(", ")}</span></p>
         </div>
         <button onClick={() => { setPerfGuest(""); setPerfResult(null) }} style={{ padding: "10px 20px", borderRadius: "8px", background: "transparent", color: "#888", border: "1px solid #333", cursor: "pointer" }}>Clear</button>
+      </div>
+    )}
+  </div>
+)}
+{/* GUEST ROI CALCULATOR VIEW */}
+{view === "roi" && (
+  <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
+    <h2 style={{ color: "#f59e0b", marginBottom: "8px" }}>💰 Guest ROI Calculator</h2>
+    <p style={{ color: "#888", marginBottom: "24px" }}>Calculate full cost vs revenue for any guest episode</p>
+    <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
+      <input value={roiGuest} onChange={e => setRoiGuest(e.target.value)} onKeyDown={e => e.key === "Enter" && calculateROI()} placeholder="Enter guest name..." style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid #333", background: "#1a1a2e", color: "white", fontSize: "14px" }} />
+      <button onClick={calculateROI} disabled={roiLoading} style={{ padding: "12px 24px", borderRadius: "8px", background: "#f59e0b", color: "black", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}>{roiLoading ? "Calculating..." : "Calculate ROI"}</button>
+    </div>
+    {roiResult && (
+      <div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+          <div style={{ background: "#1a0a0a", border: "1px solid #ef4444", borderRadius: "12px", padding: "20px" }}>
+            <h3 style={{ color: "#ef4444", margin: "0 0 16px" }}>📉 Total Costs</h3>
+            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>🎬 Editor: <span style={{ color: "white" }}>{roiResult.costs?.editorSalary}</span></p>
+            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>🔍 Research: <span style={{ color: "white" }}>{roiResult.costs?.researcherCost}</span></p>
+            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>🎙️ Studio: <span style={{ color: "white" }}>{roiResult.costs?.studioCost}</span></p>
+            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>🖼️ Thumbnail: <span style={{ color: "white" }}>{roiResult.costs?.thumbnailDesigner}</span></p>
+            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>✂️ Clips Editor: <span style={{ color: "white" }}>{roiResult.costs?.clipsEditor}</span></p>
+            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>📧 Outreach: <span style={{ color: "white" }}>{roiResult.costs?.outreachCoordination}</span></p>
+            <p style={{ color: "#ccc", margin: "0 0 12px", fontSize: "13px" }}>🔧 Misc: <span style={{ color: "white" }}>{roiResult.costs?.miscExpenses}</span></p>
+            <p style={{ color: "#ef4444", fontWeight: "bold", fontSize: "16px", margin: 0 }}>Total: {roiResult.costs?.totalCost}</p>
+          </div>
+          <div style={{ background: "#0a1a0a", border: "1px solid #4ade80", borderRadius: "12px", padding: "20px" }}>
+            <h3 style={{ color: "#4ade80", margin: "0 0 16px" }}>📈 Total Revenue</h3>
+            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>▶️ YouTube Ads: <span style={{ color: "white" }}>{roiResult.revenue?.youtubAdRevenue}</span></p>
+            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>🤝 Sponsorship: <span style={{ color: "white" }}>{roiResult.revenue?.sponsorshipValue}</span></p>
+            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>💼 Brand Deal: <span style={{ color: "white" }}>{roiResult.revenue?.brandDealPotential}</span></p>
+            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>🎬 Clips Value: <span style={{ color: "white" }}>{roiResult.revenue?.clipsViralValue}</span></p>
+            <p style={{ color: "#ccc", margin: "0 0 12px", fontSize: "13px" }}>🏆 Brand Value: <span style={{ color: "white" }}>{roiResult.revenue?.longTermBrandValue}</span></p>
+            <p style={{ color: "#4ade80", fontWeight: "bold", fontSize: "16px", margin: 0 }}>Total: {roiResult.revenue?.totalRevenue}</p>
+          </div>
+        </div>
+        <div style={{ background: "#0d0d1a", border: "1px solid #f59e0b", borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "16px", marginBottom: "16px" }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "28px", fontWeight: "bold", color: "#4ade80" }}>{roiResult.netROI}</div>
+              <div style={{ color: "#888", fontSize: "12px" }}>Net ROI</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "28px", fontWeight: "bold", color: "#f59e0b" }}>{roiResult.roiPercentage}</div>
+              <div style={{ color: "#888", fontSize: "12px" }}>ROI %</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "28px", fontWeight: "bold", color: "#6c63ff" }}>{roiResult.roiGrade}</div>
+              <div style={{ color: "#888", fontSize: "12px" }}>Grade</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "20px", fontWeight: "bold", color: roiResult.verdict === "WORTH IT" ? "#4ade80" : roiResult.verdict === "THINK TWICE" ? "#fcd34d" : "#ef4444" }}>{roiResult.verdict}</div>
+              <div style={{ color: "#888", fontSize: "12px" }}>Verdict</div>
+            </div>
+          </div>
+          <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>💡 {roiResult.verdictReason}</p>
+          <p style={{ color: "#aaa", margin: "0 0 4px", fontSize: "13px" }}>🎯 Best Sponsor Category: <span style={{ color: "#f59e0b" }}>{roiResult.bestSponsorCategory}</span></p>
+          <p style={{ color: "#aaa", margin: 0, fontSize: "13px" }}>⚖️ Break-even at: <span style={{ color: "#38bdf8" }}>{roiResult.breakEvenViews}</span></p>
+        </div>
+        <button onClick={() => { setRoiGuest(""); setRoiResult(null) }} style={{ padding: "10px 20px", borderRadius: "8px", background: "transparent", color: "#888", border: "1px solid #333", cursor: "pointer" }}>Clear</button>
       </div>
     )}
   </div>
