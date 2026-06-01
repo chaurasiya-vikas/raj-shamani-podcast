@@ -107,6 +107,10 @@ function App() {
   const [availabilityGuest, setAvailabilityGuest] = useState("")
   const [availabilityResult, setAvailabilityResult] = useState(null)
   const [loadingAvailability, setLoadingAvailability] = useState(false)
+  // Sponsor Matchmaker
+  const [sponsorGuest, setSponsorGuest] = useState("")
+  const [sponsorResult, setSponsorResult] = useState(null)
+  const [loadingSponsors, setLoadingSponsors] = useState(false)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -466,6 +470,37 @@ ONLY valid JSON. NO MARKDOWN.`, "availability_predictor")
     setLoadingAvailability(false)
   }
 
+  const matchSponsors = async () => {
+    if (!sponsorGuest.trim()) { alert("Please enter a guest name!"); return }
+    if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
+    setLoadingSponsors(true); setSponsorResult(null)
+    try {
+      const text = await callOpenAI(`You are a podcast monetization expert. For the guest "${sponsorGuest}" on "Figuring Out With Raj Shamani" podcast (3M+ subscribers, audience: Indian 18-35 year olds, aspirational entrepreneurs), suggest the best sponsors.
+Return ONLY valid JSON:
+{
+  "guestName": "",
+  "audienceMatch": "1 line describing guest's audience overlap with Raj's",
+  "sponsors": [
+    {
+      "brand": "",
+      "category": "",
+      "fitScore": 1-10,
+      "whyFit": "1 line reason",
+      "estimatedDealINR": "e.g. ₹2-5 Lakhs",
+      "contactAngle": "1 line pitch angle",
+      "pitchLine": "One ready-to-send pitch sentence"
+    }
+  ],
+  "totalEpisodeValue": "e.g. ₹8-15 Lakhs",
+  "bestSponsorCategory": ""
+}
+Suggest exactly 6 sponsors. ONLY valid JSON. NO MARKDOWN.`, "sponsor_matchmaker")
+      const cleaned = text.replace(/```json|```/g, "").trim()
+      setSponsorResult(JSON.parse(cleaned))
+    } catch (e) { alert("Error: " + e.message) }
+    setLoadingSponsors(false)
+  }
+
   useEffect(() => {
     const key = localStorage.getItem("raj_api_key")
     const date = localStorage.getItem("raj_last_updated")
@@ -808,6 +843,7 @@ Return ONLY the message text. No JSON. No labels.`)
           <button onClick={() => { setView("competitors"); if (competitors.length === 0) fetchCompetitors() }} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "competitors" ? "#1e1b4b" : "#1e1e3f", color: "#818cf8", border: "1px solid #3730a3", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>🏆 Competitors</button>
           <button onClick={() => setView("sentiment")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "sentiment" ? "#0f3320" : "#1e1e3f", color: "#34d399", border: "1px solid #065f46", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📊 Sentiment</button>
           <button onClick={() => setView("availability")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "availability" ? "#1c1400" : "#1e1e3f", color: "#fcd34d", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>🗓️ Availability</button>
+          <button onClick={() => setView("sponsors")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "sponsors" ? "#1a0533" : "#1e1e3f", color: "#e879f9", border: "1px solid #7e22ce", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>💰 Sponsors</button>
           <button onClick={() => setHistoryView(!historyView)} style={{ padding: "7px 12px", borderRadius: "8px", background: historyView ? "#1a1a2e" : "#1e1e3f", color: "#f59e0b", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📜 History</button>
           {comparedGuests.length >= 2 && <button onClick={() => setView("compare")} style={{ padding: "7px 12px", borderRadius: "8px", background: "linear-gradient(135deg,#4c1d95,#1e3a5f)", color: "#c4b5fd", border: "1px solid #7c3aed", cursor: "pointer", fontSize: isMobile ? "12px" : "13px", fontWeight: "bold" }}>⚖️ Compare ({comparedGuests.length})</button>}
           {user?.email === "chaurasiyavikas1234@gmail.com" && <button onClick={() => setView("admin")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "admin" ? "#6366f1" : "#1e1e3f", color: "#fff", border: "1px solid #6366f1", cursor: "pointer" }}>🛡️ Admin</button>}
@@ -1268,7 +1304,49 @@ Return ONLY the message text. No JSON. No labels.`)
             )}
           </div>
         )}
-
+{/* SPONSOR MATCHMAKER VIEW */}
+{view === "sponsors" && (
+          <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
+            <h2 style={{ color: "#e879f9", marginBottom: "8px" }}>💰 Sponsor Matchmaker</h2>
+            <p style={{ color: "#888", marginBottom: "20px" }}>Enter a guest name to find perfect sponsors + estimated deal value</p>
+            <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
+              <input value={sponsorGuest} onChange={e => setSponsorGuest(e.target.value)} onKeyDown={e => e.key === "Enter" && matchSponsors()} placeholder="e.g. Nikhil Kamath, Falguni Nayar..." style={{ flex: 1, padding: "12px", borderRadius: "8px", background: "#111", border: "1px solid #7e22ce", color: "#fff", fontSize: "15px" }} />
+              <button onClick={matchSponsors} disabled={loadingSponsors} style={{ padding: "12px 24px", borderRadius: "8px", background: loadingSponsors ? "#333" : "linear-gradient(135deg,#7e22ce,#a21caf)", color: "#fff", border: "none", cursor: loadingSponsors ? "not-allowed" : "pointer", fontWeight: "bold" }}>{loadingSponsors ? "⏳ Matching..." : "🔍 Find Sponsors"}</button>
+            </div>
+            {sponsorResult && (
+              <div>
+                <div style={{ background: "#1a0533", border: "1px solid #7e22ce", borderRadius: "12px", padding: "16px", marginBottom: "20px" }}>
+                  <h3 style={{ color: "#e879f9", margin: "0 0 6px" }}>{sponsorResult.guestName}</h3>
+                  <p style={{ color: "#ccc", margin: "0 0 8px" }}>{sponsorResult.audienceMatch}</p>
+                  <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                    <span style={{ color: "#4ade80", fontWeight: "bold" }}>💵 Episode Value: {sponsorResult.totalEpisodeValue}</span>
+                    <span style={{ color: "#fcd34d" }}>🏆 Best Category: {sponsorResult.bestSponsorCategory}</span>
+                  </div>
+                </div>
+                <div style={{ display: "grid", gap: "14px" }}>
+                  {sponsorResult.sponsors.map((s, i) => (
+                    <div key={i} style={{ background: "#0d0d1a", border: "1px solid #2d1b4e", borderRadius: "10px", padding: "16px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+                        <div>
+                          <span style={{ color: "#e879f9", fontWeight: "bold", fontSize: "16px" }}>{s.brand}</span>
+                          <span style={{ color: "#888", fontSize: "12px", marginLeft: "10px" }}>{s.category}</span>
+                        </div>
+                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                          <span style={{ color: "#4ade80", fontWeight: "bold" }}>{s.estimatedDealINR}</span>
+                          <span style={{ background: "#7e22ce", color: "#fff", padding: "3px 10px", borderRadius: "20px", fontSize: "12px" }}>Fit: {s.fitScore}/10</span>
+                        </div>
+                      </div>
+                      <p style={{ color: "#ccc", margin: "0 0 6px", fontSize: "13px" }}>{s.whyFit}</p>
+                      <p style={{ color: "#fcd34d", margin: "0 0 10px", fontSize: "13px" }}>📨 {s.pitchLine}</p>
+                      <p style={{ color: "#818cf8", fontSize: "12px", margin: 0 }}>💡 {s.contactAngle}</p>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={() => { setSponsorGuest(""); setSponsorResult(null) }} style={{ marginTop: "20px", padding: "10px 20px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "13px" }}>🔄 Check Another Guest</button>
+              </div>
+            )}
+          </div>
+        )}
         {/* PIPELINE VIEW */}
         {view === "pipeline" && (
           <div>
