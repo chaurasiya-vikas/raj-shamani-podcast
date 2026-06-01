@@ -111,6 +111,7 @@ function App() {
   const [sponsorGuest, setSponsorGuest] = useState("")
   const [sponsorResult, setSponsorResult] = useState(null)
   const [loadingSponsors, setLoadingSponsors] = useState(false)
+  const [darkMode, setDarkMode] = useState(true)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -815,7 +816,7 @@ Return ONLY the message text. No JSON. No labels.`)
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#fff", fontFamily: "'Segoe UI',sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: darkMode ? "#0a0a0f" : "#f0f4f8", color: darkMode ? "#fff" : "#111", fontFamily: "'Segoe UI',sans-serif" }}>
 
       {/* Header */}
       <div style={{ background: "linear-gradient(135deg,#1a0533,#0d1f3c)", padding: isMobile ? "14px 16px" : "20px 30px", borderBottom: "1px solid #333" }}>
@@ -844,6 +845,7 @@ Return ONLY the message text. No JSON. No labels.`)
           <button onClick={() => setView("sentiment")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "sentiment" ? "#0f3320" : "#1e1e3f", color: "#34d399", border: "1px solid #065f46", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📊 Sentiment</button>
           <button onClick={() => setView("availability")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "availability" ? "#1c1400" : "#1e1e3f", color: "#fcd34d", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>🗓️ Availability</button>
           <button onClick={() => setView("sponsors")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "sponsors" ? "#1a0533" : "#1e1e3f", color: "#e879f9", border: "1px solid #7e22ce", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>💰 Sponsors</button>
+          <button onClick={() => setDarkMode(!darkMode)} style={{ padding: "7px 12px", borderRadius: "8px", background: "#1e1e3f", color: darkMode ? "#fcd34d" : "#818cf8", border: "1px solid #444", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>{darkMode ? "☀️ Light" : "🌙 Dark"}</button>
           <button onClick={() => setHistoryView(!historyView)} style={{ padding: "7px 12px", borderRadius: "8px", background: historyView ? "#1a1a2e" : "#1e1e3f", color: "#f59e0b", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📜 History</button>
           {comparedGuests.length >= 2 && <button onClick={() => setView("compare")} style={{ padding: "7px 12px", borderRadius: "8px", background: "linear-gradient(135deg,#4c1d95,#1e3a5f)", color: "#c4b5fd", border: "1px solid #7c3aed", cursor: "pointer", fontSize: isMobile ? "12px" : "13px", fontWeight: "bold" }}>⚖️ Compare ({comparedGuests.length})</button>}
           {user?.email === "chaurasiyavikas1234@gmail.com" && <button onClick={() => setView("admin")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "admin" ? "#6366f1" : "#1e1e3f", color: "#fff", border: "1px solid #6366f1", cursor: "pointer" }}>🛡️ Admin</button>}
