@@ -139,6 +139,34 @@ const [perfSponsorAngle, setPerfSponsorAngle] = useState("")
 const [perfPriorityMetric, setPerfPriorityMetric] = useState("")
 const [perfTimeHorizon, setPerfTimeHorizon] = useState("")
 const [perfBenchmarkGuest, setPerfBenchmarkGuest] = useState("")
+// Guest ROI Calculator V2
+const [roiGuestType, setRoiGuestType] = useState("")
+const [roiEpisodeObjective, setRoiEpisodeObjective] = useState("")
+const [roiExpectedViews, setRoiExpectedViews] = useState("")
+const [roiPublishFrequency, setRoiPublishFrequency] = useState("")
+const [roiGuestStatus, setRoiGuestStatus] = useState("")
+const [roiSponsorStatus, setRoiSponsorStatus] = useState("")
+const [roiClipCount, setRoiClipCount] = useState("")
+// ROI Cost Inputs
+const [roiCostEditor, setRoiCostEditor] = useState("25000")
+const [roiCostClipsEditor, setRoiCostClipsEditor] = useState("10000")
+const [roiCostThumbnail, setRoiCostThumbnail] = useState("3000")
+const [roiCostStudio, setRoiCostStudio] = useState("5000")
+const [roiCostResearch, setRoiCostResearch] = useState("8000")
+const [roiCostOutreach, setRoiCostOutreach] = useState("4000")
+const [roiCostAppearanceFee, setRoiCostAppearanceFee] = useState("0")
+const [roiCostTravel, setRoiCostTravel] = useState("0")
+const [roiCostHotel, setRoiCostHotel] = useState("0")
+const [roiCostHospitality, setRoiCostHospitality] = useState("0")
+const [roiCostTools, setRoiCostTools] = useState("2000")
+const [roiCostMisc, setRoiCostMisc] = useState("2000")
+// ROI Revenue Inputs
+const [roiRevYouTube, setRoiRevYouTube] = useState("")
+const [roiRevSponsor, setRoiRevSponsor] = useState("")
+const [roiRevBrandDeal, setRoiRevBrandDeal] = useState("")
+const [roiRevClips, setRoiRevClips] = useState("")
+const [roiRevLongTail, setRoiRevLongTail] = useState("")
+const [roiRevBrandLift, setRoiRevBrandLift] = useState("")
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
@@ -585,48 +613,142 @@ ONLY valid JSON. NO MARKDOWN.`, "performance_predictor")
 // — GUEST ROI CALCULATOR —
 const calculateROI = async () => {
   if (!roiGuest.trim()) { alert("Please enter a guest name!"); return }
+  if (!roiGuestType) { alert("Please select guest type!"); return }
+  if (!roiEpisodeObjective) { alert("Please select episode objective!"); return }
+  if (!roiExpectedViews) { alert("Please select expected views!"); return }
   setRoiLoading(true); setRoiResult(null)
   try {
-    const text = await callOpenAI(`You are a podcast business analyst for Indian YouTube podcasts. Calculate the complete ROI for Raj Shamani's "Figuring Out" podcast if they interview "${roiGuest}".
+    const totalCosts = [
+      Number(roiCostEditor), Number(roiCostClipsEditor), Number(roiCostThumbnail),
+      Number(roiCostStudio), Number(roiCostResearch), Number(roiCostOutreach),
+      Number(roiCostAppearanceFee), Number(roiCostTravel), Number(roiCostHotel),
+      Number(roiCostHospitality), Number(roiCostTools), Number(roiCostMisc)
+    ].reduce((a, b) => a + b, 0)
 
-Raj's podcast context: 2-5M views per episode average, India-based, business/entrepreneur focus, YouTube monetized.
+    const userRevInputs = [
+      roiRevYouTube, roiRevSponsor, roiRevBrandDeal,
+      roiRevClips, roiRevLongTail, roiRevBrandLift
+    ].filter(v => v.trim()).map(v => Number(v)).reduce((a, b) => a + b, 0)
 
-Return ONLY valid JSON:
+    const text = await callOpenAI(`You are a senior podcast business strategist for "Figuring Out" by Raj Shamani.
+
+EPISODE INPUTS:
+- Guest: ${roiGuest}
+- Guest Type: ${roiGuestType}
+- Episode Objective: ${roiEpisodeObjective}
+- Expected Views Range: ${roiExpectedViews}
+- Publishing Frequency: ${roiPublishFrequency || "Not specified"}
+- Guest Status: ${roiGuestStatus || "Not specified"}
+- Sponsor Status: ${roiSponsorStatus || "Not specified"}
+- Clip Output Count: ${roiClipCount || "Not specified"}
+
+COST INPUTS (user-entered, in INR):
+- Editor: ₹${roiCostEditor}
+- Clips Editor: ₹${roiCostClipsEditor}
+- Thumbnail: ₹${roiCostThumbnail}
+- Studio: ₹${roiCostStudio}
+- Research: ₹${roiCostResearch}
+- Outreach: ₹${roiCostOutreach}
+- Guest Appearance Fee: ₹${roiCostAppearanceFee}
+- Guest Travel: ₹${roiCostTravel}
+- Guest Hotel: ₹${roiCostHotel}
+- Hospitality: ₹${roiCostHospitality}
+- Tools/Software: ₹${roiCostTools}
+- Misc: ₹${roiCostMisc}
+- TOTAL COSTS: ₹${totalCosts.toLocaleString()}
+
+REVENUE INPUTS (user-entered, 0 means not specified):
+- YouTube Ads: ₹${roiRevYouTube || "estimate based on views"}
+- Sponsor Deal: ₹${roiRevSponsor || "estimate based on guest type"}
+- Brand Deal: ₹${roiRevBrandDeal || "estimate"}
+- Clips Revenue: ₹${roiRevClips || "estimate"}
+- Long-tail Archive: ₹${roiRevLongTail || "estimate"}
+- Brand Lift Value: ₹${roiRevBrandLift || "estimate"}
+- USER TOTAL REVENUE: ₹${userRevInputs > 0 ? userRevInputs.toLocaleString() : "not entered, please estimate"}
+
+INSTRUCTIONS:
+- Use user-entered costs exactly as provided
+- For revenue: use user values if entered, otherwise estimate realistically based on ${roiExpectedViews} views and ${roiGuestType}
+- Generate LOW / BASE / HIGH scenarios
+- Be realistic, not inflated. Cap ROI at believable levels
+- Show payback period in months
+- Show sensitivity: what happens if views drop 50%
+
+Return ONLY valid JSON, NO markdown:
 {
   "guestName": "",
-  "costs": {
-    "editorSalary": "e.g. ₹25,000",
-    "researcherCost": "e.g. ₹8,000",
-    "studioCost": "e.g. ₹5,000",
-    "thumbnailDesigner": "e.g. ₹3,000",
-    "clipsEditor": "e.g. ₹10,000",
-    "outreachCoordination": "e.g. ₹4,000",
-    "miscExpenses": "e.g. ₹2,000",
-    "totalCost": "e.g. ₹57,000"
+  "episodeSummary": "2 line summary",
+  "totalCosts": ${totalCosts},
+  "costBreakdown": {
+    "production": "₹X",
+    "research": "₹X",
+    "guestAcquisition": "₹X",
+    "sales": "₹X",
+    "ops": "₹X"
   },
-  "revenue": {
-    "youtubAdRevenue": "e.g. ₹1,20,000",
-    "sponsorshipValue": "e.g. ₹5,00,000",
-    "brandDealPotential": "e.g. ₹2,00,000",
-    "clipsViralValue": "e.g. ₹50,000",
-    "longTermBrandValue": "e.g. ₹1,00,000",
-    "totalRevenue": "e.g. ₹9,70,000"
+  "scenarios": {
+    "low": {
+      "totalRevenue": "₹X",
+      "netROI": "₹X",
+      "roiPercentage": "X%",
+      "confidence": "X%",
+      "revenueBreakdown": {
+        "youtubeAds": "₹X",
+        "sponsorDeal": "₹X",
+        "brandDeal": "₹X",
+        "clipsRevenue": "₹X",
+        "longTailValue": "₹X",
+        "brandLiftValue": "₹X"
+      }
+    },
+    "base": {
+      "totalRevenue": "₹X",
+      "netROI": "₹X",
+      "roiPercentage": "X%",
+      "confidence": "X%",
+      "revenueBreakdown": {
+        "youtubeAds": "₹X",
+        "sponsorDeal": "₹X",
+        "brandDeal": "₹X",
+        "clipsRevenue": "₹X",
+        "longTailValue": "₹X",
+        "brandLiftValue": "₹X"
+      }
+    },
+    "high": {
+      "totalRevenue": "₹X",
+      "netROI": "₹X",
+      "roiPercentage": "X%",
+      "confidence": "X%",
+      "revenueBreakdown": {
+        "youtubeAds": "₹X",
+        "sponsorDeal": "₹X",
+        "brandDeal": "₹X",
+        "clipsRevenue": "₹X",
+        "longTailValue": "₹X",
+        "brandLiftValue": "₹X"
+      }
+    }
   },
-  "netROI": "e.g. ₹9,13,000",
-  "roiPercentage": "e.g. 1,502%",
+  "paybackPeriod": "e.g. 3.2 months",
+  "breakEvenViews": "e.g. 45,000 views",
+  "sensitivityWarning": "What happens if views drop 50%",
+  "guestMonetizationScore": "7.5/10",
+  "sponsorReadinessScore": "8/10",
+  "clipROIScore": "6/10",
+  "improvementActions": ["action1", "action2", "action3"],
   "roiGrade": "A / B / C / D",
-  "verdict": "WORTH IT / THINK TWICE / SKIP",
-  "verdictReason": "2-3 line specific reason",
-  "bestSponsorCategory": "e.g. Fintech / EdTech",
-  "breakEvenViews": "e.g. 80,000 views"
+  "verdict": "PROCEED / OPTIMIZE / RETHINK",
+  "verdictReason": "2 line specific reasoning",
+  "bestSponsorCategory": ""
 }
+
 ONLY valid JSON. NO MARKDOWN.`, "roi_calculator")
     const cleaned = text.replace(/```json|```/g, "").trim()
     setRoiResult(JSON.parse(cleaned))
   } catch (e) { alert("Error: " + e.message) }
   setRoiLoading(false)
 }
-
 
 const matchSponsors = async () => {
   if (!sponsorGuest.trim()) { alert("Please enter a guest name!"); return }
@@ -1873,61 +1995,213 @@ Return ONLY the message text. No JSON. No labels.`)
 )}
 {/* GUEST ROI CALCULATOR VIEW */}
 {view === "roi" && (
-  <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
-    <h2 style={{ color: "#f59e0b", marginBottom: "8px" }}>💰 Guest ROI Calculator</h2>
-    <p style={{ color: "#888", marginBottom: "24px" }}>Calculate full cost vs revenue for any guest episode</p>
-    <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
-      <input value={roiGuest} onChange={e => setRoiGuest(e.target.value)} onKeyDown={e => e.key === "Enter" && calculateROI()} placeholder="Enter guest name..." style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid #333", background: "#1a1a2e", color: "white", fontSize: "14px" }} />
-      <button onClick={calculateROI} disabled={roiLoading} style={{ padding: "12px 24px", borderRadius: "8px", background: "#f59e0b", color: "black", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}>{roiLoading ? "Calculating..." : "Calculate ROI"}</button>
+  <div style={{ padding: "24px", maxWidth: "960px", margin: "0 auto" }}>
+    <h2 style={{ color: "#f59e0b", marginBottom: "8px" }}>💰 Guest ROI Calculator V2</h2>
+    <p style={{ color: "#888", marginBottom: "24px" }}>Enter real costs and revenue assumptions to get a credible ROI forecast with scenarios.</p>
+
+    {/* EPISODE SETUP */}
+    <div style={{ background: "#1a1200", border: "1px solid #92400e", borderRadius: "12px", padding: "24px", marginBottom: "20px" }}>
+      <h3 style={{ color: "#f59e0b", margin: "0 0 16px" }}>📋 Episode Setup</h3>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px" }}>
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Guest Name *</label>
+          <input value={roiGuest} onChange={e => setRoiGuest(e.target.value)} placeholder="e.g. Nikhil Kamath"
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0900", border: "1px solid #92400e", color: "white", fontSize: "14px", boxSizing: "border-box" }} />
+        </div>
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Guest Type *</label>
+          <select value={roiGuestType} onChange={e => setRoiGuestType(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0900", border: "1px solid #92400e", color: "white", fontSize: "14px" }}>
+            <option value="">Select type</option>
+            <option>CEO / Founder</option>
+            <option>Creator / Influencer</option>
+            <option>Actor / Entertainer</option>
+            <option>Cricketer / Athlete</option>
+            <option>Investor / VC</option>
+            <option>Domain Expert</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Episode Objective *</label>
+          <select value={roiEpisodeObjective} onChange={e => setRoiEpisodeObjective(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0900", border: "1px solid #92400e", color: "white", fontSize: "14px" }}>
+            <option value="">Select objective</option>
+            <option>Maximum Views</option>
+            <option>Sponsor Revenue</option>
+            <option>Brand Building</option>
+            <option>Audience Growth</option>
+            <option>Clip Virality</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Expected Views Range *</label>
+          <select value={roiExpectedViews} onChange={e => setRoiExpectedViews(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0900", border: "1px solid #92400e", color: "white", fontSize: "14px" }}>
+            <option value="">Select range</option>
+            <option>Under 500K</option>
+            <option>500K – 1M</option>
+            <option>1M – 2M</option>
+            <option>2M – 5M</option>
+            <option>5M+</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Guest Status</label>
+          <select value={roiGuestStatus} onChange={e => setRoiGuestStatus(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0900", border: "1px solid #92400e", color: "white", fontSize: "14px" }}>
+            <option value="">Select</option>
+            <option>First Time Guest</option>
+            <option>Repeat Guest</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Sponsor Status</label>
+          <select value={roiSponsorStatus} onChange={e => setRoiSponsorStatus(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0900", border: "1px solid #92400e", color: "white", fontSize: "14px" }}>
+            <option value="">Select</option>
+            <option>Sponsor Already Secured</option>
+            <option>Sponsor Being Pitched</option>
+            <option>No Sponsor Yet</option>
+          </select>
+        </div>
+      </div>
     </div>
+
+    {/* COST INPUTS */}
+    <div style={{ background: "#1a0a0a", border: "1px solid #7f1d1d", borderRadius: "12px", padding: "24px", marginBottom: "20px" }}>
+      <h3 style={{ color: "#f87171", margin: "0 0 16px" }}>📉 Cost Inputs (edit each value in ₹)</h3>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: "12px" }}>
+        {[
+          ["Editor", roiCostEditor, setRoiCostEditor],
+          ["Clips Editor", roiCostClipsEditor, setRoiCostClipsEditor],
+          ["Thumbnail", roiCostThumbnail, setRoiCostThumbnail],
+          ["Studio", roiCostStudio, setRoiCostStudio],
+          ["Research", roiCostResearch, setRoiCostResearch],
+          ["Outreach", roiCostOutreach, setRoiCostOutreach],
+          ["Appearance Fee", roiCostAppearanceFee, setRoiCostAppearanceFee],
+          ["Guest Travel", roiCostTravel, setRoiCostTravel],
+          ["Guest Hotel", roiCostHotel, setRoiCostHotel],
+          ["Hospitality", roiCostHospitality, setRoiCostHospitality],
+          ["Tools/Software", roiCostTools, setRoiCostTools],
+          ["Misc", roiCostMisc, setRoiCostMisc],
+        ].map(([label, val, setter]) => (
+          <div key={label}>
+            <label style={{ color: "#aaa", fontSize: "12px", display: "block", marginBottom: "4px" }}>{label}</label>
+            <input type="number" value={val} onChange={e => setter(e.target.value)}
+              style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "#0d0000", border: "1px solid #7f1d1d", color: "white", fontSize: "13px", boxSizing: "border-box" }} />
+          </div>
+        ))}
+      </div>
+      <p style={{ color: "#f87171", fontWeight: "bold", marginTop: "12px" }}>
+        Total Costs: ₹{([Number(roiCostEditor),Number(roiCostClipsEditor),Number(roiCostThumbnail),Number(roiCostStudio),Number(roiCostResearch),Number(roiCostOutreach),Number(roiCostAppearanceFee),Number(roiCostTravel),Number(roiCostHotel),Number(roiCostHospitality),Number(roiCostTools),Number(roiCostMisc)].reduce((a,b)=>a+b,0)).toLocaleString()}
+      </p>
+    </div>
+
+    {/* REVENUE INPUTS */}
+    <div style={{ background: "#0a1a0a", border: "1px solid #14532d", borderRadius: "12px", padding: "24px", marginBottom: "20px" }}>
+      <h3 style={{ color: "#4ade80", margin: "0 0 8px" }}>📈 Revenue Inputs (leave blank to auto-estimate)</h3>
+      <p style={{ color: "#666", fontSize: "13px", margin: "0 0 16px" }}>Enter known values. Blank fields will be estimated by AI based on your episode context.</p>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: "12px" }}>
+        {[
+          ["YouTube Ads ₹", roiRevYouTube, setRoiRevYouTube],
+          ["Sponsor Deal ₹", roiRevSponsor, setRoiRevSponsor],
+          ["Brand Deal ₹", roiRevBrandDeal, setRoiRevBrandDeal],
+          ["Clips Revenue ₹", roiRevClips, setRoiRevClips],
+          ["Long-tail Archive ₹", roiRevLongTail, setRoiRevLongTail],
+          ["Brand Lift Value ₹", roiRevBrandLift, setRoiRevBrandLift],
+        ].map(([label, val, setter]) => (
+          <div key={label}>
+            <label style={{ color: "#aaa", fontSize: "12px", display: "block", marginBottom: "4px" }}>{label}</label>
+            <input type="number" value={val} onChange={e => setter(e.target.value)} placeholder="auto"
+              style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "#000d00", border: "1px solid #14532d", color: "white", fontSize: "13px", boxSizing: "border-box" }} />
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <button onClick={calculateROI} disabled={roiLoading}
+      style={{ width: "100%", padding: "14px", borderRadius: "8px", background: roiLoading ? "#333" : "linear-gradient(135deg,#92400e,#f59e0b)", color: "white", fontWeight: "bold", fontSize: "16px", border: "none", cursor: "pointer", marginBottom: "24px" }}>
+      {roiLoading ? "🔍 Calculating ROI..." : "💰 Calculate Episode ROI"}
+    </button>
+
+    {/* RESULTS */}
     {roiResult && (
       <div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
-          <div style={{ background: "#1a0a0a", border: "1px solid #ef4444", borderRadius: "12px", padding: "20px" }}>
-            <h3 style={{ color: "#ef4444", margin: "0 0 16px" }}>📉 Total Costs</h3>
-            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>🎬 Editor: <span style={{ color: "white" }}>{roiResult.costs?.editorSalary}</span></p>
-            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>🔍 Research: <span style={{ color: "white" }}>{roiResult.costs?.researcherCost}</span></p>
-            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>🎙️ Studio: <span style={{ color: "white" }}>{roiResult.costs?.studioCost}</span></p>
-            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>🖼️ Thumbnail: <span style={{ color: "white" }}>{roiResult.costs?.thumbnailDesigner}</span></p>
-            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>✂️ Clips Editor: <span style={{ color: "white" }}>{roiResult.costs?.clipsEditor}</span></p>
-            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>📧 Outreach: <span style={{ color: "white" }}>{roiResult.costs?.outreachCoordination}</span></p>
-            <p style={{ color: "#ccc", margin: "0 0 12px", fontSize: "13px" }}>🔧 Misc: <span style={{ color: "white" }}>{roiResult.costs?.miscExpenses}</span></p>
-            <p style={{ color: "#ef4444", fontWeight: "bold", fontSize: "16px", margin: 0 }}>Total: {roiResult.costs?.totalCost}</p>
+        <div style={{ background: "#1a1200", border: "1px solid #92400e", borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+          <h3 style={{ color: "#f59e0b", margin: "0 0 6px" }}>{roiResult.guestName}</h3>
+          <p style={{ color: "#ccc", margin: "0 0 16px" }}>{roiResult.episodeSummary}</p>
+
+          {/* COST BREAKDOWN */}
+          <div style={{ background: "#0d0900", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
+            <p style={{ color: "#f87171", fontWeight: "bold", margin: "0 0 10px" }}>📉 Cost Breakdown</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: "8px" }}>
+              {roiResult.costBreakdown && Object.entries(roiResult.costBreakdown).map(([k,v]) => (
+                <div key={k} style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "#aaa", fontSize: "13px" }}>{k}</span>
+                  <span style={{ color: "#f87171", fontSize: "13px" }}>{v}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ color: "#f87171", fontWeight: "bold", marginTop: "8px" }}>Total: ₹{roiResult.totalCosts?.toLocaleString()}</p>
           </div>
-          <div style={{ background: "#0a1a0a", border: "1px solid #4ade80", borderRadius: "12px", padding: "20px" }}>
-            <h3 style={{ color: "#4ade80", margin: "0 0 16px" }}>📈 Total Revenue</h3>
-            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>▶️ YouTube Ads: <span style={{ color: "white" }}>{roiResult.revenue?.youtubAdRevenue}</span></p>
-            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>🤝 Sponsorship: <span style={{ color: "white" }}>{roiResult.revenue?.sponsorshipValue}</span></p>
-            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>💼 Brand Deal: <span style={{ color: "white" }}>{roiResult.revenue?.brandDealPotential}</span></p>
-            <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>🎬 Clips Value: <span style={{ color: "white" }}>{roiResult.revenue?.clipsViralValue}</span></p>
-            <p style={{ color: "#ccc", margin: "0 0 12px", fontSize: "13px" }}>🏆 Brand Value: <span style={{ color: "white" }}>{roiResult.revenue?.longTermBrandValue}</span></p>
-            <p style={{ color: "#4ade80", fontWeight: "bold", fontSize: "16px", margin: 0 }}>Total: {roiResult.revenue?.totalRevenue}</p>
+
+          {/* 3 SCENARIOS */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: "12px", marginBottom: "16px" }}>
+            {roiResult.scenarios && Object.entries(roiResult.scenarios).map(([scenario, data]) => (
+              <div key={scenario} style={{ background: scenario === "low" ? "#2d0000" : scenario === "base" ? "#1a1200" : "#0a1a0a", border: `1px solid ${scenario === "low" ? "#f87171" : scenario === "base" ? "#f59e0b" : "#4ade80"}`, borderRadius: "10px", padding: "16px" }}>
+                <p style={{ color: scenario === "low" ? "#f87171" : scenario === "base" ? "#f59e0b" : "#4ade80", fontWeight: "bold", margin: "0 0 8px", textTransform: "uppercase" }}>{scenario} Case</p>
+                <p style={{ color: "white", fontSize: "18px", fontWeight: "bold", margin: "0 0 4px" }}>{data.netROI}</p>
+                <p style={{ color: "#aaa", fontSize: "13px", margin: "0 0 4px" }}>ROI: {data.roiPercentage}</p>
+                <p style={{ color: "#aaa", fontSize: "13px", margin: "0 0 8px" }}>Revenue: {data.totalRevenue}</p>
+                <p style={{ color: "#666", fontSize: "12px", margin: "0" }}>Confidence: {data.confidence}</p>
+              </div>
+            ))}
           </div>
+
+          {/* KEY METRICS */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: "10px", marginBottom: "16px" }}>
+            {[
+              ["Payback Period", roiResult.paybackPeriod, "#f59e0b"],
+              ["Break-even Views", roiResult.breakEvenViews, "#38bdf8"],
+              ["Guest Monetization", roiResult.guestMonetizationScore, "#a78bfa"],
+              ["Sponsor Readiness", roiResult.sponsorReadinessScore, "#4ade80"],
+              ["Clip ROI Score", roiResult.clipROIScore, "#fb923c"],
+              ["Best Sponsor Cat.", roiResult.bestSponsorCategory, "#f472b6"],
+            ].map(([label, val, color]) => (
+              <div key={label} style={{ background: "#0d0900", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
+                <p style={{ color: color, fontWeight: "bold", fontSize: "16px", margin: "0 0 4px" }}>{val}</p>
+                <p style={{ color: "#666", fontSize: "12px", margin: "0" }}>{label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* SENSITIVITY */}
+          <div style={{ background: "#1a0a0a", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
+            <p style={{ color: "#f87171", fontWeight: "bold", margin: "0 0 8px" }}>⚠️ Sensitivity Warning</p>
+            <p style={{ color: "#ccc", fontSize: "13px", margin: "0" }}>{roiResult.sensitivityWarning}</p>
+          </div>
+
+          {/* IMPROVEMENT ACTIONS */}
+          <div style={{ background: "#0a1a0a", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
+            <p style={{ color: "#4ade80", fontWeight: "bold", margin: "0 0 8px" }}>🔧 Improvement Actions</p>
+            {roiResult.improvementActions?.map((a, i) => (
+              <p key={i} style={{ color: "#ccc", fontSize: "13px", margin: "0 0 6px" }}>• {a}</p>
+            ))}
+          </div>
+
+          {/* VERDICT */}
+          <div style={{ background: roiResult.verdict === "PROCEED" ? "#14532d" : roiResult.verdict === "OPTIMIZE" ? "#1c1c00" : "#2d1414", border: `1px solid ${roiResult.verdict === "PROCEED" ? "#4ade80" : roiResult.verdict === "OPTIMIZE" ? "#fcd34d" : "#f87171"}`, borderRadius: "10px", padding: "16px" }}>
+            <p style={{ color: roiResult.verdict === "PROCEED" ? "#4ade80" : roiResult.verdict === "OPTIMIZE" ? "#fcd34d" : "#f87171", fontWeight: "bold", fontSize: "22px", margin: "0 0 8px" }}>
+              {roiResult.verdict === "PROCEED" ? "✅" : roiResult.verdict === "OPTIMIZE" ? "⚠️" : "❌"} {roiResult.verdict} — Grade {roiResult.roiGrade}
+            </p>
+            <p style={{ color: "#ccc", fontSize: "14px", margin: "0" }}>{roiResult.verdictReason}</p>
+          </div>
+
+          <button onClick={() => { setRoiGuest(""); setRoiResult(null); setRoiGuestType(""); setRoiEpisodeObjective(""); setRoiExpectedViews("") }}
+            style={{ marginTop: "16px", padding: "10px 20px", borderRadius: "8px", background: "#1a1200", color: "#f59e0b", border: "1px solid #92400e", cursor: "pointer" }}>
+            🔄 New Calculation
+          </button>
         </div>
-        <div style={{ background: "#0d0d1a", border: "1px solid #f59e0b", borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "16px", marginBottom: "16px" }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "28px", fontWeight: "bold", color: "#4ade80" }}>{roiResult.netROI}</div>
-              <div style={{ color: "#888", fontSize: "12px" }}>Net ROI</div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "28px", fontWeight: "bold", color: "#f59e0b" }}>{roiResult.roiPercentage}</div>
-              <div style={{ color: "#888", fontSize: "12px" }}>ROI %</div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "28px", fontWeight: "bold", color: "#6c63ff" }}>{roiResult.roiGrade}</div>
-              <div style={{ color: "#888", fontSize: "12px" }}>Grade</div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "20px", fontWeight: "bold", color: roiResult.verdict === "WORTH IT" ? "#4ade80" : roiResult.verdict === "THINK TWICE" ? "#fcd34d" : "#ef4444" }}>{roiResult.verdict}</div>
-              <div style={{ color: "#888", fontSize: "12px" }}>Verdict</div>
-            </div>
-          </div>
-          <p style={{ color: "#ccc", margin: "0 0 8px", fontSize: "13px" }}>💡 {roiResult.verdictReason}</p>
-          <p style={{ color: "#aaa", margin: "0 0 4px", fontSize: "13px" }}>🎯 Best Sponsor Category: <span style={{ color: "#f59e0b" }}>{roiResult.bestSponsorCategory}</span></p>
-          <p style={{ color: "#aaa", margin: 0, fontSize: "13px" }}>⚖️ Break-even at: <span style={{ color: "#38bdf8" }}>{roiResult.breakEvenViews}</span></p>
-        </div>
-        <button onClick={() => { setRoiGuest(""); setRoiResult(null) }} style={{ padding: "10px 20px", borderRadius: "8px", background: "transparent", color: "#888", border: "1px solid #333", cursor: "pointer" }}>Clear</button>
       </div>
     )}
   </div>
