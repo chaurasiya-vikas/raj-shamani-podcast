@@ -130,6 +130,15 @@ const [sponsorMarket, setSponsorMarket] = useState("")
 const [sponsorCustomBrands, setSponsorCustomBrands] = useState("")
 const [sponsorExcluded, setSponsorExcluded] = useState([])
 const [sponsorSavedToPipeline, setSponsorSavedToPipeline] = useState(false)
+// Episode Performance Predictor V2
+const [perfGuestType, setPerfGuestType] = useState("")
+const [perfEpisodeGoal, setPerfEpisodeGoal] = useState("")
+const [perfAudienceSegment, setPerfAudienceSegment] = useState("")
+const [perfContentStyle, setPerfContentStyle] = useState("")
+const [perfSponsorAngle, setPerfSponsorAngle] = useState("")
+const [perfPriorityMetric, setPerfPriorityMetric] = useState("")
+const [perfTimeHorizon, setPerfTimeHorizon] = useState("")
+const [perfBenchmarkGuest, setPerfBenchmarkGuest] = useState("")
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
@@ -490,23 +499,83 @@ ONLY valid JSON. NO MARKDOWN.`, "availability_predictor")
 // — EPISODE PERFORMANCE PREDICTOR —
 const predictPerformance = async () => {
   if (!perfGuest.trim()) { alert("Please enter a guest name!"); return }
+  if (!perfGuestType) { alert("Please select guest type!"); return }
+  if (!perfEpisodeGoal) { alert("Please select episode goal!"); return }
+  if (!perfAudienceSegment) { alert("Please select audience segment!"); return }
+  if (!perfContentStyle) { alert("Please select content style!"); return }
+  if (!perfTimeHorizon) { alert("Please select time horizon!"); return }
   setPerfLoading(true); setPerfResult(null)
   try {
-    const text = await callOpenAI(`You are a YouTube podcast performance analyst for Indian creators. Predict episode performance if Raj Shamani interviews "${perfGuest}".
+    const benchmarkNote = perfBenchmarkGuest.trim()
+      ? `Benchmark against this past episode guest: ${perfBenchmarkGuest}.`
+      : "Benchmark against Raj Shamani's top 5 performing episodes."
+    const text = await callOpenAI(`You are a senior YouTube podcast performance strategist for "Figuring Out" by Raj Shamani. Raj's channel averages 2-5M views per episode. Audience is Indian, 18-35, entrepreneurship/finance/lifestyle focused.
 
-Return ONLY valid JSON:
+EPISODE CONTEXT:
+- Guest: ${perfGuest}
+- Guest Type: ${perfGuestType}
+- Episode Goal: ${perfEpisodeGoal}
+- Audience Segment: ${perfAudienceSegment}
+- Content Style: ${perfContentStyle}
+- Sponsor Angle: ${perfSponsorAngle || "Not specified"}
+- Priority Metric: ${perfPriorityMetric || "Overall performance"}
+- Time Horizon: ${perfTimeHorizon}
+- ${benchmarkNote}
+
+IMPORTANT: Every score must be unique and context-driven based on the guest and inputs above. Do NOT give generic scores. Reason each score specifically.
+
+Return ONLY valid JSON, NO markdown:
 {
   "guestName": "",
-  "predictedViews": "e.g. 1.2M",
-  "confidenceScore": "e.g. 82%",
-  "engagementRate": "e.g. 8.4%",
-  "avgWatchTime": "e.g. 14 mins",
-  "viralityChance": "Low / Medium / High",
-  "comparableGuests": ["guest1", "guest2"],
+  "episodeContext": "2 line summary of this specific episode opportunity",
+  "viewsForecast": {
+    "low": "e.g. 800K",
+    "mid": "e.g. 1.8M",
+    "high": "e.g. 3.2M",
+    "reasoning": "2 line specific reason based on guest type and theme"
+  },
+  "confidenceRange": {
+    "low": "e.g. 68%",
+    "high": "e.g. 84%",
+    "driver": "1 line on what drives confidence up or down"
+  },
+  "metrics": {
+    "engagementRate": {"score": "e.g. 8.2%", "reason": "1 line"},
+    "avgWatchTime": {"score": "e.g. 14 mins", "reason": "1 line"},
+    "shareabilityScore": {"score": "7.5/10", "reason": "1 line"},
+    "brandSafetyScore": {"score": "9/10", "reason": "1 line"},
+    "sponsorAttractiveness": {"score": "8/10", "reason": "1 line"},
+    "viralClipPotential": {"score": "High/Medium/Low", "reason": "1 line"},
+    "topicFreshnessScore": {"score": "7/10", "reason": "1 line"},
+    "creatorFitScore": {"score": "8.5/10", "reason": "1 line"},
+    "audienceRetentionRisk": {"score": "Low/Medium/High", "reason": "1 line"},
+    "guestNoveltyScore": {"score": "8/10", "reason": "1 line"}
+  },
+  "revenueEstimate": {
+    "youtubeAds": "e.g. ₹1.2-2.4L",
+    "sponsorDeal": "e.g. ₹5-12L",
+    "totalEstimate": "e.g. ₹6-15L",
+    "reasoning": "1 line"
+  },
+  "comparableEpisodes": [
+    {"guest": "", "views": "", "similarity": "1 line why similar"}
+  ],
+  "improvementActions": [
+    "Specific action 1 before recording",
+    "Specific action 2 for thumbnail/title",
+    "Specific action 3 for distribution"
+  ],
+  "publishStrategy": {
+    "bestDay": "e.g. Tuesday or Wednesday",
+    "bestTime": "e.g. 11AM IST",
+    "reasoning": "1 line"
+  },
   "topReasons": ["reason1", "reason2", "reason3"],
   "riskFactors": ["risk1", "risk2"],
-  "recommendation": "STRONG YES / YES / MAYBE / NO"
+  "finalVerdict": "PUBLISH NOW / REVISE FIRST / HOLD / STRONG YES",
+  "verdictReason": "2 line specific reasoning for the verdict"
 }
+
 ONLY valid JSON. NO MARKDOWN.`, "performance_predictor")
     const cleaned = text.replace(/```json|```/g, "").trim()
     setPerfResult(JSON.parse(cleaned))
@@ -1612,50 +1681,192 @@ Return ONLY the message text. No JSON. No labels.`)
     )}
   </div>
 )}
-        {/* EPISODE PERFORMANCE PREDICTOR VIEW */}
+{/* EPISODE PERFORMANCE PREDICTOR VIEW */}
 {view === "performance" && (
   <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
-    <h2 style={{ color: "#6c63ff", marginBottom: "8px" }}>📊 Episode Performance Predictor</h2>
-    <p style={{ color: "#888", marginBottom: "24px" }}>Predict views, engagement & watch time before booking a guest</p>
-    <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
-      <input value={perfGuest} onChange={e => setPerfGuest(e.target.value)} onKeyDown={e => e.key === "Enter" && predictPerformance()} placeholder="Enter guest name..." style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid #333", background: "#1a1a2e", color: "white", fontSize: "14px" }} />
-      <button onClick={predictPerformance} disabled={perfLoading} style={{ padding: "12px 24px", borderRadius: "8px", background: "#6c63ff", color: "white", border: "none", cursor: "pointer", fontSize: "14px" }}>{perfLoading ? "Predicting..." : "Predict"}</button>
+    <h2 style={{ color: "#6c63ff", marginBottom: "8px" }}>📊 Episode Performance Predictor V2</h2>
+    <p style={{ color: "#888", marginBottom: "24px" }}>Fill in episode context to get a deep forecast with reasoning and action plan.</p>
+
+    <div style={{ background: "#0e0e1a", border: "1px solid #3730a3", borderRadius: "12px", padding: "24px", marginBottom: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px" }}>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Guest Name *</label>
+          <input value={perfGuest} onChange={e => setPerfGuest(e.target.value)}
+            placeholder="e.g. Samay Raina"
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#1a1a2e", border: "1px solid #3730a3", color: "white", fontSize: "14px", boxSizing: "border-box" }} />
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Guest Type *</label>
+          <select value={perfGuestType} onChange={e => setPerfGuestType(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#1a1a2e", border: "1px solid #3730a3", color: "white", fontSize: "14px" }}>
+            <option value="">Select guest type</option>
+            <option>CEO / Founder</option>
+            <option>Creator / Comedian</option>
+            <option>Actor / Entertainer</option>
+            <option>Cricketer / Athlete</option>
+            <option>Politician / Bureaucrat</option>
+            <option>Domain Expert</option>
+            <option>Investor / VC</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Episode Goal *</label>
+          <select value={perfEpisodeGoal} onChange={e => setPerfEpisodeGoal(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#1a1a2e", border: "1px solid #3730a3", color: "white", fontSize: "14px" }}>
+            <option value="">Select goal</option>
+            <option>Maximum Views</option>
+            <option>Sponsor Attractiveness</option>
+            <option>Audience Growth</option>
+            <option>Clip Virality</option>
+            <option>Brand Building</option>
+            <option>Community Engagement</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Audience Segment *</label>
+          <select value={perfAudienceSegment} onChange={e => setPerfAudienceSegment(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#1a1a2e", border: "1px solid #3730a3", color: "white", fontSize: "14px" }}>
+            <option value="">Select audience</option>
+            <option>Students / College</option>
+            <option>Young Professionals</option>
+            <option>Founders / Entrepreneurs</option>
+            <option>Mass Entertainment</option>
+            <option>Investors / HNI</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Content Style *</label>
+          <select value={perfContentStyle} onChange={e => setPerfContentStyle(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#1a1a2e", border: "1px solid #3730a3", color: "white", fontSize: "14px" }}>
+            <option value="">Select style</option>
+            <option>Deep Interview</option>
+            <option>Conversational / Casual</option>
+            <option>Story-driven</option>
+            <option>Debate / Controversial</option>
+            <option>Educational / Masterclass</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Time Horizon *</label>
+          <select value={perfTimeHorizon} onChange={e => setPerfTimeHorizon(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#1a1a2e", border: "1px solid #3730a3", color: "white", fontSize: "14px" }}>
+            <option value="">Select horizon</option>
+            <option>7 days</option>
+            <option>30 days</option>
+            <option>90 days</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Sponsor Angle (optional)</label>
+          <input value={perfSponsorAngle} onChange={e => setPerfSponsorAngle(e.target.value)}
+            placeholder="e.g. Fintech, EdTech, D2C"
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#1a1a2e", border: "1px solid #3730a3", color: "white", fontSize: "14px", boxSizing: "border-box" }} />
+        </div>
+
+        <div>
+          <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Benchmark Guest (optional)</label>
+          <input value={perfBenchmarkGuest} onChange={e => setPerfBenchmarkGuest(e.target.value)}
+            placeholder="e.g. Nikhil Kamath"
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#1a1a2e", border: "1px solid #3730a3", color: "white", fontSize: "14px", boxSizing: "border-box" }} />
+        </div>
+
+      </div>
+
+      <button onClick={predictPerformance} disabled={perfLoading}
+        style={{ marginTop: "20px", width: "100%", padding: "14px", borderRadius: "8px", background: perfLoading ? "#333" : "linear-gradient(135deg,#3730a3,#6c63ff)", color: "white", fontWeight: "bold", fontSize: "16px", border: "none", cursor: "pointer" }}>
+        {perfLoading ? "🔍 Analyzing episode..." : "📊 Generate Performance Forecast"}
+      </button>
     </div>
+
     {perfResult && (
       <div>
-        <div style={{ background: "#1a0533", border: "1px solid #6c63ff", borderRadius: "12px", padding: "24px", marginBottom: "16px" }}>
-          <h3 style={{ color: "#6c63ff", margin: "0 0 16px" }}>{perfResult.guestName}</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "16px", marginBottom: "16px" }}>
-            <div style={{ background: "#0d0d1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
-              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#4ade80" }}>{perfResult.predictedViews}</div>
-              <div style={{ color: "#888", fontSize: "12px" }}>Predicted Views</div>
+        <div style={{ background: "#0e0e1a", border: "1px solid #3730a3", borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+          <h3 style={{ color: "#6c63ff", margin: "0 0 8px" }}>{perfResult.guestName}</h3>
+          <p style={{ color: "#ccc", margin: "0 0 16px" }}>{perfResult.episodeContext}</p>
+
+          <div style={{ background: "#1a1a2e", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
+            <p style={{ color: "#6c63ff", fontWeight: "bold", margin: "0 0 10px" }}>📈 Views Forecast</p>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              <span style={{ color: "#f87171" }}>Low: {perfResult.viewsForecast?.low}</span>
+              <span style={{ color: "#fcd34d" }}>Mid: {perfResult.viewsForecast?.mid}</span>
+              <span style={{ color: "#4ade80" }}>High: {perfResult.viewsForecast?.high}</span>
             </div>
-            <div style={{ background: "#0d0d1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
-              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#fcd34d" }}>{perfResult.confidenceScore}</div>
-              <div style={{ color: "#888", fontSize: "12px" }}>Confidence</div>
-            </div>
-            <div style={{ background: "#0d0d1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
-              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#38bdf8" }}>{perfResult.engagementRate}</div>
-              <div style={{ color: "#888", fontSize: "12px" }}>Engagement Rate</div>
-            </div>
-            <div style={{ background: "#0d0d1a", borderRadius: "8px", padding: "16px", textAlign: "center" }}>
-              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#f472b6" }}>{perfResult.avgWatchTime}</div>
-              <div style={{ color: "#888", fontSize: "12px" }}>Avg Watch Time</div>
-            </div>
+            <p style={{ color: "#aaa", fontSize: "13px", margin: "8px 0 0" }}>{perfResult.viewsForecast?.reasoning}</p>
           </div>
-          <p style={{ color: "#aaa", margin: "0 0 8px" }}>🔥 Virality: <span style={{ color: "#fcd34d", fontWeight: "bold" }}>{perfResult.viralityChance}</span></p>
-          <p style={{ color: "#aaa", margin: "0 0 16px" }}>✅ Recommendation: <span style={{ color: "#4ade80", fontWeight: "bold" }}>{perfResult.recommendation}</span></p>
-          <div style={{ marginBottom: "12px" }}>
-            <p style={{ color: "#6c63ff", fontWeight: "bold", margin: "0 0 6px" }}>📈 Top Reasons:</p>
-            {perfResult.topReasons?.map((r, i) => <p key={i} style={{ color: "#ccc", margin: "0 0 4px", fontSize: "13px" }}>• {r}</p>)}
+
+          <div style={{ background: "#1a1a2e", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
+            <p style={{ color: "#6c63ff", fontWeight: "bold", margin: "0 0 10px" }}>🎯 Confidence Range</p>
+            <p style={{ color: "#4ade80", fontSize: "20px", fontWeight: "bold", margin: "0 0 4px" }}>{perfResult.confidenceRange?.low} — {perfResult.confidenceRange?.high}</p>
+            <p style={{ color: "#aaa", fontSize: "13px", margin: "0" }}>{perfResult.confidenceRange?.driver}</p>
           </div>
-          <div style={{ marginBottom: "12px" }}>
-            <p style={{ color: "#f87171", fontWeight: "bold", margin: "0 0 6px" }}>⚠️ Risk Factors:</p>
-            {perfResult.riskFactors?.map((r, i) => <p key={i} style={{ color: "#ccc", margin: "0 0 4px", fontSize: "13px" }}>• {r}</p>)}
+
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2,1fr)", gap: "10px", marginBottom: "16px" }}>
+            {perfResult.metrics && Object.entries(perfResult.metrics).map(([key, val]) => (
+              <div key={key} style={{ background: "#1a1a2e", borderRadius: "8px", padding: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                  <span style={{ color: "#aaa", fontSize: "12px" }}>{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                  <span style={{ color: "#6c63ff", fontWeight: "bold", fontSize: "13px" }}>{val.score}</span>
+                </div>
+                <p style={{ color: "#666", fontSize: "12px", margin: "0" }}>{val.reason}</p>
+              </div>
+            ))}
           </div>
-          <p style={{ color: "#aaa", margin: "0" }}>🎙️ Comparable Guests: <span style={{ color: "#38bdf8" }}>{perfResult.comparableGuests?.join(", ")}</span></p>
+
+          <div style={{ background: "#1a1a2e", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
+            <p style={{ color: "#6c63ff", fontWeight: "bold", margin: "0 0 10px" }}>💰 Revenue Estimate</p>
+            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+              <span style={{ color: "#ccc", fontSize: "13px" }}>YT Ads: {perfResult.revenueEstimate?.youtubeAds}</span>
+              <span style={{ color: "#ccc", fontSize: "13px" }}>Sponsor: {perfResult.revenueEstimate?.sponsorDeal}</span>
+              <span style={{ color: "#4ade80", fontWeight: "bold" }}>Total: {perfResult.revenueEstimate?.totalEstimate}</span>
+            </div>
+            <p style={{ color: "#aaa", fontSize: "13px", margin: "8px 0 0" }}>{perfResult.revenueEstimate?.reasoning}</p>
+          </div>
+
+          {perfResult.comparableEpisodes && (
+            <div style={{ background: "#1a1a2e", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
+              <p style={{ color: "#6c63ff", fontWeight: "bold", margin: "0 0 10px" }}>📋 Comparable Episodes</p>
+              {perfResult.comparableEpisodes.map((ep, i) => (
+                <div key={i} style={{ marginBottom: "8px" }}>
+                  <span style={{ color: "#fcd34d", fontWeight: "bold" }}>{ep.guest}</span>
+                  <span style={{ color: "#4ade80", marginLeft: "10px" }}>{ep.views}</span>
+                  <p style={{ color: "#888", fontSize: "12px", margin: "2px 0 0" }}>{ep.similarity}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ background: "#1a1a2e", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
+            <p style={{ color: "#6c63ff", fontWeight: "bold", margin: "0 0 10px" }}>🔧 Improvement Actions</p>
+            {perfResult.improvementActions?.map((a, i) => (
+              <p key={i} style={{ color: "#ccc", fontSize: "13px", margin: "0 0 6px" }}>• {a}</p>
+            ))}
+          </div>
+
+          <div style={{ background: "#1a1a2e", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
+            <p style={{ color: "#6c63ff", fontWeight: "bold", margin: "0 0 8px" }}>📅 Publish Strategy</p>
+            <p style={{ color: "#4ade80", margin: "0 0 4px" }}>Best Day: {perfResult.publishStrategy?.bestDay} at {perfResult.publishStrategy?.bestTime}</p>
+            <p style={{ color: "#aaa", fontSize: "13px", margin: "0" }}>{perfResult.publishStrategy?.reasoning}</p>
+          </div>
+
+          <div style={{ background: perfResult.finalVerdict === "PUBLISH NOW" || perfResult.finalVerdict === "STRONG YES" ? "#14532d" : perfResult.finalVerdict === "REVISE FIRST" ? "#1c1c00" : "#2d1414", border: `1px solid ${perfResult.finalVerdict === "PUBLISH NOW" || perfResult.finalVerdict === "STRONG YES" ? "#4ade80" : perfResult.finalVerdict === "REVISE FIRST" ? "#fcd34d" : "#f87171"}`, borderRadius: "10px", padding: "16px" }}>
+            <p style={{ color: perfResult.finalVerdict === "PUBLISH NOW" || perfResult.finalVerdict === "STRONG YES" ? "#4ade80" : perfResult.finalVerdict === "REVISE FIRST" ? "#fcd34d" : "#f87171", fontWeight: "bold", fontSize: "20px", margin: "0 0 8px" }}>
+              {perfResult.finalVerdict === "PUBLISH NOW" || perfResult.finalVerdict === "STRONG YES" ? "✅" : perfResult.finalVerdict === "REVISE FIRST" ? "⚠️" : "❌"} {perfResult.finalVerdict}
+            </p>
+            <p style={{ color: "#ccc", margin: "0", fontSize: "14px" }}>{perfResult.verdictReason}</p>
+          </div>
+
+          <button onClick={() => { setPerfGuest(""); setPerfResult(null); setPerfGuestType(""); setPerfEpisodeGoal(""); setPerfAudienceSegment(""); setPerfContentStyle(""); setPerfTimeHorizon("") }}
+            style={{ marginTop: "16px", padding: "10px 20px", borderRadius: "8px", background: "#1a1a2e", color: "#6c63ff", border: "1px solid #3730a3", cursor: "pointer" }}>
+            🔄 New Prediction
+          </button>
         </div>
-        <button onClick={() => { setPerfGuest(""); setPerfResult(null) }} style={{ padding: "10px 20px", borderRadius: "8px", background: "transparent", color: "#888", border: "1px solid #333", cursor: "pointer" }}>Clear</button>
       </div>
     )}
   </div>
