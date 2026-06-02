@@ -1129,7 +1129,7 @@ ONLY valid JSON. NO MARKDOWN.`)
 
   const generateResearch = async (guest) => {
     if (!apiKey) return
-    setIntelGuest(true)
+    setIntelLoading(true)
     setintelGuest(guest)
     setShowIntel(true)
     setIntelData(null)
