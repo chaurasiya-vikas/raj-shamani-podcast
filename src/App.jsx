@@ -81,6 +81,8 @@ function App() {
   const [showTitles, setShowTitles] = useState(false)
   const [brief, setBrief] = useState("")
   const [loadingBrief, setLoadingBrief] = useState(false)
+  const [showBrief, setShowBrief] = useState(false)
+const [briefGuest, setBriefGuest] = useState(null)
   const [intelGuest, setintelGuest] = useState(null)
   const [showIntel, setShowIntel] = useState(false)
   const [intelData, setIntelData] = useState(null)
