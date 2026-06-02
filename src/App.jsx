@@ -478,7 +478,7 @@ ONLY valid JSON. NO MARKDOWN.`)
   const fetchCompetitors = async () => {
     setLoadingCompetitors(true); setCompetitors([])
     try {
-      const text = await callOpenAI(`You are a competitive intelligence analyst for Raj Shamani's podcast "Figuring Out".
+      const text = await callOpenAI("You are a competitive intelligence analyst for Raj Shamani's podcast. Analyze these 6 competitors: Nikhil Kamath, Ankur Warikoo, Ranveer Allahbadia, Sharan Hegde, Prakhar Ke Pravachan, Think School. Return ONLY valid JSON array of 6 objects with these fields: host, positioning, audienceType, momentumScore (1-10), momentumTrend (Rising/Stable/Declining), contentPillars (array of 3), mainFormats (array of 2), guestDiversity, sponsorThemes (array of 2), recentGuests (array of 3 with name/category/performance), betterThanRaj, weakerThanRaj, topicGaps (array of 2), guestGaps (array of 2). NO MARKDOWN.", "competitor_intel")
       const cleaned = text.replace(/```json|```/g, "").trim()
       setCompetitors(JSON.parse(cleaned))
     } catch (e) { alert("Error: " + e.message) }
