@@ -116,8 +116,16 @@ const [selectedGap, setSelectedGap] = useState(null)
   const [loadingSentiment, setLoadingSentiment] = useState(false)
   // Availability Predictor
   const [availabilityGuest, setAvailabilityGuest] = useState("")
-  const [availabilityResult, setAvailabilityResult] = useState(null)
-  const [loadingAvailability, setLoadingAvailability] = useState(false)
+const [availabilityCategory, setAvailabilityCategory] = useState("Founder")
+const [availabilityRegion, setAvailabilityRegion] = useState("India")
+const [availabilityPriority, setAvailabilityPriority] = useState("High")
+const [availabilityPurpose, setAvailabilityPurpose] = useState("First Episode")
+const [availabilityContact, setAvailabilityContact] = useState("First Contact")
+const [availabilitySpeed, setAvailabilitySpeed] = useState("Quality")
+const [availabilityWarmIntro, setAvailabilityWarmIntro] = useState("No")
+const [availabilityContactType, setAvailabilityContactType] = useState("Direct")
+const [availabilityResult, setAvailabilityResult] = useState(null)
+const [loadingAvailability, setLoadingAvailability] = useState(false)
   // Sponsor Matchmaker
   const [sponsorGuest, setSponsorGuest] = useState("")
   const [sponsorResult, setSponsorResult] = useState(null)
@@ -550,43 +558,68 @@ ONLY valid JSON. NO MARKDOWN.`, "sentiment_analyzer")
     setLoadingSentiment(false)
   }
 
-  // ─── AVAILABILITY PREDICTOR ───────────────────────────────────────────────
-  const predictAvailability = async () => {
-    if (!availabilityGuest.trim()) { alert("Please enter a guest name!"); return }
-    if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
-    setLoadingAvailability(true); setAvailabilityResult(null)
-    try {
-      const text = await callOpenAI(`You are a talent booking analyst for Indian podcasts. Predict the availability and reachability of "${availabilityGuest}" for "Figuring Out With Raj Shamani" podcast.
-
-Analyse based on: their known schedule patterns, how frequently they appear on podcasts, what motivates them to say yes, who manages them, best outreach timing, and historical patterns of similar guests.
-
-Today is ${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+  // ─── AVAILABILITY PREDICTOR ──────
+  // ──────────────const predictAvailability = async () => {
+  if (!availabilityGuest.trim()) { alert("Please enter a guest name!"); return }
+  setLoadingAvailability(true); setAvailabilityResult(null)
+  try {
+    const text = await callOpenAI(`You are an enterprise podcast booking strategist for Raj Shamani's "Figuring Out".
+Guest: ${availabilityGuest}
+Category: ${availabilityCategory}
+Region/Timezone: ${availabilityRegion}
+Priority: ${availabilityPriority}
+Purpose: ${availabilityPurpose}
+Contact Stage: ${availabilityContact}
+Booking Speed: ${availabilitySpeed}
+Warm Intro Available: ${availabilityWarmIntro}
+Preferred Contact Type: ${availabilityContactType}
 
 Return ONLY valid JSON:
 {
-  "name": "",
-  "availabilityScore": 1-10,
-  "availabilityLabel": "Very Easy / Easy / Moderate / Hard / Very Hard",
-  "bestMonthToReach": "e.g. July-August 2025",
-  "bestDayOfWeek": "e.g. Tuesday or Wednesday",
-  "bestTimeOfDay": "e.g. Morning 10-11am",
-  "podcastFrequency": "How often they do podcasts — e.g. Monthly / Rarely / Frequently",
-  "lastKnownPodcast": "Name of last podcast they appeared on (if known)",
-  "typicalResponseTime": "e.g. 1-2 weeks / 1 month / Unpredictable",
-  "whoToContact": "e.g. Direct DM on Instagram / Manager / PR Agency / LinkedIn",
-  "motivators": ["list 3 things that would make them say YES to Raj's show"],
-  "dealBreakers": ["list 2-3 things that might make them say NO"],
-  "bookingDifficulty": "Low / Medium / High",
-  "suggestedApproach": "2-3 line specific outreach strategy for Raj's team",
-  "windowAlert": "Any upcoming window when they might be MORE available — e.g. post book launch, off-season, etc.",
-  "confidenceLevel": "Low / Medium / High — how confident this prediction is"
+  "bookingProbability": 0-100,
+  "bookingProbabilityLabel": "Very High / High / Moderate / Low / Very Low",
+  "confidenceBand": "e.g. 65-80%",
+  "bestMonth": "e.g. August-September",
+  "bestWeek": "e.g. First or second week",
+  "bestDay": "e.g. Tuesday or Wednesday",
+  "bestTime": "e.g. 10am-12pm IST",
+  "timezone": "e.g. IST / EST",
+  "channels": [
+    { "name": "Email", "responseRate": 0-100, "notes": "why" },
+    { "name": "WhatsApp", "responseRate": 0-100, "notes": "why" },
+    { "name": "Instagram DM", "responseRate": 0-100, "notes": "why" },
+    { "name": "LinkedIn", "responseRate": 0-100, "notes": "why" }
+  ],
+  "bestChannel": "single best channel name",
+  "contactPerson": "e.g. Manager / PR Agency / Direct / Assistant",
+  "warmIntroAdvantage": "how much warm intro helps in this case",
+  "objections": [
+    { "objection": "likely objection", "handle": "how to handle it" },
+    { "objection": "likely objection", "handle": "how to handle it" },
+    { "objection": "likely objection", "handle": "how to handle it" }
+  ],
+  "messageAngle": "what to lead with in outreach message",
+  "messageAvoid": "what to avoid saying",
+  "followUpSequence": [
+    { "day": "Day 1", "action": "specific action", "channel": "channel name" },
+    { "day": "Day 4", "action": "specific action", "channel": "channel name" },
+    { "day": "Day 10", "action": "specific action", "channel": "channel name" },
+    { "day": "Day 21", "action": "specific action", "channel": "channel name" }
+  ],
+  "bestPathToYes": "single most strategic recommendation",
+  "contactabilityScore": 0-10,
+  "responsivenessScore": 0-10,
+  "schedulingEaseScore": 0-10,
+  "reputationBarrier": 0-10,
+  "relevanceScore": 0-10,
+  "confidenceExplanation": "2-3 lines explaining why this prediction"
 }
 ONLY valid JSON. NO MARKDOWN.`, "availability_predictor")
-      const cleaned = text.replace(/```json|```/g, "").trim()
-      setAvailabilityResult(JSON.parse(cleaned))
-    } catch (e) { alert("Error: " + e.message) }
-    setLoadingAvailability(false)
-  }
+    const cleaned = text.replace(/```json|```/g, "").trim()
+    setAvailabilityResult(JSON.parse(cleaned))
+  } catch (e) { alert("Error: " + e.message) }
+  setLoadingAvailability(false)
+}───────────────────────────
 // — EPISODE PERFORMANCE PREDICTOR —
 const predictPerformance = async () => {
   if (!perfGuest.trim()) { alert("Please enter a guest name!"); return }
@@ -1736,128 +1769,157 @@ Return ONLY the message text. No JSON. No labels.`)
 
         {/* AVAILABILITY PREDICTOR VIEW */}
         {view === "availability" && (
-          <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-            <div style={{ marginBottom: "24px" }}>
-              <h2 style={{ margin: "0 0 4px", color: "#fcd34d" }}>🗓️ Guest Availability Predictor</h2>
-              <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>Predict when and how to reach any guest — based on their patterns, schedule & motivation</p>
+<div style={{ padding: "24px", maxWidth: "1100px", margin: "0 auto" }}>
+  <h2 style={{ color: "#fcd34d", marginBottom: "8px" }}>📅 Guest Availability Predictor V2</h2>
+  <p style={{ color: "#888", marginBottom: "24px" }}>Enterprise booking strategy engine — know when, how, and who to contact.</p>
+  <div style={{ background: "#1a1a2e", border: "1px solid #fcd34d33", borderRadius: "12px", padding: "24px", marginBottom: "24px" }}>
+    <h3 style={{ color: "#fcd34d", marginBottom: "16px" }}>⚙️ Guest Details</h3>
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "16px" }}>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Guest Name *</label>
+        <input value={availabilityGuest} onChange={e => setAvailabilityGuest(e.target.value)} placeholder="e.g. Deepinder Goyal" style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333", boxSizing: "border-box" }} />
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Guest Category</label>
+        <select value={availabilityCategory} onChange={e => setAvailabilityCategory(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+          {["Founder", "Investor", "Celebrity", "Politician", "Author", "Domain Expert", "Athlete", "Artist"].map(o => <option key={o}>{o}</option>)}
+        </select>
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Region / Timezone</label>
+        <select value={availabilityRegion} onChange={e => setAvailabilityRegion(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+          {["India (IST)", "USA (EST)", "USA (PST)", "UK (GMT)", "UAE (GST)", "Singapore (SGT)", "Europe (CET)"].map(o => <option key={o}>{o}</option>)}
+        </select>
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Priority Level</label>
+        <select value={availabilityPriority} onChange={e => setAvailabilityPriority(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+          {["High", "Medium", "Low"].map(o => <option key={o}>{o}</option>)}
+        </select>
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Purpose</label>
+        <select value={availabilityPurpose} onChange={e => setAvailabilityPurpose(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+          {["First Episode", "Repeat Guest", "Collaboration", "Sponsored Episode"].map(o => <option key={o}>{o}</option>)}
+        </select>
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Contact Stage</label>
+        <select value={availabilityContact} onChange={e => setAvailabilityContact(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+          {["First Contact", "Follow-up", "Re-engagement"].map(o => <option key={o}>{o}</option>)}
+        </select>
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Booking Speed</label>
+        <select value={availabilitySpeed} onChange={e => setAvailabilitySpeed(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+          {["Fast", "Quality"].map(o => <option key={o}>{o}</option>)}
+        </select>
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Warm Intro Available?</label>
+        <select value={availabilityWarmIntro} onChange={e => setAvailabilityWarmIntro(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+          {["Yes", "No"].map(o => <option key={o}>{o}</option>)}
+        </select>
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Contact Via</label>
+        <select value={availabilityContactType} onChange={e => setAvailabilityContactType(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+          {["Direct", "Manager", "PR Agency", "Agent", "Assistant"].map(o => <option key={o}>{o}</option>)}
+        </select>
+      </div>
+    </div>
+    <button onClick={predictAvailability} disabled={loadingAvailability || !availabilityGuest} style={{ marginTop: "20px", padding: "12px 32px", borderRadius: "8px", background: "#fcd34d", color: "#000", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}>
+      {loadingAvailability ? "🔄 Analyzing..." : "📅 Generate Booking Strategy"}
+    </button>
+  </div>
+  {availabilityResult && (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+        <div style={{ background: "#1a1a2e", border: "1px solid #fcd34d", borderRadius: "12px", padding: "20px", textAlign: "center" }}>
+          <div style={{ fontSize: "48px", fontWeight: "bold", color: "#fcd34d" }}>{availabilityResult.bookingProbability}%</div>
+          <div style={{ color: "#fcd34d", fontWeight: "bold", marginBottom: "4px" }}>{availabilityResult.bookingProbabilityLabel}</div>
+          <div style={{ color: "#888", fontSize: "12px" }}>Confidence Band: {availabilityResult.confidenceBand}</div>
+        </div>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#fcd34d", marginBottom: "12px" }}>📅 Best Outreach Window</h4>
+          <p style={{ color: "#ccc", fontSize: "13px", marginBottom: "4px" }}>📆 {availabilityResult.bestMonth}</p>
+          <p style={{ color: "#ccc", fontSize: "13px", marginBottom: "4px" }}>📅 {availabilityResult.bestWeek}</p>
+          <p style={{ color: "#ccc", fontSize: "13px", marginBottom: "4px" }}>📌 {availabilityResult.bestDay}</p>
+          <p style={{ color: "#ccc", fontSize: "13px" }}>⏰ {availabilityResult.bestTime} ({availabilityResult.timezone})</p>
+        </div>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#fcd34d", marginBottom: "12px" }}>📊 Scores</h4>
+          {[["Contactability", availabilityResult.contactabilityScore], ["Responsiveness", availabilityResult.responsivenessScore], ["Scheduling Ease", availabilityResult.schedulingEaseScore], ["Relevance", availabilityResult.relevanceScore]].map(([label, score]) => (
+            <div key={label} style={{ marginBottom: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#ccc", marginBottom: "3px" }}><span>{label}</span><span>{score}/10</span></div>
+              <div style={{ background: "#333", borderRadius: "4px", height: "6px" }}><div style={{ width: `${score * 10}%`, background: "#fcd34d", borderRadius: "4px", height: "6px" }} /></div>
             </div>
-            <div style={{ background: "#111827", borderRadius: "12px", padding: "20px", border: "1px solid #92400e", marginBottom: "20px" }}>
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                <input
-                  placeholder="Enter guest name — e.g. Deepinder Goyal, Faye D'Souza..."
-                  value={availabilityGuest}
-                  onChange={e => setAvailabilityGuest(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && predictAvailability()}
-                  style={{ flex: 1, minWidth: "220px", padding: "12px 16px", borderRadius: "8px", background: "#1f2937", color: "#fff", border: "1px solid #374151", fontSize: "14px", outline: "none" }}
-                />
-                <button onClick={predictAvailability} disabled={loadingAvailability || !availabilityGuest.trim()}
-                  style={{ padding: "12px 24px", borderRadius: "8px", background: availabilityGuest.trim() ? "linear-gradient(135deg,#78350f,#92400e)" : "#1f2937", color: availabilityGuest.trim() ? "#fcd34d" : "#4b5563", border: "none", cursor: availabilityGuest.trim() ? "pointer" : "not-allowed", fontSize: "14px", fontWeight: "bold", whiteSpace: "nowrap" }}>
-                  {loadingAvailability ? "⏳ Predicting..." : "🔮 Predict Availability"}
-                </button>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#fcd34d", marginBottom: "12px" }}>📱 Channel Comparison</h4>
+          {availabilityResult.channels?.map((ch, i) => (
+            <div key={i} style={{ marginBottom: "10px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: ch.name === availabilityResult.bestChannel ? "#fcd34d" : "#ccc", marginBottom: "3px" }}>
+                <span>{ch.name === availabilityResult.bestChannel ? "⭐ " : ""}{ch.name}</span><span>{ch.responseRate}%</span>
               </div>
+              <div style={{ background: "#333", borderRadius: "4px", height: "6px" }}><div style={{ width: `${ch.responseRate}%`, background: ch.name === availabilityResult.bestChannel ? "#fcd34d" : "#555", borderRadius: "4px", height: "6px" }} /></div>
+              <p style={{ color: "#666", fontSize: "11px", marginTop: "2px" }}>{ch.notes}</p>
             </div>
-
-            {loadingAvailability && (
-              <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>
-                <div style={{ fontSize: "40px", marginBottom: "16px" }}>🔮</div>
-                <p>Analyzing availability patterns for {availabilityGuest}...</p>
-              </div>
-            )}
-
-            {availabilityResult && (
+          ))}
+        </div>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#fcd34d", marginBottom: "12px" }}>🧱 Likely Objections</h4>
+          {availabilityResult.objections?.map((o, i) => (
+            <div key={i} style={{ marginBottom: "12px", borderBottom: "1px solid #222", paddingBottom: "10px" }}>
+              <p style={{ color: "#ef4444", fontSize: "13px", marginBottom: "4px" }}>❌ {o.objection}</p>
+              <p style={{ color: "#22c55e", fontSize: "12px" }}>✅ {o.handle}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#fcd34d", marginBottom: "12px" }}>💬 Message Strategy</h4>
+          <p style={{ color: "#888", fontSize: "12px", marginBottom: "4px" }}>LEAD WITH:</p>
+          <p style={{ color: "#ccc", fontSize: "13px", marginBottom: "12px" }}>{availabilityResult.messageAngle}</p>
+          <p style={{ color: "#888", fontSize: "12px", marginBottom: "4px" }}>AVOID:</p>
+          <p style={{ color: "#ef4444", fontSize: "13px", marginBottom: "12px" }}>{availabilityResult.messageAvoid}</p>
+          <p style={{ color: "#888", fontSize: "12px", marginBottom: "4px" }}>CONTACT VIA:</p>
+          <p style={{ color: "#ccc", fontSize: "13px" }}>{availabilityResult.contactPerson}</p>
+          {availabilityWarmIntro === "Yes" && <p style={{ color: "#22c55e", fontSize: "12px", marginTop: "8px" }}>🤝 {availabilityResult.warmIntroAdvantage}</p>}
+        </div>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#fcd34d", marginBottom: "12px" }}>🔄 Follow-up Sequence</h4>
+          {availabilityResult.followUpSequence?.map((step, i) => (
+            <div key={i} style={{ display: "flex", gap: "12px", marginBottom: "12px", alignItems: "flex-start" }}>
+              <span style={{ background: "#fcd34d20", color: "#fcd34d", padding: "2px 8px", borderRadius: "4px", fontSize: "11px", whiteSpace: "nowrap" }}>{step.day}</span>
               <div>
-                {/* Header */}
-                <div style={{ background: "#0d1117", borderRadius: "12px", padding: "20px", border: `1px solid ${availabilityColor(availabilityResult.availabilityLabel)}44`, marginBottom: "16px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
-                    <div>
-                      <h3 style={{ margin: "0 0 8px", fontSize: "20px", color: "#fff" }}>{availabilityResult.name}</h3>
-                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                        <span style={{ fontSize: "13px", fontWeight: "bold", padding: "3px 12px", borderRadius: "20px", background: availabilityColor(availabilityResult.availabilityLabel) + "22", color: availabilityColor(availabilityResult.availabilityLabel), border: `1px solid ${availabilityColor(availabilityResult.availabilityLabel)}44` }}>
-                          {availabilityResult.availabilityLabel}
-                        </span>
-                        <span style={{ fontSize: "13px", padding: "3px 12px", borderRadius: "20px", background: availabilityResult.bookingDifficulty === "Low" ? "#14532d" : availabilityResult.bookingDifficulty === "High" ? "#7f1d1d" : "#78350f", color: availabilityResult.bookingDifficulty === "Low" ? "#4ade80" : availabilityResult.bookingDifficulty === "High" ? "#f87171" : "#fbbf24" }}>
-                          {availabilityResult.bookingDifficulty} Difficulty
-                        </span>
-                        <span style={{ fontSize: "11px", padding: "2px 10px", borderRadius: "20px", background: "#1f2937", color: "#9ca3af" }}>
-                          Confidence: {availabilityResult.confidenceLevel}
-                        </span>
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: "40px", fontWeight: "bold", color: availabilityColor(availabilityResult.availabilityLabel) }}>{availabilityResult.availabilityScore}/10</div>
-                      <div style={{ fontSize: "11px", color: "#555" }}>Availability Score</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Best Times */}
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "10px", marginBottom: "16px" }}>
-                  {[
-                    { label: "Best Month", value: availabilityResult.bestMonthToReach, icon: "📅" },
-                    { label: "Best Day", value: availabilityResult.bestDayOfWeek, icon: "📆" },
-                    { label: "Best Time", value: availabilityResult.bestTimeOfDay, icon: "⏰" },
-                    { label: "Response Time", value: availabilityResult.typicalResponseTime, icon: "📬" }
-                  ].map((item, idx) => (
-                    <div key={idx} style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #1f2937", textAlign: "center" }}>
-                      <div style={{ fontSize: "20px", marginBottom: "4px" }}>{item.icon}</div>
-                      <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "4px" }}>{item.label}</div>
-                      <div style={{ fontSize: "12px", color: "#fcd34d", lineHeight: "1.4", fontWeight: "bold" }}>{item.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Contact & Approach */}
-                <div style={{ background: "#0d1a1a", borderRadius: "10px", padding: "16px", border: "1px solid #065f46", marginBottom: "12px" }}>
-                  <div style={{ fontSize: "11px", color: "#34d399", fontWeight: "bold", marginBottom: "8px" }}>📲 HOW TO CONTACT</div>
-                  <div style={{ fontSize: "13px", color: "#fcd34d", fontWeight: "bold", marginBottom: "10px" }}>{availabilityResult.whoToContact}</div>
-                  <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "6px" }}>🎯 SUGGESTED APPROACH</div>
-                  <div style={{ fontSize: "13px", color: "#d1d5db", lineHeight: "1.6" }}>{availabilityResult.suggestedApproach}</div>
-                </div>
-
-                {/* Podcast Frequency */}
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
-                  <div style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #1f2937" }}>
-                    <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "6px" }}>🎙️ PODCAST FREQUENCY</div>
-                    <div style={{ fontSize: "13px", color: "#c084fc" }}>{availabilityResult.podcastFrequency}</div>
-                    {availabilityResult.lastKnownPodcast && <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px" }}>Last seen on: {availabilityResult.lastKnownPodcast}</div>}
-                  </div>
-                  {availabilityResult.windowAlert && (
-                    <div style={{ background: "#0d1a0d", borderRadius: "10px", padding: "14px", border: "1px solid #166534" }}>
-                      <div style={{ fontSize: "11px", color: "#4ade80", fontWeight: "bold", marginBottom: "6px" }}>🚨 OPPORTUNITY WINDOW</div>
-                      <div style={{ fontSize: "13px", color: "#86efac", lineHeight: "1.5" }}>{availabilityResult.windowAlert}</div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Motivators & Deal Breakers */}
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-                  <div style={{ background: "#0d1f0d", borderRadius: "10px", padding: "16px", border: "1px solid #166534" }}>
-                    <div style={{ fontSize: "11px", color: "#4ade80", fontWeight: "bold", marginBottom: "10px" }}>✅ WHAT WILL MAKE THEM SAY YES</div>
-                    {availabilityResult.motivators && availabilityResult.motivators.map((m, mi) => (
-                      <div key={mi} style={{ display: "flex", gap: "8px", marginBottom: "6px", fontSize: "12px", color: "#d1d5db" }}>
-                        <span style={{ color: "#4ade80" }}>▸</span> {m}
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ background: "#1a0a0a", borderRadius: "10px", padding: "16px", border: "1px solid #7f1d1d" }}>
-                    <div style={{ fontSize: "11px", color: "#f87171", fontWeight: "bold", marginBottom: "10px" }}>🚫 WHAT MIGHT MAKE THEM SAY NO</div>
-                    {availabilityResult.dealBreakers && availabilityResult.dealBreakers.map((d, di) => (
-                      <div key={di} style={{ display: "flex", gap: "8px", marginBottom: "6px", fontSize: "12px", color: "#fca5a5" }}>
-                        <span style={{ color: "#f87171" }}>▸</span> {d}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  <button onClick={() => { setAvailabilityGuest(""); setAvailabilityResult(null) }} style={{ padding: "10px 20px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "13px" }}>🔄 Check Another Guest</button>
-                  <button onClick={() => { setSentimentGuest(availabilityResult.name); setView("sentiment") }} style={{ padding: "10px 20px", borderRadius: "8px", background: "#0f3320", color: "#34d399", border: "1px solid #065f46", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>📊 Check Sentiment →</button>
-                  <button onClick={() => generateOutreach({ name: availabilityResult.name, category: "Guest", whyNow: availabilityResult.suggestedApproach, topicAngle: "" })} style={{ padding: "10px 20px", borderRadius: "8px", background: "#1a2e1a", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>✉️ Generate Outreach Email</button>
-                </div>
+                <p style={{ color: "#ccc", fontSize: "12px", marginBottom: "2px" }}>{step.action}</p>
+                <p style={{ color: "#888", fontSize: "11px" }}>via {step.channel}</p>
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ background: "#1a1a2e", border: "2px solid #fcd34d", borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+        <h4 style={{ color: "#fcd34d", marginBottom: "8px" }}>🏆 Best Path to Yes</h4>
+        <p style={{ color: "#fff", fontSize: "14px", lineHeight: "1.6" }}>{availabilityResult.bestPathToYes}</p>
+      </div>
+      <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+        <h4 style={{ color: "#fcd34d", marginBottom: "8px" }}>🧠 Confidence Explanation</h4>
+        <p style={{ color: "#ccc", fontSize: "13px", lineHeight: "1.6" }}>{availabilityResult.confidenceExplanation}</p>
+      </div>
+      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+        <button onClick={() => { setAvailabilityGuest(""); setAvailabilityResult(null) }} style={{ padding: "10px 20px", borderRadius: "8px", background: "#333", color: "#fff", border: "none", cursor: "pointer" }}>🔄 New Prediction</button>
+        <button onClick={() => generateOutreach({ name: availabilityGuest, category: availabilityCategory })} style={{ padding: "10px 20px", borderRadius: "8px", background: "#fcd34d", color: "#000", border: "none", cursor: "pointer", fontWeight: "bold" }}>📤 Generate Outreach</button>
+      </div>
+    </div>
+  )}
+</div>
+)}
 {/* SPONSOR MATCHMAKER VIEW */}
 {view === "sponsors" && (
   <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
