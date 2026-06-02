@@ -155,6 +155,10 @@ const [outcomeForm, setOutcomeForm] = useState({
   clip_count: "", clip_views: "", sponsor_value: "", brand_deal: "",
   total_cost: "", outreach_days: "", approval_days: "", notes: ""
 })
+const [briefData, setBriefData] = useState(null)
+const [briefGuest, setBriefGuest] = useState(null)
+const [briefLoading, setBriefLoading] = useState(false)
+const [showBrief, setShowBrief] = useState(false)
 // Guest ROI Calculator V2
 const [roiGuestType, setRoiGuestType] = useState("")
 const [roiEpisodeObjective, setRoiEpisodeObjective] = useState("")
@@ -1127,16 +1131,37 @@ ONLY valid JSON. NO MARKDOWN.`)
 
   const generateResearch = async (guest) => {
     if (!apiKey) return
-    setLoading(true); setSelectedGuest(guest); setView("research")
+    setBriefLoading(true)
+    setBriefGuest(guest)
+    setShowBrief(true)
+    setBriefData(null)
     try {
-      const text = await callOpenAI(`Detailed research card for: ${guest.name} (${guest.category})
-1. SHORT BIO 2. THEIR STORY 3. KEY ACHIEVEMENTS 4. CURRENT CONTROVERSIES 5. UNIQUE ANGLE for Raj Shamani 6. WHY THIS GUEST NOW
-Factual, honest, insightful.`)
-      setResearch(text)
-    } catch (e) { alert("Error: " + e.message) }
-    setLoading(false)
+      const prompt = `You are a senior research analyst for "Figuring Out" podcast by Raj Shamani. Raj's philosophy: "stop chasing famous names, find exclusive voices no one else has."
+  
+  Create a sourced intelligence brief for: ${guest.name} (${guest.category})
+  
+  Return ONLY a JSON object with these exact keys:
+  {
+    "executive_summary": "3-4 line overview of who this person is and why they matter",
+    "why_raj": "Why this is an EXCLUSIVE voice Raj should have — not mainstream, not overexposed",
+    "why_now": "Current trend or event that makes this guest timely right now",
+    "achievements": [{"fact": "achievement", "tag": "verified|inferred", "source": "source name or URL"}],
+    "risks": [{"flag": "risk or sensitivity", "severity": "low|medium|high"}],
+    "audience_fit": "How well this guest fits Raj's 18-35 young Indian audience and why",
+    "episode_angle": "The single best episode angle — specific, not generic",
+    "intro_hook": "A 2-line intro Raj could actually use to open the episode",
+    "questions": ["question 1", "question 2", "question 3", "question 4", "question 5", "question 6", "question 7"],
+    "sponsor_fit": "Which sponsor categories this guest attracts and why",
+    "sources": ["source 1", "source 2", "source 3"]
   }
-
+  
+  Be specific, factual, and research-grade. NO markdown, NO generic statements.`
+      const result = await callOpenAI(prompt, "sourced_brief")
+      const cleaned = result.replace(/```json|```/g, "").trim()
+      setBriefData(JSON.parse(cleaned))
+    } catch(e) { alert("Error generating brief: " + e.message) }
+    setBriefLoading(false)
+  }
   const generateQuestions = async (guest) => {
     if (!apiKey) return
     setLoading(true); setSelectedGuest(guest); setView("questions")
@@ -2861,6 +2886,109 @@ Return ONLY the message text. No JSON. No labels.`)
               </div>}
           </div>
         )}
+        {showBrief && (
+  <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, overflowY: "auto", padding: "20px" }}>
+    <div style={{ maxWidth: "800px", margin: "0 auto", background: darkMode ? "#0f172a" : "#fff", borderRadius: "16px", padding: "28px", border: "1px solid #1e3a5f" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h2 style={{ color: "#38bdf8", margin: 0 }}>📋 Intelligence Brief: {briefGuest?.name}</h2>
+        <button onClick={() => setShowBrief(false)} style={{ background: "#7f1d1d", color: "#fff", border: "none", borderRadius: "8px", padding: "6px 14px", cursor: "pointer" }}>✕ Close</button>
+      </div>
+
+      {briefLoading && <div style={{ textAlign: "center", padding: "60px", color: "#38bdf8" }}>⏳ Generating intelligence brief...</div>}
+
+      {briefData && (
+        <div>
+          {/* Executive Summary */}
+          <div style={{ background: darkMode ? "#1e3a5f" : "#eff6ff", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
+            <h3 style={{ color: "#38bdf8", margin: "0 0 8px" }}>📌 Executive Summary</h3>
+            <p style={{ color: darkMode ? "#fff" : "#000", margin: 0, lineHeight: "1.6" }}>{briefData.executive_summary}</p>
+          </div>
+
+          {/* Why Raj */}
+          <div style={{ background: darkMode ? "#1a2e1a" : "#f0fdf4", borderRadius: "10px", padding: "16px", marginBottom: "16px", border: "1px solid #166534" }}>
+            <h3 style={{ color: "#4ade80", margin: "0 0 8px" }}>🎯 Why Raj Should Have This Guest</h3>
+            <p style={{ color: darkMode ? "#fff" : "#000", margin: 0, lineHeight: "1.6" }}>{briefData.why_raj}</p>
+          </div>
+
+          {/* Why Now */}
+          <div style={{ background: darkMode ? "#1a1a0a" : "#fffbeb", borderRadius: "10px", padding: "16px", marginBottom: "16px", border: "1px solid #854d0e" }}>
+            <h3 style={{ color: "#f59e0b", margin: "0 0 8px" }}>⚡ Why Now</h3>
+            <p style={{ color: darkMode ? "#fff" : "#000", margin: 0 }}>{briefData.why_now}</p>
+          </div>
+
+          {/* Achievements */}
+          <div style={{ marginBottom: "16px" }}>
+            <h3 style={{ color: "#38bdf8", marginBottom: "10px" }}>🏆 Key Achievements</h3>
+            {briefData.achievements?.map((a, i) => (
+              <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "8px", background: darkMode ? "#111827" : "#f8fafc", borderRadius: "8px", padding: "10px" }}>
+                <span style={{ color: a.tag === "verified" ? "#4ade80" : "#f59e0b", fontSize: "11px", whiteSpace: "nowrap", marginTop: "2px" }}>{a.tag === "verified" ? "✅ Verified" : "🔵 Inferred"}</span>
+                <div>
+                  <p style={{ color: darkMode ? "#fff" : "#000", margin: "0 0 2px", fontSize: "14px" }}>{a.fact}</p>
+                  <p style={{ color: "#666", fontSize: "11px", margin: 0 }}>Source: {a.source}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Risks */}
+          {briefData.risks?.length > 0 && (
+            <div style={{ marginBottom: "16px" }}>
+              <h3 style={{ color: "#f87171", marginBottom: "10px" }}>⚠️ Risk & Sensitivity Flags</h3>
+              {briefData.risks.map((r, i) => (
+                <div key={i} style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "6px", background: darkMode ? "#1a0a0a" : "#fff1f2", borderRadius: "8px", padding: "10px" }}>
+                  <span style={{ color: r.severity === "high" ? "#f87171" : r.severity === "medium" ? "#f59e0b" : "#888", fontSize: "11px" }}>{r.severity?.toUpperCase()}</span>
+                  <p style={{ color: darkMode ? "#fff" : "#000", margin: 0, fontSize: "14px" }}>{r.flag}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Audience Fit + Episode Angle */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+            <div style={{ background: darkMode ? "#111827" : "#f8fafc", borderRadius: "10px", padding: "14px" }}>
+              <h3 style={{ color: "#a78bfa", margin: "0 0 8px", fontSize: "14px" }}>👥 Audience Fit</h3>
+              <p style={{ color: darkMode ? "#ccc" : "#333", margin: 0, fontSize: "13px" }}>{briefData.audience_fit}</p>
+            </div>
+            <div style={{ background: darkMode ? "#111827" : "#f8fafc", borderRadius: "10px", padding: "14px" }}>
+              <h3 style={{ color: "#f59e0b", margin: "0 0 8px", fontSize: "14px" }}>🎬 Best Episode Angle</h3>
+              <p style={{ color: darkMode ? "#ccc" : "#333", margin: 0, fontSize: "13px" }}>{briefData.episode_angle}</p>
+            </div>
+          </div>
+
+          {/* Intro Hook */}
+          <div style={{ background: darkMode ? "#0f2027" : "#f0f9ff", borderRadius: "10px", padding: "14px", marginBottom: "16px", border: "1px solid #0369a1" }}>
+            <h3 style={{ color: "#38bdf8", margin: "0 0 8px", fontSize: "14px" }}>🎤 Suggested Intro Hook</h3>
+            <p style={{ color: darkMode ? "#ccc" : "#333", margin: 0, fontStyle: "italic" }}>{briefData.intro_hook}</p>
+          </div>
+
+          {/* Questions */}
+          <div style={{ marginBottom: "16px" }}>
+            <h3 style={{ color: "#38bdf8", marginBottom: "10px" }}>❓ Interview Questions</h3>
+            {briefData.questions?.map((q, i) => (
+              <div key={i} style={{ background: darkMode ? "#111827" : "#f8fafc", borderRadius: "8px", padding: "10px 14px", marginBottom: "6px", color: darkMode ? "#fff" : "#000", fontSize: "14px" }}>
+                {i + 1}. {q}
+              </div>
+            ))}
+          </div>
+
+          {/* Sponsor Fit */}
+          <div style={{ background: darkMode ? "#1a1200" : "#fffbeb", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
+            <h3 style={{ color: "#f59e0b", margin: "0 0 8px", fontSize: "14px" }}>💰 Sponsor Fit</h3>
+            <p style={{ color: darkMode ? "#ccc" : "#333", margin: 0, fontSize: "13px" }}>{briefData.sponsor_fit}</p>
+          </div>
+
+          {/* Sources */}
+          <div style={{ background: darkMode ? "#111827" : "#f8fafc", borderRadius: "10px", padding: "14px" }}>
+            <h3 style={{ color: "#888", margin: "0 0 8px", fontSize: "13px" }}>🔗 Sources</h3>
+            {briefData.sources?.map((s, i) => (
+              <p key={i} style={{ color: "#38bdf8", margin: "2px 0", fontSize: "12px" }}>• {s}</p>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
         {/* QUESTIONS VIEW */}
         {view === "questions" && (
