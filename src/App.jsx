@@ -100,8 +100,10 @@ const [intelLoading, setIntelLoading] = useState(false)
   const [trendGuests, setTrendGuests] = useState({})
   const [loadingTrendGuest, setLoadingTrendGuest] = useState(null)
   const [isMobile, setIsMobile] = useState(false)
-  const [competitors, setCompetitors] = useState([])
-  const [loadingCompetitors, setLoadingCompetitors] = useState(false)
+const [selectedCompetitors, setSelectedCompetitors] = useState(["Nikhil Kamath", "Ankur Warikoo", "Ranveer Allahbadia"])
+const [competitorGaps, setCompetitorGaps] = useState(null)
+const [loadingCompetitorGaps, setLoadingCompetitorGaps] = useState(false)
+const [selectedCompetitorProfile, setSelectedCompetitorProfile] = useState(null)
   // Content Gap Finder
 const [gapCompetitors, setGapCompetitors] = useState([])
 const [gapTimeRange, setGapTimeRange] = useState("90")
@@ -472,23 +474,69 @@ ONLY valid JSON. NO MARKDOWN.`)
   }
 
   const fetchCompetitors = async () => {
-    if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
     setLoadingCompetitors(true); setCompetitors([])
     try {
-      const text = await callOpenAI(`You are a podcast intelligence analyst. For each of these 10 podcast shows list their 3 most recent notable guests. Shows: Ranveer Allahbadia BeerBiceps, Nikhil Kamath WTF Podcast, Samdish Bhatia Unfiltered, Kamiya Jani Curly Tales, Sandeep Maheshwari, Ankur Warikoo Podcast, Joe Rogan Experience, Steven Bartlett Diary of a CEO, Lex Fridman Podcast, Jay Shetty On Purpose.
-Return ONLY valid JSON array of 10 objects: { host, guests: [{name, category, why, rajFit, rajAngle}] }
-ONLY valid JSON. NO MARKDOWN.`)
+      const text = await callOpenAI(`You are a competitive intelligence analyst for Raj Shamani's podcast "Figuring Out".
+  Analyze these 11 podcast competitors: Nikhil Kamath, Ankur Warikoo, Ranveer Allahbadia (BeerBiceps), Sharan Hegde, Varun Mayya, Think School, Prakhar Ke Pravachan, Lex Fridman, My First Million, Diary of a CEO, How I Built This.
+  
+  For each competitor return a detailed profile. Return ONLY valid JSON array of 11 objects:
+  [{
+    "host": "name",
+    "positioning": "1 line positioning summary",
+    "audienceType": "who their audience is",
+    "momentumScore": 1-10,
+    "momentumTrend": "Rising|Stable|Declining",
+    "contentPillars": ["pillar1", "pillar2", "pillar3"],
+    "mainFormats": ["format1", "format2"],
+    "guestDiversity": "Low|Medium|High",
+    "sponsorThemes": ["theme1", "theme2"],
+    "recentGuests": [
+      {"name": "guest name", "category": "category", "performance": "High|Medium|Low"},
+      {"name": "guest name", "category": "category", "performance": "High|Medium|Low"},
+      {"name": "guest name", "category": "category", "performance": "High|Medium|Low"},
+      {"name": "guest name", "category": "category", "performance": "High|Medium|Low"},
+      {"name": "guest name", "category": "category", "performance": "High|Medium|Low"}
+    ],
+    "betterThanRaj": "what they do better than Raj in 1 line",
+    "weakerThanRaj": "where Raj has advantage in 1 line",
+    "topicGaps": ["topic Raj could own that this competitor is winning"],
+    "guestGaps": ["guest type this competitor books that Raj doesn't"]
+  }]
+  ONLY valid JSON. NO MARKDOWN.`, "competitor_intel")
       const cleaned = text.replace(/```json|```/g, "").trim()
-      const parsed = JSON.parse(cleaned)
-      const merged = COMPETITORS.map(comp => {
-        const aiData = Array.isArray(parsed) ? parsed.find(p => p.host && p.host.toLowerCase().includes(comp.name.split(" ")[0].toLowerCase())) : null
-        return { ...comp, guests: aiData ? aiData.guests : [] }
-      })
-      setCompetitors(merged)
+      setCompetitors(JSON.parse(cleaned))
     } catch (e) { alert("Error: " + e.message) }
     setLoadingCompetitors(false)
   }
-
+  
+  const analyzeCompetitorGaps = async () => {
+    if (!competitors.length) { alert("Please load competitors first!"); return }
+    setLoadingCompetitorGaps(true); setCompetitorGaps(null)
+    try {
+      const selected = competitors.filter(c => selectedCompetitors.includes(c.host))
+      const text = await callOpenAI(`You are a competitive strategy analyst for Raj Shamani's podcast.
+  Based on these competitor profiles: ${JSON.stringify(selected.map(c => ({ host: c.host, contentPillars: c.contentPillars, topicGaps: c.topicGaps, guestGaps: c.guestGaps })))}
+  
+  Find the top 8 gaps Raj should fill. Return ONLY valid JSON array:
+  [{
+    "gapTitle": "specific gap title",
+    "gapType": "Topic|Guest|Format|Trend|Sponsor|Region",
+    "urgencyScore": 1-10,
+    "competitorsWinning": ["competitor names"],
+    "whyItMatters": "1-2 lines",
+    "suggestedGuest": "specific real person",
+    "guestCategory": "category",
+    "episodeAngle": "specific angle",
+    "sponsorFit": "sponsor category",
+    "audienceFit": "why Raj's audience would love this",
+    "riskWarning": "any risk or null"
+  }]
+  ONLY valid JSON. NO MARKDOWN.`, "competitor_gaps")
+      const cleaned = text.replace(/```json|```/g, "").trim()
+      setCompetitorGaps(JSON.parse(cleaned))
+    } catch (e) { alert("Error: " + e.message) }
+    setLoadingCompetitorGaps(false)
+  }
   const generateGapAnalysis = async () => {
     if (!gapCompetitors.length) { alert("Please select at least one competitor!"); return }
     setLoadingGaps(true)
@@ -3280,149 +3328,68 @@ Return ONLY the message text. No JSON. No labels.`)
 
       {/* COMPETITORS VIEW */}
       {view === "competitors" && (
-        <div style={{ padding: isMobile ? "14px" : "24px", maxWidth: "1300px", margin: "0 auto" }}>
-          <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-            <div>
-              <h2 style={{ margin: "0 0 4px", color: "#818cf8" }}>🏆 Competitor Intelligence</h2>
-              <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>Who are Raj's competitors booking — find gaps and opportunities</p>
-            </div>
-            <button onClick={fetchCompetitors} disabled={loadingCompetitors} style={{ padding: "10px 20px", borderRadius: "8px", background: loadingCompetitors ? "#333" : "linear-gradient(135deg,#3730a3,#1e1b4b)", color: "#818cf8", border: "1px solid #3730a3", cursor: loadingCompetitors ? "not-allowed" : "pointer", fontSize: "13px", fontWeight: "bold" }}>
-              {loadingCompetitors ? "⏳ Fetching..." : "🔄 Refresh Data"}
-            </button>
-          </div>
-          {loadingCompetitors && <div style={{ textAlign: "center", padding: "60px", color: "#666" }}><div style={{ fontSize: "40px", marginBottom: "16px" }}>🔍</div><p>Analyzing what competitors are doing...</p></div>}
-          {!loadingCompetitors && competitors.length === 0 && (
-            <div style={{ textAlign: "center", padding: "60px 20px" }}>
-              <div style={{ fontSize: "50px", marginBottom: "16px" }}>🏆</div>
-              <h3 style={{ color: "#555" }}>No data loaded yet</h3>
-              <button onClick={fetchCompetitors} style={{ marginTop: "16px", padding: "10px 24px", borderRadius: "8px", background: "linear-gradient(135deg,#3730a3,#1e1b4b)", color: "#818cf8", border: "none", cursor: "pointer" }}>🏆 Load Competitor Data</button>
-            </div>
-          )}
-          {competitors.length > 0 && (
-            <div>
-              <h3 style={{ color: "#818cf8", fontSize: "15px", marginBottom: "14px", borderBottom: "1px solid #1e1b4b", paddingBottom: "8px" }}>🇮🇳 India Competitors</h3>
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(380px,1fr))", gap: "16px", marginBottom: "28px" }}>
-                {competitors.filter(c => c.type === "India").map((comp, ci) => (
-                  <div key={ci} style={{ background: "#111827", borderRadius: "12px", border: `1px solid ${comp.color}33`, overflow: "hidden" }}>
-                    <div style={{ padding: "16px", borderBottom: "1px solid #1f2937", background: `linear-gradient(135deg,${comp.color}11,#111827)` }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                        <div>
-                          <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: "#fff" }}>{comp.name}</h3>
-                          <span style={{ fontSize: "11px", color: comp.color, background: comp.color + "22", padding: "2px 8px", borderRadius: "20px" }}>{comp.aka}</span>
-                        </div>
-                        <span style={{ fontSize: "10px", background: "#1e1b4b", color: "#818cf8", padding: "3px 8px", borderRadius: "6px" }}>🇮🇳 India</span>
-                      </div>
-                      <p style={{ margin: "8px 0 0", fontSize: "12px", color: "#9ca3af" }}><span style={{ color: "#f59e0b" }}>Edge:</span> {comp.edge}</p>
-                    </div>
-                    <div style={{ padding: "14px" }}>
-                      {comp.guests && comp.guests.map((g, gi) => (
-                        <div key={gi} style={{ background: g.rajFit ? "#0d1f0d" : "#0d0d1a", borderRadius: "8px", padding: "10px 12px", marginBottom: "8px", border: `1px solid ${g.rajFit ? "#166534" : "#1f2937"}` }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
-                            <div>
-                              <span style={{ fontSize: "13px", fontWeight: "bold", color: g.rajFit ? "#4ade80" : "#fff" }}>{g.name}</span>
-                              <span style={{ fontSize: "11px", background: "#1e1e3f", color: "#a78bfa", padding: "1px 6px", borderRadius: "10px", marginLeft: "6px" }}>{g.category}</span>
-                            </div>
-                            {g.rajFit && <span style={{ fontSize: "10px", background: "#14532d", color: "#4ade80", padding: "2px 7px", borderRadius: "6px" }}>Gap Opportunity</span>}
-                          </div>
-                          <p style={{ margin: "4px 0", fontSize: "12px", color: "#9ca3af", lineHeight: "1.4" }}>{g.why}</p>
-                          {g.rajFit && g.rajAngle && (
-                            <div style={{ marginTop: "6px", padding: "6px 10px", background: "#1a2e1a", borderRadius: "6px", border: "1px solid #166534" }}>
-                              <span style={{ fontSize: "11px", color: "#60a5fa" }}>Raj's Angle: </span>
-                              <span style={{ fontSize: "11px", color: "#86efac" }}>{g.rajAngle}</span>
-                            </div>
-                          )}
-                          {g.rajFit && (
-                            <button onClick={() => addToPipeline({ name: g.name, category: g.category, whyNow: g.rajAngle || g.why, topicAngle: g.rajAngle || "", virality: 8, relevance: 8, value: 8, total: "8.0", priority: "High", status: "New", lastAppeared: "Never", isAISlot: false, addedDate: new Date().toLocaleDateString("en-IN") }, "competitor")}
-                              style={{ marginTop: "6px", width: "100%", padding: "6px", borderRadius: "6px", background: "#1a2e3f", color: "#38bdf8", border: "1px solid #0369a1", cursor: "pointer", fontSize: "11px", fontWeight: "bold" }}>
-                              + Add to Raj's Pipeline
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <h3 style={{ color: "#a78bfa", fontSize: "15px", marginBottom: "14px", borderBottom: "1px solid #2e1e5f", paddingBottom: "8px" }}>🌍 Global Competitors</h3>
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(380px,1fr))", gap: "16px" }}>
-                {competitors.filter(c => c.type === "Global").map((comp, ci) => (
-                  <div key={ci} style={{ background: "#111827", borderRadius: "12px", border: `1px solid ${comp.color}33`, overflow: "hidden" }}>
-                    <div style={{ padding: "16px", borderBottom: "1px solid #1f2937", background: `linear-gradient(135deg,${comp.color}11,#111827)` }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                        <div>
-                          <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: "#fff" }}>{comp.name}</h3>
-                          <span style={{ fontSize: "11px", color: comp.color, background: comp.color + "22", padding: "2px 8px", borderRadius: "20px" }}>{comp.aka}</span>
-                        </div>
-                        <span style={{ fontSize: "10px", background: "#2e1e5f", color: "#a78bfa", padding: "3px 8px", borderRadius: "6px" }}>🌍 Global</span>
-                      </div>
-                      <p style={{ margin: "8px 0 0", fontSize: "12px", color: "#9ca3af" }}><span style={{ color: "#f59e0b" }}>Edge:</span> {comp.edge}</p>
-                    </div>
-                    <div style={{ padding: "14px" }}>
-                      {comp.guests && comp.guests.map((g, gi) => (
-                        <div key={gi} style={{ background: g.rajFit ? "#0d1f0d" : "#0d0d1a", borderRadius: "8px", padding: "10px 12px", marginBottom: "8px", border: `1px solid ${g.rajFit ? "#166534" : "#1f2937"}` }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
-                            <div>
-                              <span style={{ fontSize: "13px", fontWeight: "bold", color: g.rajFit ? "#4ade80" : "#fff" }}>{g.name}</span>
-                              <span style={{ fontSize: "11px", background: "#1e1e3f", color: "#a78bfa", padding: "1px 6px", borderRadius: "10px", marginLeft: "6px" }}>{g.category}</span>
-                            </div>
-                            {g.rajFit && <span style={{ fontSize: "10px", background: "#14532d", color: "#4ade80", padding: "2px 7px", borderRadius: "6px" }}>Gap Opportunity</span>}
-                          </div>
-                          <p style={{ margin: "4px 0", fontSize: "12px", color: "#9ca3af", lineHeight: "1.4" }}>{g.why}</p>
-                          {g.rajFit && g.rajAngle && (
-                            <div style={{ marginTop: "6px", padding: "6px 10px", background: "#1a2e1a", borderRadius: "6px", border: "1px solid #166534" }}>
-                              <span style={{ fontSize: "11px", color: "#60a5fa" }}>Raj's Angle: </span>
-                              <span style={{ fontSize: "11px", color: "#86efac" }}>{g.rajAngle}</span>
-                            </div>
-                          )}
-                          {g.rajFit && (
-                            <button onClick={() => addToPipeline({ name: g.name, category: g.category, whyNow: g.rajAngle || g.why, topicAngle: g.rajAngle || "", virality: 8, relevance: 8, value: 8, total: "8.0", priority: "High", status: "New", lastAppeared: "Never", isAISlot: false, addedDate: new Date().toLocaleDateString("en-IN") }, "competitor")}
-                              style={{ marginTop: "6px", width: "100%", padding: "6px", borderRadius: "6px", background: "#1a2e3f", color: "#38bdf8", border: "1px solid #0369a1", cursor: "pointer", fontSize: "11px", fontWeight: "bold" }}>
-                              + Add to Raj's Pipeline
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+<div style={{ padding: isMobile ? "14px" : "24px", maxWidth: "1300px", margin: "0 auto" }}>
+  <h2 style={{ color: "#818cf8", marginBottom: "8px" }}>🏆 Competitor Intelligence V2</h2>
+  <p style={{ color: "#888", marginBottom: "24px" }}>Full competitive strategy dashboard — who's winning, where are the gaps, what Raj should do next.</p>
+  <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
+    <button onClick={fetchCompetitors} disabled={loadingCompetitors} style={{ padding: "10px 24px", borderRadius: "8px", background: "#3730a3", color: "#fff", border: "none", cursor: "pointer", fontWeight: "bold" }}>
+      {loadingCompetitors ? "⏳ Loading..." : "🔄 Load Competitor Profiles"}
+    </button>
+    {competitors.length > 0 && (
+      <button onClick={analyzeCompetitorGaps} disabled={loadingCompetitorGaps} style={{ padding: "10px 24px", borderRadius: "8px", background: "#7c3aed", color: "#fff", border: "none", cursor: "pointer", fontWeight: "bold" }}>
+        {loadingCompetitorGaps ? "⏳ Analyzing..." : "🔍 Find Gap Opportunities"}
+      </button>
+    )}
+  </div>
+  {competitors.length > 0 && (
+    <div style={{ marginBottom: "24px" }}>
+      <h3 style={{ color: "#818cf8", marginBottom: "12px" }}>Select Competitors to Analyze</h3>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        {competitors.map((c, i) => (
+          <label key={i} style={{ display: "flex", alignItems: "center", gap: "6px", background: selectedCompetitors.includes(c.host) ? "#3730a3" : "#1a1a2e", padding: "6px 14px", borderRadius: "20px", cursor: "pointer", color: selectedCompetitors.includes(c.host) ? "#fff" : "#888", fontSize: "13px", border: `1px solid ${selectedCompetitors.includes(c.host) ? "#818cf8" : "#333"}` }}>
+            <input type="checkbox" checked={selectedCompetitors.includes(c.host)} onChange={() => setSelectedCompetitors(prev => prev.includes(c.host) ? prev.filter(x => x !== c.host) : [...prev, c.host])} style={{ display: "none" }} />
+            {c.host}
+          </label>
+        ))}
+      </div>
+    </div>
+  )}
+  {loadingCompetitors && <div style={{ textAlign: "center", padding: "60px", color: "#666" }}><div style={{ fontSize: "40px", marginBottom: "16px" }}>🔍</div><p>Loading competitor profiles...</p></div>}
+  {!loadingCompetitors && competitors.length === 0 && (
+    <div style={{ textAlign: "center", padding: "60px", color: "#555", background: "#111827", borderRadius: "12px" }}>
+      <div style={{ fontSize: "50px", marginBottom: "16px" }}>🏆</div>
+      <h3>No data loaded yet</h3>
+      <button onClick={fetchCompetitors} style={{ marginTop: "16px", padding: "10px 24px", borderRadius: "8px", background: "#3730a3", color: "#fff", border: "none", cursor: "pointer" }}>Load Competitor Data</button>
+    </div>
+  )}
+  {competitors.length > 0 && (
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(340px, 1fr))", gap: "16px", marginBottom: "32px" }}>
+      {competitors.map((comp, ci) => (
+        <div key={ci} onClick={() => setSelectedCompetitorProfile(selectedCompetitorProfile === ci ? null : ci)} style={{ background: "#111827", borderRadius: "12px", border: `1px solid ${selectedCompetitors.includes(comp.host) ? "#818cf8" : "#333"}`, cursor: "pointer", overflow: "hidden" }}>
+          <div style={{ padding: "16px", background: "#0d0d1a" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <h3 style={{ color: "#fff", margin: 0, fontSize: "15px" }}>{comp.host}</h3>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ color: comp.momentumTrend === "Rising" ? "#22c55e" : comp.momentumTrend === "Declining" ? "#ef4444" : "#f59e0b", fontSize: "12px" }}>{comp.momentumTrend === "Rising" ? "↑" : comp.momentumTrend === "Declining" ? "↓" : "→"}</span>
+                <span style={{ background: "#3730a3", color: "#818cf8", padding: "2px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold" }}>{comp.momentumScore}/10</span>
               </div>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* HISTORY OVERLAY */}
-      {historyView && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, overflowY: "auto", padding: "24px" }}>
-          <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-              <div>
-                <h2 style={{ margin: "0 0 4px", color: "#f59e0b" }}>📜 Guest History Log <span style={{ fontSize: "12px", color: "#4ade80" }}>☁️ Cloud Synced</span></h2>
-                <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>All guests ever suggested by AI — last 30 sessions</p>
-              </div>
-              <button onClick={() => setHistoryView(false)} style={{ padding: "8px 20px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "14px", fontWeight: "bold" }}>✕ Close</button>
+            <p style={{ color: "#888", fontSize: "12px", margin: "0 0 8px" }}>{comp.positioning}</p>
+            <p style={{ color: "#666", fontSize: "11px", margin: "0 0 8px" }}>👥 {comp.audienceType}</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "8px" }}>
+              {comp.contentPillars?.map((p, i) => <span key={i} style={{ background: "#1e1e3f", color: "#a78bfa", padding: "2px 8px", borderRadius: "10px", fontSize: "11px" }}>{p}</span>)}
             </div>
-            {guestHistory.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "60px", color: "#555", background: "#111827", borderRadius: "12px" }}>
-                <div style={{ fontSize: "40px", marginBottom: "16px" }}>📭</div>
-                <p>No history yet. Generate guests to start building history.</p>
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {guestHistory.map((entry, ei) => (
-                  <div key={ei} style={{ background: "#111827", borderRadius: "12px", border: "1px solid #1f2937", overflow: "hidden" }}>
-                    <div style={{ padding: "12px 16px", background: "#0d0d1a", borderBottom: "1px solid #1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "13px", color: "#f59e0b", fontWeight: "bold" }}>📅 {entry.date}</span>
-                      <span style={{ fontSize: "12px", color: "#555" }}>{entry.guests.length} guests suggested</span>
-                    </div>
-                    <div style={{ padding: "12px 16px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                      {entry.guests.map((g, gi) => (
-                        <div key={gi} style={{ background: "#1f2937", borderRadius: "8px", padding: "6px 12px", display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "13px", color: "#fff", fontWeight: "bold" }}>{g.name}</span>
-                          <span style={{ fontSize: "11px", background: "#1e1e3f", color: "#a78bfa", padding: "1px 6px", borderRadius: "10px" }}>{g.category}</span>
-                          <span style={{ fontSize: "12px", fontWeight: "bold", color: g.priority === "High" ? "#00ff88" : g.priority === "Medium" ? "#ffaa00" : "#ff6666" }}>{g.total}</span>
-                        </div>
-                      ))}
+            {selectedCompetitorProfile === ci && (
+              <div style={{ marginTop: "12px", borderTop: "1px solid #222", paddingTop: "12px" }}>
+                <p style={{ color: "#f59e0b", fontSize: "12px", marginBottom: "6px" }}>✅ Better than Raj: <span style={{ color: "#ccc" }}>{comp.betterThanRaj}</span></p>
+                <p style={{ color: "#22c55e", fontSize: "12px", marginBottom: "10px" }}>💪 Raj's Advantage: <span style={{ color: "#ccc" }}>{comp.weakerThanRaj}</span></p>
+                <p style={{ color: "#818cf8", fontSize: "12px", marginBottom: "6px", fontWeight: "bold" }}>Recent Guests:</p>
+                {comp.recentGuests?.map((g, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 8px", background: "#0d0d1a", borderRadius: "6px", marginBottom: "4px" }}>
+                    <span style={{ color: "#ccc", fontSize: "12px" }}>{g.name}</span>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <span style={{ color: "#a78bfa", fontSize: "11px" }}>{g.category}</span>
+                      <span style={{ color: g.performance === "High" ? "#22c55e" : g.performance === "Medium" ? "#f59e0b" : "#ef4444", fontSize: "11px" }}>{g.performance}</span>
                     </div>
                   </div>
                 ))}
@@ -3430,8 +3397,37 @@ Return ONLY the message text. No JSON. No labels.`)
             )}
           </div>
         </div>
-      )}
-
+      ))}
+    </div>
+  )}
+  {loadingCompetitorGaps && <div style={{ textAlign: "center", padding: "40px", color: "#7c3aed" }}><div style={{ fontSize: "40px", marginBottom: "16px" }}>⏳</div><p>Analyzing gaps across selected competitors...</p></div>}
+  {competitorGaps && (
+    <div>
+      <h3 style={{ color: "#818cf8", marginBottom: "16px" }}>🎯 Gap Opportunities Ranked by Priority</h3>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px" }}>
+        {competitorGaps.map((gap, i) => (
+          <div key={i} style={{ background: "#111827", border: `1px solid ${gap.urgencyScore >= 8 ? "#ef4444" : gap.urgencyScore >= 6 ? "#f59e0b" : "#22c55e"}44`, borderRadius: "12px", padding: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span style={{ background: "#1e1e3f", color: "#a78bfa", padding: "2px 8px", borderRadius: "4px", fontSize: "11px" }}>{gap.gapType}</span>
+              <span style={{ color: gap.urgencyScore >= 8 ? "#ef4444" : gap.urgencyScore >= 6 ? "#f59e0b" : "#22c55e", fontWeight: "bold", fontSize: "14px" }}>{gap.urgencyScore}/10</span>
+            </div>
+            <h4 style={{ color: "#fff", marginBottom: "8px", fontSize: "14px" }}>{gap.gapTitle}</h4>
+            <p style={{ color: "#888", fontSize: "12px", marginBottom: "8px" }}>{gap.whyItMatters}</p>
+            <p style={{ color: "#666", fontSize: "11px", marginBottom: "8px" }}>Competitors winning: {gap.competitorsWinning?.join(", ")}</p>
+            <div style={{ background: "#0d0d1a", borderRadius: "8px", padding: "10px", marginBottom: "10px" }}>
+              <p style={{ color: "#a78bfa", fontSize: "12px", marginBottom: "4px" }}>🎯 Suggested Guest: <span style={{ color: "#fff", fontWeight: "bold" }}>{gap.suggestedGuest}</span></p>
+              <p style={{ color: "#888", fontSize: "11px", marginBottom: "4px" }}>🎙️ {gap.episodeAngle}</p>
+              <p style={{ color: "#888", fontSize: "11px", marginBottom: "4px" }}>💰 Sponsor: {gap.sponsorFit}</p>
+              {gap.riskWarning && <p style={{ color: "#f59e0b", fontSize: "11px" }}>⚠️ {gap.riskWarning}</p>}
+            </div>
+            <button onClick={() => setPipelineGuests(prev => [...prev, { name: gap.suggestedGuest, status: "New", notes: gap.episodeAngle, addedAt: new Date().toISOString() }])} style={{ width: "100%", padding: "8px", borderRadius: "8px", background: "#1a2e3f", color: "#38bdf8", border: "1px solid #0369a1", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>+ Add to Pipeline</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
+)}
       {/* TITLES OVERLAY */}
       {showTitles && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.88)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
