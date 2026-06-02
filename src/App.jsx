@@ -112,8 +112,13 @@ const [selectedGap, setSelectedGap] = useState(null)
   const [syncStatus, setSyncStatus] = useState("")
   // Sentiment Analyzer
   const [sentimentGuest, setSentimentGuest] = useState("")
-  const [sentimentResult, setSentimentResult] = useState(null)
-  const [loadingSentiment, setLoadingSentiment] = useState(false)
+const [sentimentFocus, setSentimentFocus] = useState("Reputation")
+const [sentimentTimeRange, setSentimentTimeRange] = useState("30")
+const [sentimentRegion, setSentimentRegion] = useState("India")
+const [sentimentAudience, setSentimentAudience] = useState("General")
+const [sentimentPlatforms, setSentimentPlatforms] = useState(["Twitter", "YouTube", "Reddit", "News"])
+const [sentimentResult, setSentimentResult] = useState(null)
+const [loadingSentiment, setLoadingSentiment] = useState(false)
   // Availability Predictor
   const [availabilityGuest, setAvailabilityGuest] = useState("")
 const [availabilityCategory, setAvailabilityCategory] = useState("Founder")
@@ -523,41 +528,57 @@ ONLY valid JSON. NO MARKDOWN.`)
   // ─── SENTIMENT ANALYZER ───────────────────────────────────────────────────
   const analyzeSentiment = async () => {
     if (!sentimentGuest.trim()) { alert("Please enter a guest name!"); return }
-    if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
     setLoadingSentiment(true); setSentimentResult(null)
     try {
-      const text = await callOpenAI(`You are a social media intelligence analyst. Analyze the current PUBLIC SENTIMENT around "${sentimentGuest}" across Twitter/X, YouTube comments, Reddit India, and Indian news media.
-
-Be specific, factual and data-driven. Today is ${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
-
-Return ONLY valid JSON:
-{
-  "name": "",
-  "overallSentiment": "Positive" or "Neutral" or "Negative" or "Mixed",
-  "overallScore": 1-10,
-  "positivePercent": 0-100,
-  "negativePercent": 0-100,
-  "neutralPercent": 0-100,
-  "audienceLoveScore": 1-10,
-  "controversyLevel": "Low" or "Medium" or "High",
-  "twitterSentiment": "Positive/Neutral/Negative with 1 line reason",
-  "youtubeSentiment": "Positive/Neutral/Negative with 1 line reason",
-  "redditSentiment": "Positive/Neutral/Negative with 1 line reason",
-  "newsSentiment": "Positive/Neutral/Negative with 1 line reason",
-  "recentControversies": ["list up to 3 real controversies or empty array"],
-  "positiveHighlights": ["list up to 3 things audiences love about them"],
-  "bestTimeToFeature": "Now / Wait 1 month / Wait 3 months — with reason",
-  "podcastRisk": "Low / Medium / High — with 1 line reason",
-  "rajRecommendation": "BOOK NOW / CONSIDER / WAIT / SKIP",
-  "rajRecommendationReason": "1-2 line specific reason for Raj's show"
-}
-ONLY valid JSON. NO MARKDOWN.`, "sentiment_analyzer")
+      const text = await callOpenAI(`You are a reputation intelligence analyst for Raj Shamani's podcast "Figuring Out".
+  Guest: ${sentimentGuest}
+  Analysis Focus: ${sentimentFocus}
+  Time Range: Last ${sentimentTimeRange} days
+  Region: ${sentimentRegion}
+  Audience Type: ${sentimentAudience}
+  Platforms: ${sentimentPlatforms.join(", ")}
+  
+  Return ONLY valid JSON:
+  {
+    "name": "",
+    "reputationScore": 0-100,
+    "audienceLoveScore": 0-100,
+    "brandSafetyScore": 0-100,
+    "audienceTrustScore": 0-100,
+    "controversyIntensity": 0-100,
+    "trendDirection": "Rising|Stable|Declining",
+    "trendReason": "1 line why",
+    "overallVerdict": "Safe|Caution|Risky",
+    "platforms": [
+      { "name": "Twitter", "positive": 0-100, "negative": 0-100, "neutral": 0-100, "summary": "1 line" },
+      { "name": "YouTube", "positive": 0-100, "negative": 0-100, "neutral": 0-100, "summary": "1 line" },
+      { "name": "Reddit", "positive": 0-100, "negative": 0-100, "neutral": 0-100, "summary": "1 line" },
+      { "name": "News", "positive": 0-100, "negative": 0-100, "neutral": 0-100, "summary": "1 line" }
+    ],
+    "topPraiseThemes": ["theme 1", "theme 2", "theme 3"],
+    "topCriticismThemes": ["theme 1", "theme 2", "theme 3"],
+    "redFlags": ["red flag 1", "red flag 2"],
+    "greenOpportunities": ["opportunity 1", "opportunity 2"],
+    "backlashProbability": "Low|Medium|High",
+    "backlashTriggers": ["trigger 1", "trigger 2"],
+    "crisisIndicator": "None|Watch|Alert",
+    "sponsorSafetyNote": "1-2 lines for sponsors",
+    "suggestedInterviewAngle": "specific angle that maximizes positive reception",
+    "riskMitigation": "what Raj should do to reduce risk if booking",
+    "bestFraming": "how to frame this guest to Raj's audience",
+    "audienceSegments": [
+      { "segment": "segment name", "sentiment": "Positive|Neutral|Negative", "reason": "why" },
+      { "segment": "segment name", "sentiment": "Positive|Neutral|Negative", "reason": "why" }
+    ],
+    "rajRecommendation": "BOOK NOW|BOOK WITH CAUTION|WAIT|AVOID",
+    "rajRecommendationReason": "2-3 line specific reason for Raj's show"
+  }
+  ONLY valid JSON. NO MARKDOWN.`, "sentiment_analyzer")
       const cleaned = text.replace(/```json|```/g, "").trim()
       setSentimentResult(JSON.parse(cleaned))
     } catch (e) { alert("Error: " + e.message) }
     setLoadingSentiment(false)
   }
-
   // ─── AVAILABILITY PREDICTOR ──────
   const predictAvailability = async () => {
   if (!availabilityGuest.trim()) { alert("Please enter a guest name!"); return }
@@ -1635,138 +1656,157 @@ Return ONLY the message text. No JSON. No labels.`)
 
         {/* SENTIMENT ANALYZER VIEW */}
         {view === "sentiment" && (
-          <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-            <div style={{ marginBottom: "24px" }}>
-              <h2 style={{ margin: "0 0 4px", color: "#34d399" }}>📊 Guest Social Media Sentiment Analyzer</h2>
-              <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>Analyze public perception of any guest across Twitter, YouTube, Reddit & News before booking them</p>
-            </div>
-            <div style={{ background: "#111827", borderRadius: "12px", padding: "20px", border: "1px solid #065f46", marginBottom: "20px" }}>
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                <input
-                  placeholder="Enter guest name — e.g. Zerodha Nithin Kamath, Ashneer Grover..."
-                  value={sentimentGuest}
-                  onChange={e => setSentimentGuest(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && analyzeSentiment()}
-                  style={{ flex: 1, minWidth: "220px", padding: "12px 16px", borderRadius: "8px", background: "#1f2937", color: "#fff", border: "1px solid #374151", fontSize: "14px", outline: "none" }}
-                />
-                <button onClick={analyzeSentiment} disabled={loadingSentiment || !sentimentGuest.trim()}
-                  style={{ padding: "12px 24px", borderRadius: "8px", background: sentimentGuest.trim() ? "linear-gradient(135deg,#065f46,#047857)" : "#1f2937", color: sentimentGuest.trim() ? "#34d399" : "#4b5563", border: "none", cursor: sentimentGuest.trim() ? "pointer" : "not-allowed", fontSize: "14px", fontWeight: "bold", whiteSpace: "nowrap" }}>
-                  {loadingSentiment ? "⏳ Analyzing..." : "🔍 Analyze Sentiment"}
-                </button>
-              </div>
-            </div>
-
-            {loadingSentiment && (
-              <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>
-                <div style={{ fontSize: "40px", marginBottom: "16px" }}>📡</div>
-                <p>Scanning Twitter, YouTube, Reddit & News for {sentimentGuest}...</p>
-              </div>
-            )}
-
-            {sentimentResult && (
-              <div>
-                {/* Header */}
-                <div style={{ background: "#0d1117", borderRadius: "12px", padding: "20px", border: `1px solid ${sentimentColor(sentimentResult.overallSentiment)}44`, marginBottom: "16px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
-                    <div>
-                      <h3 style={{ margin: "0 0 6px", fontSize: "20px", color: "#fff" }}>{sentimentResult.name}</h3>
-                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                        <span style={{ fontSize: "13px", fontWeight: "bold", padding: "3px 12px", borderRadius: "20px", background: sentimentColor(sentimentResult.overallSentiment) + "22", color: sentimentColor(sentimentResult.overallSentiment), border: `1px solid ${sentimentColor(sentimentResult.overallSentiment)}44` }}>
-                          {sentimentResult.overallSentiment} Sentiment
-                        </span>
-                        <span style={{ fontSize: "13px", padding: "3px 12px", borderRadius: "20px", background: sentimentResult.controversyLevel === "High" ? "#7f1d1d" : sentimentResult.controversyLevel === "Medium" ? "#78350f" : "#14532d", color: sentimentResult.controversyLevel === "High" ? "#f87171" : sentimentResult.controversyLevel === "Medium" ? "#fbbf24" : "#4ade80" }}>
-                          {sentimentResult.controversyLevel} Controversy
-                        </span>
-                        <span style={{ fontSize: "13px", fontWeight: "bold", padding: "3px 12px", borderRadius: "20px", background: sentimentResult.rajRecommendation === "BOOK NOW" ? "#14532d" : sentimentResult.rajRecommendation === "CONSIDER" ? "#78350f" : sentimentResult.rajRecommendation === "WAIT" ? "#1e3a5f" : "#7f1d1d", color: sentimentResult.rajRecommendation === "BOOK NOW" ? "#4ade80" : sentimentResult.rajRecommendation === "CONSIDER" ? "#fbbf24" : sentimentResult.rajRecommendation === "WAIT" ? "#60a5fa" : "#f87171" }}>
-                          {sentimentResult.rajRecommendation}
-                        </span>
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: "40px", fontWeight: "bold", color: sentimentColor(sentimentResult.overallSentiment) }}>{sentimentResult.overallScore}/10</div>
-                      <div style={{ fontSize: "11px", color: "#555" }}>Overall Score</div>
-                    </div>
-                  </div>
-                  {/* Sentiment Bar */}
-                  <div style={{ marginBottom: "12px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                      <span style={{ fontSize: "11px", color: "#00ff88" }}>Positive {sentimentResult.positivePercent}%</span>
-                      <span style={{ fontSize: "11px", color: "#9ca3af" }}>Neutral {sentimentResult.neutralPercent}%</span>
-                      <span style={{ fontSize: "11px", color: "#ff6666" }}>Negative {sentimentResult.negativePercent}%</span>
-                    </div>
-                    <div style={{ height: "10px", borderRadius: "5px", overflow: "hidden", display: "flex" }}>
-                      <div style={{ width: `${sentimentResult.positivePercent}%`, background: "#00ff88" }} />
-                      <div style={{ width: `${sentimentResult.neutralPercent}%`, background: "#4b5563" }} />
-                      <div style={{ width: `${sentimentResult.negativePercent}%`, background: "#ff6666" }} />
-                    </div>
-                  </div>
-                  <p style={{ margin: 0, fontSize: "13px", color: "#9ca3af", lineHeight: "1.5" }}>{sentimentResult.rajRecommendationReason}</p>
-                </div>
-
-                {/* Platform Breakdown */}
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "10px", marginBottom: "16px" }}>
-                  {[
-                    { label: "Twitter/X", value: sentimentResult.twitterSentiment, icon: "𝕏" },
-                    { label: "YouTube", value: sentimentResult.youtubeSentiment, icon: "▶️" },
-                    { label: "Reddit", value: sentimentResult.redditSentiment, icon: "🔴" },
-                    { label: "News", value: sentimentResult.newsSentiment, icon: "📰" }
-                  ].map((p, pi) => (
-                    <div key={pi} style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #1f2937" }}>
-                      <div style={{ fontSize: "16px", marginBottom: "4px" }}>{p.icon}</div>
-                      <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "4px" }}>{p.label}</div>
-                      <div style={{ fontSize: "12px", color: "#d1d5db", lineHeight: "1.4" }}>{p.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Positives & Controversies */}
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-                  <div style={{ background: "#0d1f0d", borderRadius: "10px", padding: "16px", border: "1px solid #166534" }}>
-                    <div style={{ fontSize: "11px", color: "#4ade80", fontWeight: "bold", marginBottom: "10px" }}>✅ WHAT AUDIENCES LOVE</div>
-                    {sentimentResult.positiveHighlights && sentimentResult.positiveHighlights.map((h, hi) => (
-                      <div key={hi} style={{ display: "flex", gap: "8px", marginBottom: "6px", fontSize: "12px", color: "#d1d5db" }}>
-                        <span style={{ color: "#4ade80" }}>▸</span> {h}
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ background: sentimentResult.recentControversies?.length > 0 ? "#1a0a0a" : "#0d1117", borderRadius: "10px", padding: "16px", border: `1px solid ${sentimentResult.recentControversies?.length > 0 ? "#7f1d1d" : "#1f2937"}` }}>
-                    <div style={{ fontSize: "11px", color: "#f87171", fontWeight: "bold", marginBottom: "10px" }}>⚠️ RECENT CONTROVERSIES</div>
-                    {sentimentResult.recentControversies && sentimentResult.recentControversies.length > 0
-                      ? sentimentResult.recentControversies.map((c, ci) => (
-                          <div key={ci} style={{ display: "flex", gap: "8px", marginBottom: "6px", fontSize: "12px", color: "#fca5a5" }}>
-                            <span style={{ color: "#f87171" }}>▸</span> {c}
-                          </div>
-                        ))
-                      : <div style={{ fontSize: "12px", color: "#4ade80" }}>No major controversies found ✓</div>
-                    }
-                  </div>
-                </div>
-
-                {/* Timing & Risk */}
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: "10px", marginBottom: "16px" }}>
-                  <div style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #1f2937" }}>
-                    <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "6px" }}>⏰ BEST TIME TO FEATURE</div>
-                    <div style={{ fontSize: "13px", color: "#fbbf24", lineHeight: "1.5" }}>{sentimentResult.bestTimeToFeature}</div>
-                  </div>
-                  <div style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: "1px solid #1f2937" }}>
-                    <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "6px" }}>🎯 AUDIENCE LOVE SCORE</div>
-                    <div style={{ fontSize: "28px", fontWeight: "bold", color: sentimentResult.audienceLoveScore >= 8 ? "#00ff88" : sentimentResult.audienceLoveScore >= 6 ? "#ffaa00" : "#ff6666" }}>{sentimentResult.audienceLoveScore}/10</div>
-                  </div>
-                  <div style={{ background: "#111827", borderRadius: "10px", padding: "14px", border: `1px solid ${sentimentResult.podcastRisk?.includes("Low") ? "#166534" : sentimentResult.podcastRisk?.includes("High") ? "#7f1d1d" : "#92400e"}` }}>
-                    <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "bold", marginBottom: "6px" }}>🛡️ PODCAST RISK</div>
-                    <div style={{ fontSize: "13px", color: sentimentResult.podcastRisk?.includes("Low") ? "#4ade80" : sentimentResult.podcastRisk?.includes("High") ? "#f87171" : "#fbbf24", lineHeight: "1.5" }}>{sentimentResult.podcastRisk}</div>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  <button onClick={() => { setSentimentGuest(""); setSentimentResult(null) }} style={{ padding: "10px 20px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "13px" }}>🔄 Analyze Another Guest</button>
-                  <button onClick={() => { setAvailabilityGuest(sentimentResult.name); setView("availability") }} style={{ padding: "10px 20px", borderRadius: "8px", background: "#1c1400", color: "#fcd34d", border: "1px solid #92400e", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>🗓️ Check Availability →</button>
-                </div>
-              </div>
-            )}
+<div style={{ padding: "24px", maxWidth: "1100px", margin: "0 auto" }}>
+  <h2 style={{ color: "#34d399", marginBottom: "8px" }}>🧠 Reputation Intelligence System</h2>
+  <p style={{ color: "#888", marginBottom: "24px" }}>Deep public perception analysis — sentiment, risk, brand safety, and content strategy.</p>
+  <div style={{ background: "#1a1a2e", border: "1px solid #34d39933", borderRadius: "12px", padding: "24px", marginBottom: "24px" }}>
+    <h3 style={{ color: "#34d399", marginBottom: "16px" }}>⚙️ Analysis Setup</h3>
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "16px" }}>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Guest Name *</label>
+        <input value={sentimentGuest} onChange={e => setSentimentGuest(e.target.value)} placeholder="e.g. Ashneer Grover" style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333", boxSizing: "border-box" }} />
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Analysis Focus</label>
+        <select value={sentimentFocus} onChange={e => setSentimentFocus(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+          {["Reputation", "Brand Safety", "Content Opportunity"].map(o => <option key={o}>{o}</option>)}
+        </select>
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Time Range</label>
+        <select value={sentimentTimeRange} onChange={e => setSentimentTimeRange(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+          <option value="7">Last 7 Days</option>
+          <option value="30">Last 30 Days</option>
+          <option value="90">Last 90 Days</option>
+        </select>
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Region</label>
+        <select value={sentimentRegion} onChange={e => setSentimentRegion(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+          {["India", "Global", "Both"].map(o => <option key={o}>{o}</option>)}
+        </select>
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Audience Type</label>
+        <select value={sentimentAudience} onChange={e => setSentimentAudience(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+          {["General", "Business", "Youth", "Political"].map(o => <option key={o}>{o}</option>)}
+        </select>
+      </div>
+      <div>
+        <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Platforms</label>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          {["Twitter", "YouTube", "Reddit", "News"].map(p => (
+            <label key={p} style={{ display: "flex", alignItems: "center", gap: "4px", color: "#ccc", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={sentimentPlatforms.includes(p)} onChange={() => setSentimentPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])} />
+              {p}
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+    <button onClick={analyzeSentiment} disabled={loadingSentiment || !sentimentGuest} style={{ marginTop: "20px", padding: "12px 32px", borderRadius: "8px", background: "#34d399", color: "#000", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}>
+      {loadingSentiment ? "🔄 Analyzing..." : "🧠 Analyze Reputation"}
+    </button>
+  </div>
+  {sentimentResult && (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(6, 1fr)", gap: "12px", marginBottom: "20px" }}>
+        {[
+          ["🏆 Reputation", sentimentResult.reputationScore, "#34d399"],
+          ["❤️ Audience Love", sentimentResult.audienceLoveScore, "#f472b6"],
+          ["🔒 Brand Safety", sentimentResult.brandSafetyScore, "#60a5fa"],
+          ["🤝 Trust", sentimentResult.audienceTrustScore, "#a78bfa"],
+          ["⚠️ Controversy", sentimentResult.controversyIntensity, "#f59e0b"],
+        ].map(([label, score, color]) => (
+          <div key={label} style={{ background: "#1a1a2e", borderRadius: "10px", padding: "14px", textAlign: "center", border: `1px solid ${color}44` }}>
+            <div style={{ fontSize: "22px", fontWeight: "bold", color }}>{score}</div>
+            <div style={{ color: "#888", fontSize: "11px", marginTop: "4px" }}>{label}</div>
           </div>
-        )}
-
+        ))}
+        <div style={{ background: "#1a1a2e", borderRadius: "10px", padding: "14px", textAlign: "center", border: `1px solid ${sentimentResult.overallVerdict === "Safe" ? "#34d399" : sentimentResult.overallVerdict === "Caution" ? "#f59e0b" : "#ef4444"}44` }}>
+          <div style={{ fontSize: "16px", fontWeight: "bold", color: sentimentResult.overallVerdict === "Safe" ? "#34d399" : sentimentResult.overallVerdict === "Caution" ? "#f59e0b" : "#ef4444" }}>{sentimentResult.overallVerdict}</div>
+          <div style={{ color: "#888", fontSize: "11px", marginTop: "4px" }}>📊 {sentimentResult.trendDirection}</div>
+        </div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#34d399", marginBottom: "16px" }}>📱 Platform Sentiment</h4>
+          {sentimentResult.platforms?.filter(p => sentimentPlatforms.includes(p.name)).map((p, i) => (
+            <div key={i} style={{ marginBottom: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                <span style={{ color: "#ccc", fontSize: "13px" }}>{p.name}</span>
+                <span style={{ color: "#888", fontSize: "11px" }}>{p.summary}</span>
+              </div>
+              <div style={{ display: "flex", borderRadius: "4px", overflow: "hidden", height: "8px" }}>
+                <div style={{ width: `${p.positive}%`, background: "#34d399" }} />
+                <div style={{ width: `${p.neutral}%`, background: "#555" }} />
+                <div style={{ width: `${p.negative}%`, background: "#ef4444" }} />
+              </div>
+              <div style={{ display: "flex", gap: "12px", marginTop: "3px", fontSize: "11px" }}>
+                <span style={{ color: "#34d399" }}>+{p.positive}%</span>
+                <span style={{ color: "#555" }}>{p.neutral}% neutral</span>
+                <span style={{ color: "#ef4444" }}>-{p.negative}%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#34d399", marginBottom: "12px" }}>🎯 Topic Clusters</h4>
+          <p style={{ color: "#888", fontSize: "12px", marginBottom: "6px" }}>WHAT FANS PRAISE:</p>
+          {sentimentResult.topPraiseThemes?.map((t, i) => <div key={i} style={{ background: "#34d39915", color: "#34d399", padding: "6px 10px", borderRadius: "6px", fontSize: "12px", marginBottom: "6px" }}>✅ {t}</div>)}
+          <p style={{ color: "#888", fontSize: "12px", margin: "12px 0 6px" }}>WHAT CRITICS ATTACK:</p>
+          {sentimentResult.topCriticismThemes?.map((t, i) => <div key={i} style={{ background: "#ef444415", color: "#ef4444", padding: "6px 10px", borderRadius: "6px", fontSize: "12px", marginBottom: "6px" }}>❌ {t}</div>)}
+        </div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#34d399", marginBottom: "12px" }}>🚨 Risk & Opportunity Alerts</h4>
+          {sentimentResult.redFlags?.map((f, i) => <div key={i} style={{ background: "#ef444415", color: "#ef4444", padding: "8px 12px", borderRadius: "6px", fontSize: "12px", marginBottom: "8px" }}>🔴 {f}</div>)}
+          {sentimentResult.greenOpportunities?.map((o, i) => <div key={i} style={{ background: "#34d39915", color: "#34d399", padding: "8px 12px", borderRadius: "6px", fontSize: "12px", marginBottom: "8px" }}>🟢 {o}</div>)}
+          <div style={{ marginTop: "12px", padding: "10px", background: "#f59e0b15", borderRadius: "8px" }}>
+            <span style={{ color: "#f59e0b", fontSize: "12px" }}>⚠️ Backlash Probability: <strong>{sentimentResult.backlashProbability}</strong></span>
+          </div>
+          <div style={{ marginTop: "8px", padding: "10px", background: "#60a5fa15", borderRadius: "8px" }}>
+            <span style={{ color: "#60a5fa", fontSize: "12px" }}>🚨 Crisis Indicator: <strong>{sentimentResult.crisisIndicator}</strong></span>
+          </div>
+        </div>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#34d399", marginBottom: "12px" }}>👥 Audience Segments</h4>
+          {sentimentResult.audienceSegments?.map((s, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px", background: "#ffffff08", borderRadius: "6px", marginBottom: "8px" }}>
+              <span style={{ color: "#ccc", fontSize: "13px" }}>{s.segment}</span>
+              <div style={{ textAlign: "right" }}>
+                <span style={{ color: s.sentiment === "Positive" ? "#34d399" : s.sentiment === "Negative" ? "#ef4444" : "#f59e0b", fontSize: "12px", fontWeight: "bold" }}>{s.sentiment}</span>
+                <p style={{ color: "#666", fontSize: "11px", margin: 0 }}>{s.reason}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+        <div style={{ background: "#1a1a2e", border: "1px solid #34d399", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#34d399", marginBottom: "12px" }}>🎙️ Content Strategy</h4>
+          <p style={{ color: "#888", fontSize: "12px", marginBottom: "4px" }}>SUGGESTED ANGLE:</p>
+          <p style={{ color: "#ccc", fontSize: "13px", marginBottom: "12px" }}>{sentimentResult.suggestedInterviewAngle}</p>
+          <p style={{ color: "#888", fontSize: "12px", marginBottom: "4px" }}>BEST FRAMING:</p>
+          <p style={{ color: "#ccc", fontSize: "13px", marginBottom: "12px" }}>{sentimentResult.bestFraming}</p>
+          <p style={{ color: "#888", fontSize: "12px", marginBottom: "4px" }}>RISK MITIGATION:</p>
+          <p style={{ color: "#f59e0b", fontSize: "13px" }}>{sentimentResult.riskMitigation}</p>
+        </div>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#34d399", marginBottom: "12px" }}>💰 Sponsor Safety</h4>
+          <p style={{ color: "#ccc", fontSize: "13px", marginBottom: "16px" }}>{sentimentResult.sponsorSafetyNote}</p>
+          <div style={{ background: `${sentimentResult.rajRecommendation === "BOOK NOW" ? "#34d399" : sentimentResult.rajRecommendation === "BOOK WITH CAUTION" ? "#f59e0b" : sentimentResult.rajRecommendation === "WAIT" ? "#60a5fa" : "#ef4444"}20`, border: `1px solid ${sentimentResult.rajRecommendation === "BOOK NOW" ? "#34d399" : sentimentResult.rajRecommendation === "BOOK WITH CAUTION" ? "#f59e0b" : sentimentResult.rajRecommendation === "WAIT" ? "#60a5fa" : "#ef4444"}`, borderRadius: "10px", padding: "16px" }}>
+            <div style={{ fontSize: "16px", fontWeight: "bold", color: sentimentResult.rajRecommendation === "BOOK NOW" ? "#34d399" : sentimentResult.rajRecommendation === "BOOK WITH CAUTION" ? "#f59e0b" : sentimentResult.rajRecommendation === "WAIT" ? "#60a5fa" : "#ef4444", marginBottom: "8px" }}>{sentimentResult.rajRecommendation}</div>
+            <p style={{ color: "#ccc", fontSize: "13px", margin: 0 }}>{sentimentResult.rajRecommendationReason}</p>
+          </div>
+        </div>
+      </div>
+      <button onClick={() => { setSentimentGuest(""); setSentimentResult(null) }} style={{ padding: "10px 20px", borderRadius: "8px", background: "#333", color: "#fff", border: "none", cursor: "pointer" }}>🔄 New Analysis</button>
+    </div>
+  )}
+</div>
+)}
         {/* AVAILABILITY PREDICTOR VIEW */}
         {view === "availability" && (
 <div style={{ padding: "24px", maxWidth: "1100px", margin: "0 auto" }}>
