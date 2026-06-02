@@ -228,6 +228,12 @@ const [roiRevBrandLift, setRoiRevBrandLift] = useState("")
       await supabase.from('pipeline').delete().neq('id', '00000000-0000-0000-0000-000000000000')
       if (pipelineData.length > 0) {
         await supabase.from('pipeline').insert(pipelineData.map(g => ({
+          name: g.name, category: g.category, score: g.total, priority: g.priority,
+          status: g.status || 'New', virality: g.virality, relevance: g.relevance, value: g.value,
+          why_now: g.whyNow, topic_angle: g.topicAngle, last_appeared: g.lastAppeared,
+          recording_date: g.recordingDate || '', added_date: g.addedDate,
+          pipeline_date: g.pipelineDate, added_from: g.addedFrom, is_ai_slot: g.isAISlot || false
+        })))
       }
       setSyncStatus("Synced ✓")
       setTimeout(() => setSyncStatus(""), 2000)
