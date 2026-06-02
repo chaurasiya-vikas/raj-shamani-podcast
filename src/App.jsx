@@ -144,6 +144,17 @@ const [teamMembers, setTeamMembers] = useState([])
 const [approvalRequests, setApprovalRequests] = useState([])
 const [activityLog, setActivityLog] = useState([])
 const [pendingCount, setPendingCount] = useState(0)
+const [episodeOutcomes, setEpisodeOutcomes] = useState([])
+const [outcomesLoading, setOutcomesLoading] = useState(false)
+const [outcomeInsights, setOutcomeInsights] = useState(null)
+const [showOutcomeForm, setShowOutcomeForm] = useState(false)
+const [outcomeForm, setOutcomeForm] = useState({
+  guest_name: "", guest_type: "", episode_date: "", episode_title: "",
+  predicted_views: "", actual_views: "", watch_time_pct: "", ctr: "",
+  retention: "", likes: "", comments: "", shares: "", subscriber_lift: "",
+  clip_count: "", clip_views: "", sponsor_value: "", brand_deal: "",
+  total_cost: "", outreach_days: "", approval_days: "", notes: ""
+})
 // Guest ROI Calculator V2
 const [roiGuestType, setRoiGuestType] = useState("")
 const [roiEpisodeObjective, setRoiEpisodeObjective] = useState("")
@@ -844,6 +855,65 @@ Suggest exactly 6 sponsors ranked by fitScore. ONLY valid JSON. NO MARKDOWN.`, "
     loadNotesFromSupabase()
     loadGuestHistoryFromSupabase()
     if (user?.email) fetchUserRole(user.email)
+
+      const fetchOutcomes = async () => {
+        const { data } = await supabase
+          .from("episode_outcomes")
+          .select("*")
+          .order("episode_date", { ascending: false })
+        if (data) setEpisodeOutcomes(data)
+      }
+      
+      const saveOutcome = async () => {
+        setOutcomesLoading(true)
+        try {
+          await supabase.from("episode_outcomes").insert({
+            ...outcomeForm,
+            predicted_views: parseInt(outcomeForm.predicted_views) || 0,
+            actual_views: parseInt(outcomeForm.actual_views) || 0,
+            watch_time_pct: parseFloat(outcomeForm.watch_time_pct) || 0,
+            ctr: parseFloat(outcomeForm.ctr) || 0,
+            retention: parseFloat(outcomeForm.retention) || 0,
+            likes: parseInt(outcomeForm.likes) || 0,
+            comments: parseInt(outcomeForm.comments) || 0,
+            shares: parseInt(outcomeForm.shares) || 0,
+            subscriber_lift: parseInt(outcomeForm.subscriber_lift) || 0,
+            clip_count: parseInt(outcomeForm.clip_count) || 0,
+            clip_views: parseInt(outcomeForm.clip_views) || 0,
+            sponsor_value: parseInt(outcomeForm.sponsor_value) || 0,
+            brand_deal: parseInt(outcomeForm.brand_deal) || 0,
+            total_cost: parseInt(outcomeForm.total_cost) || 0,
+            outreach_days: parseInt(outcomeForm.outreach_days) || 0,
+            approval_days: parseInt(outcomeForm.approval_days) || 0,
+            logged_by: user?.email
+          })
+          await fetchOutcomes()
+          setShowOutcomeForm(false)
+          setOutcomeForm({
+            guest_name: "", guest_type: "", episode_date: "", episode_title: "",
+            predicted_views: "", actual_views: "", watch_time_pct: "", ctr: "",
+            retention: "", likes: "", comments: "", shares: "", subscriber_lift: "",
+            clip_count: "", clip_views: "", sponsor_value: "", brand_deal: "",
+            total_cost: "", outreach_days: "", approval_days: "", notes: ""
+          })
+        } catch(e) { alert("Error saving: " + e.message) }
+        setOutcomesLoading(false)
+      }
+      
+      const generateOutcomeInsights = async () => {
+        if (episodeOutcomes.length === 0) return
+        setOutcomesLoading(true)
+        const summary = episodeOutcomes.slice(0, 10).map(e =>
+          `Guest: ${e.guest_name} (${e.guest_type}), Views: ${e.actual_views}, CTR: ${e.ctr}%, Retention: ${e.retention}%, Sponsor: ₹${e.sponsor_value}, ROI: ${e.total_cost > 0 ? ((e.sponsor_value + e.brand_deal) / e.total_cost * 100).toFixed(0) : 0}%`
+        ).join("\n")
+        const prompt = `You are a podcast growth strategist for "Figuring Out" by Raj Shamani. Analyze these episode outcomes and provide 5 specific actionable insights:\n\n${summary}\n\nReturn ONLY a JSON array of 5 objects with: { insight, category, action, impact } where category is one of: Content, Guest, Revenue, Workflow, Growth. No markdown.`
+        try {
+          const result = await callOpenAI(prompt, "outcome_insights")
+          const cleaned = result.replace(/```json|```/g, "").trim()
+          setOutcomeInsights(JSON.parse(cleaned))
+        } catch(e) { alert("Error generating insights") }
+        setOutcomesLoading(false)
+      }
     if (saved && lastDate !== today && key) {
       localStorage.setItem("raj_last_date", today)
       setTimeout(() => generateGuests(key), 1500)
@@ -1252,6 +1322,9 @@ Return ONLY the message text. No JSON. No labels.`)
           <button onClick={() => setView("performance")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "performance" ? "#6c63ff" : "transparent", color: "white", border: "1px solid #444", cursor: "pointer", fontSize: "12px" }}>📊 Performance</button>
           <button onClick={() => { setView("team"); fetchApprovals() }} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "team" ? "#1a6535" : "transparent", color: darkMode ? "#fff" : "#000", border: "1px solid #333", cursor: "pointer", position: "relative" }}>
   👥 Team {pendingCount > 0 && <span style={{ background: "#e74c3c", color: "#fff", borderRadius: "50%", padding: "1px 5px", fontSize: "10px", marginLeft: "4px" }}>{pendingCount}</span>}
+</button>
+<button onClick={() => { setView("outcomes"); fetchOutcomes() }} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "outcomes" ? "#1a6535" : "transparent", color: darkMode ? "#fff" : "#000", border: "1px solid #333", cursor: "pointer" }}>
+  📊 Outcomes
 </button>
           <button onClick={() => setView("roi")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "roi" ? "#f59e0b" : "transparent", color: "white", border: "1px solid #444", cursor: "pointer", fontSize: "12px" }}>💰 ROI Calculator</button>
           <button onClick={() => setDarkMode(!darkMode)} style={{ padding: "7px 12px", borderRadius: "8px", background: "#1e1e3f", color: darkMode ? "#fcd34d" : "#818cf8", border: "1px solid #444", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>{darkMode ? "☀️ Light" : "🌙 Dark"}</button>
@@ -2287,6 +2360,144 @@ Return ONLY the message text. No JSON. No labels.`)
         </div>
       </div>
     )}
+  </div>
+)}
+{view === "outcomes" && (
+  <div style={{ padding: "24px", maxWidth: "1000px", margin: "0 auto" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
+      <div>
+        <h2 style={{ color: "#38bdf8", margin: "0 0 4px" }}>📊 Outcome Analytics</h2>
+        <p style={{ color: "#888", fontSize: "13px", margin: 0 }}>{episodeOutcomes.length} episodes tracked</p>
+      </div>
+      <div style={{ display: "flex", gap: "8px" }}>
+        <button onClick={generateOutcomeInsights} disabled={outcomesLoading || episodeOutcomes.length === 0} style={{ padding: "8px 16px", background: "#1e3a5f", color: "#38bdf8", border: "1px solid #38bdf8", borderRadius: "8px", cursor: "pointer", fontSize: "13px" }}>
+          {outcomesLoading ? "Analysing..." : "🤖 Generate Insights"}
+        </button>
+        <button onClick={() => setShowOutcomeForm(!showOutcomeForm)} style={{ padding: "8px 16px", background: "#166534", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px" }}>
+          + Log Episode
+        </button>
+      </div>
+    </div>
+
+    {/* Summary Bar */}
+    {episodeOutcomes.length > 0 && (
+      <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
+        {[
+          { label: "Avg Views", value: Math.round(episodeOutcomes.reduce((a,b) => a + b.actual_views, 0) / episodeOutcomes.length).toLocaleString() },
+          { label: "Total Sponsor Revenue", value: "₹" + episodeOutcomes.reduce((a,b) => a + b.sponsor_value, 0).toLocaleString() },
+          { label: "Avg CTR", value: (episodeOutcomes.reduce((a,b) => a + b.ctr, 0) / episodeOutcomes.length).toFixed(1) + "%" },
+          { label: "Avg Retention", value: (episodeOutcomes.reduce((a,b) => a + b.retention, 0) / episodeOutcomes.length).toFixed(1) + "%" },
+          { label: "Total Clips", value: episodeOutcomes.reduce((a,b) => a + b.clip_count, 0) },
+          { label: "Subscriber Lift", value: "+" + episodeOutcomes.reduce((a,b) => a + b.subscriber_lift, 0).toLocaleString() }
+        ].map(m => (
+          <div key={m.label} style={{ background: darkMode ? "#111827" : "#f0f4f8", borderRadius: "10px", padding: "14px 18px", flex: "1", minWidth: "140px", border: "1px solid #222" }}>
+            <div style={{ color: "#38bdf8", fontSize: "18px", fontWeight: "bold" }}>{m.value}</div>
+            <div style={{ color: "#888", fontSize: "11px", marginTop: "4px" }}>{m.label}</div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/* Log Episode Form */}
+    {showOutcomeForm && (
+      <div style={{ background: darkMode ? "#111827" : "#f0f4f8", borderRadius: "12px", padding: "20px", marginBottom: "24px", border: "1px solid #333" }}>
+        <h3 style={{ color: "#38bdf8", marginBottom: "16px" }}>Log Episode Outcome</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          {[
+            { key: "guest_name", label: "Guest Name" },
+            { key: "guest_type", label: "Guest Type" },
+            { key: "episode_title", label: "Episode Title" },
+            { key: "episode_date", label: "Episode Date", type: "date" },
+            { key: "predicted_views", label: "Predicted Views" },
+            { key: "actual_views", label: "Actual Views" },
+            { key: "watch_time_pct", label: "Watch Time %" },
+            { key: "ctr", label: "CTR %" },
+            { key: "retention", label: "Retention %" },
+            { key: "likes", label: "Likes" },
+            { key: "comments", label: "Comments" },
+            { key: "shares", label: "Shares" },
+            { key: "subscriber_lift", label: "Subscriber Lift" },
+            { key: "clip_count", label: "Clip Count" },
+            { key: "clip_views", label: "Clip Views" },
+            { key: "sponsor_value", label: "Sponsor Value (₹)" },
+            { key: "brand_deal", label: "Brand Deal (₹)" },
+            { key: "total_cost", label: "Total Cost (₹)" },
+            { key: "outreach_days", label: "Outreach Days" },
+            { key: "approval_days", label: "Approval Days" }
+          ].map(f => (
+            <div key={f.key}>
+              <label style={{ color: "#888", fontSize: "11px" }}>{f.label}</label>
+              <input type={f.type || "text"} value={outcomeForm[f.key]} onChange={e => setOutcomeForm({...outcomeForm, [f.key]: e.target.value})}
+                style={{ width: "100%", padding: "7px", borderRadius: "6px", background: darkMode ? "#1a1a2e" : "#fff", color: darkMode ? "#fff" : "#000", border: "1px solid #333", marginTop: "4px", boxSizing: "border-box" }} />
+            </div>
+          ))}
+        </div>
+        <textarea placeholder="Notes..." value={outcomeForm.notes} onChange={e => setOutcomeForm({...outcomeForm, notes: e.target.value})}
+          style={{ width: "100%", marginTop: "12px", padding: "8px", borderRadius: "6px", background: darkMode ? "#1a1a2e" : "#fff", color: darkMode ? "#fff" : "#000", border: "1px solid #333", boxSizing: "border-box", minHeight: "60px" }} />
+        <button onClick={saveOutcome} disabled={outcomesLoading} style={{ marginTop: "12px", padding: "10px 24px", background: "#166534", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold" }}>
+          {outcomesLoading ? "Saving..." : "Save Episode"}
+        </button>
+      </div>
+    )}
+
+    {/* AI Insights */}
+    {outcomeInsights && (
+      <div style={{ marginBottom: "24px" }}>
+        <h3 style={{ color: "#f59e0b", marginBottom: "12px" }}>🤖 AI Strategy Insights</h3>
+        <div style={{ display: "grid", gap: "10px" }}>
+          {outcomeInsights.map((ins, i) => (
+            <div key={i} style={{ background: darkMode ? "#1a1a0a" : "#fffbeb", borderRadius: "10px", padding: "14px", border: "1px solid #854d0e" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ color: "#f59e0b", fontWeight: "bold", fontSize: "13px" }}>{ins.category}</span>
+                <span style={{ color: "#4ade80", fontSize: "12px" }}>Impact: {ins.impact}</span>
+              </div>
+              <p style={{ color: darkMode ? "#fff" : "#000", margin: "0 0 6px", fontSize: "14px" }}>{ins.insight}</p>
+              <p style={{ color: "#38bdf8", fontSize: "12px", margin: 0 }}>→ {ins.action}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* Episode Cards */}
+    <h3 style={{ color: "#38bdf8", marginBottom: "12px" }}>📺 Episode Performance</h3>
+    {episodeOutcomes.length === 0
+      ? <p style={{ color: "#666" }}>No episodes logged yet. Click "+ Log Episode" to start.</p>
+      : episodeOutcomes.map(ep => {
+        const roi = ep.total_cost > 0 ? (((ep.sponsor_value + ep.brand_deal) / ep.total_cost) * 100).toFixed(0) : 0
+        const vsPredict = ep.predicted_views > 0 ? (((ep.actual_views - ep.predicted_views) / ep.predicted_views) * 100).toFixed(0) : null
+        const verdict = vsPredict > 10 ? "Outperformed" : vsPredict < -10 ? "Underperformed" : "Met Expectations"
+        const verdictColor = verdict === "Outperformed" ? "#4ade80" : verdict === "Underperformed" ? "#f87171" : "#f59e0b"
+        return (
+          <div key={ep.id} style={{ background: darkMode ? "#111827" : "#f0f4f8", borderRadius: "12px", padding: "16px", marginBottom: "12px", border: "1px solid #222" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", marginBottom: "12px" }}>
+              <div>
+                <strong style={{ color: "#fff", fontSize: "15px" }}>{ep.guest_name}</strong>
+                <span style={{ marginLeft: "8px", color: "#888", fontSize: "12px" }}>{ep.guest_type}</span>
+                <p style={{ color: "#666", fontSize: "12px", margin: "2px 0 0" }}>{ep.episode_title}</p>
+              </div>
+              <span style={{ color: verdictColor, fontWeight: "bold", fontSize: "13px" }}>{verdict}</span>
+            </div>
+            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+              {[
+                { label: "Views", value: ep.actual_views?.toLocaleString() },
+                { label: "CTR", value: ep.ctr + "%" },
+                { label: "Retention", value: ep.retention + "%" },
+                { label: "Clips", value: ep.clip_count },
+                { label: "Sponsor", value: "₹" + ep.sponsor_value?.toLocaleString() },
+                { label: "ROI", value: roi + "%" },
+                { label: "vs Prediction", value: vsPredict ? vsPredict + "%" : "N/A" }
+              ].map(m => (
+                <div key={m.label} style={{ textAlign: "center" }}>
+                  <div style={{ color: "#38bdf8", fontWeight: "bold", fontSize: "14px" }}>{m.value}</div>
+                  <div style={{ color: "#666", fontSize: "10px" }}>{m.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })
+    }
   </div>
 )}
         {/* PIPELINE VIEW */}
