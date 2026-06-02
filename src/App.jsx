@@ -479,32 +479,6 @@ ONLY valid JSON. NO MARKDOWN.`)
     setLoadingCompetitors(true); setCompetitors([])
     try {
       const text = await callOpenAI(`You are a competitive intelligence analyst for Raj Shamani's podcast "Figuring Out".
-  Analyze these 11 podcast competitors: Nikhil Kamath, Ankur Warikoo, Ranveer Allahbadia (BeerBiceps), Sharan Hegde, Varun Mayya, Think School, Prakhar Ke Pravachan, Lex Fridman, My First Million, Diary of a CEO, How I Built This.
-  
-  For each competitor return a detailed profile. Return ONLY valid JSON array of 11 objects:
-  [{
-    "host": "name",
-    "positioning": "1 line positioning summary",
-    "audienceType": "who their audience is",
-    "momentumScore": 1-10,
-    "momentumTrend": "Rising|Stable|Declining",
-    "contentPillars": ["pillar1", "pillar2", "pillar3"],
-    "mainFormats": ["format1", "format2"],
-    "guestDiversity": "Low|Medium|High",
-    "sponsorThemes": ["theme1", "theme2"],
-    "recentGuests": [
-      {"name": "guest name", "category": "category", "performance": "High|Medium|Low"},
-      {"name": "guest name", "category": "category", "performance": "High|Medium|Low"},
-      {"name": "guest name", "category": "category", "performance": "High|Medium|Low"},
-      {"name": "guest name", "category": "category", "performance": "High|Medium|Low"},
-      {"name": "guest name", "category": "category", "performance": "High|Medium|Low"}
-    ],
-    "betterThanRaj": "what they do better than Raj in 1 line",
-    "weakerThanRaj": "where Raj has advantage in 1 line",
-    "topicGaps": ["topic Raj could own that this competitor is winning"],
-    "guestGaps": ["guest type this competitor books that Raj doesn't"]
-  }]
-  ONLY valid JSON. NO MARKDOWN.`, "competitor_intel")
       const cleaned = text.replace(/```json|```/g, "").trim()
       setCompetitors(JSON.parse(cleaned))
     } catch (e) { alert("Error: " + e.message) }
