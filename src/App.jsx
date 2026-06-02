@@ -81,10 +81,12 @@ function App() {
   const [showTitles, setShowTitles] = useState(false)
   const [brief, setBrief] = useState("")
   const [loadingBrief, setLoadingBrief] = useState(false)
-  const [briefGuest, setBriefGuest] = useState(null)
-  const [showBrief, setShowBrief] = useState(false)
-  const [briefData, setBriefData] = useState(null)
-const [briefLoading, setBriefLoading] = useState(false)
+  const [intelGuest, setintelGuest] = useState(null)
+  const [showIntel, setShowIntel] = useState(false)
+  const [intelData, setIntelData] = useState(null)
+const [intelLoading, setIntelLoading] = useState(false)
+const [intelGuest, setIntelGuest] = useState(null)
+const [showIntel, setShowIntel] = useState(false)
   const [copiedBrief, setCopiedBrief] = useState(false)
   const [alignmentData, setAlignmentData] = useState({})
   const [loadingAlignment, setLoadingAlignment] = useState(null)
@@ -1064,7 +1066,7 @@ Return ONLY valid JSON array of 5 strings. NO MARKDOWN.`)
 
   const generateBrief = async (guest) => {
     if (!apiKey) return
-    setLoadingBrief(true); setBriefGuest(guest); setBrief(""); setShowBrief(true)
+    setLoadingBrief(true); setintelGuest(guest); setBrief(""); setShowIntel(true)
     try {
       const text = await callOpenAI(`Generate a one-page Pre-Interview Brief for Raj Shamani before interviewing ${guest.name} (${guest.category}).
 Include: 1. GUEST SNAPSHOT 2. COMMUNICATION STYLE 3. TOPICS THEY LOVE 4. SENSITIVE TOPICS TO AVOID 5. BEST CONVERSATION OPENERS 6. VIRAL MOMENT TRIGGERS 7. DOs AND DONTs 8. ENERGY LEVEL
@@ -1129,10 +1131,10 @@ ONLY valid JSON. NO MARKDOWN.`)
 
   const generateResearch = async (guest) => {
     if (!apiKey) return
-    setBriefLoading(true)
-    setBriefGuest(guest)
-    setShowBrief(true)
-    setBriefData(null)
+    setIntelGuest(true)
+    setintelGuest(guest)
+    setShowIntel(true)
+    setIntelData(null)
     try {
       const prompt = `You are a senior research analyst for "Figuring Out" podcast by Raj Shamani. Raj's philosophy: "stop chasing famous names, find exclusive voices no one else has."
   
@@ -1156,9 +1158,9 @@ ONLY valid JSON. NO MARKDOWN.`)
   Be specific, factual, and research-grade. NO markdown, NO generic statements.`
       const result = await callOpenAI(prompt, "sourced_brief")
       const cleaned = result.replace(/```json|```/g, "").trim()
-      setBriefData(JSON.parse(cleaned))
+      setIntelData(JSON.parse(cleaned))
     } catch(e) { alert("Error generating brief: " + e.message) }
-    setBriefLoading(false)
+    setIntelGuest(false)
   }
   const generateQuestions = async (guest) => {
     if (!apiKey) return
@@ -2868,40 +2870,40 @@ Return ONLY the message text. No JSON. No labels.`)
           </div>
         )}
 
-        {showBrief && (
+        {showIntel && (
   <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, overflowY: "auto", padding: "20px" }}>
     <div style={{ maxWidth: "800px", margin: "0 auto", background: darkMode ? "#0f172a" : "#fff", borderRadius: "16px", padding: "28px", border: "1px solid #1e3a5f" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h2 style={{ color: "#38bdf8", margin: 0 }}>📋 Intelligence Brief: {briefGuest?.name}</h2>
-        <button onClick={() => setShowBrief(false)} style={{ background: "#7f1d1d", color: "#fff", border: "none", borderRadius: "8px", padding: "6px 14px", cursor: "pointer" }}>✕ Close</button>
+        <h2 style={{ color: "#38bdf8", margin: 0 }}>📋 Intelligence Brief: {intelGuest?.name}</h2>
+        <button onClick={() => setShowIntel(false)} style={{ background: "#7f1d1d", color: "#fff", border: "none", borderRadius: "8px", padding: "6px 14px", cursor: "pointer" }}>✕ Close</button>
       </div>
 
-      {briefLoading && <div style={{ textAlign: "center", padding: "60px", color: "#38bdf8" }}>⏳ Generating intelligence brief...</div>}
+      {intelLoading && <div style={{ textAlign: "center", padding: "60px", color: "#38bdf8" }}>⏳ Generating intelligence brief...</div>}
 
-      {briefData && (
+      {intelData && (
         <div>
           {/* Executive Summary */}
           <div style={{ background: darkMode ? "#1e3a5f" : "#eff6ff", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
             <h3 style={{ color: "#38bdf8", margin: "0 0 8px" }}>📌 Executive Summary</h3>
-            <p style={{ color: darkMode ? "#fff" : "#000", margin: 0, lineHeight: "1.6" }}>{briefData.executive_summary}</p>
+            <p style={{ color: darkMode ? "#fff" : "#000", margin: 0, lineHeight: "1.6" }}>{intelData.executive_summary}</p>
           </div>
 
           {/* Why Raj */}
           <div style={{ background: darkMode ? "#1a2e1a" : "#f0fdf4", borderRadius: "10px", padding: "16px", marginBottom: "16px", border: "1px solid #166534" }}>
             <h3 style={{ color: "#4ade80", margin: "0 0 8px" }}>🎯 Why Raj Should Have This Guest</h3>
-            <p style={{ color: darkMode ? "#fff" : "#000", margin: 0, lineHeight: "1.6" }}>{briefData.why_raj}</p>
+            <p style={{ color: darkMode ? "#fff" : "#000", margin: 0, lineHeight: "1.6" }}>{intelData.why_raj}</p>
           </div>
 
           {/* Why Now */}
           <div style={{ background: darkMode ? "#1a1a0a" : "#fffbeb", borderRadius: "10px", padding: "16px", marginBottom: "16px", border: "1px solid #854d0e" }}>
             <h3 style={{ color: "#f59e0b", margin: "0 0 8px" }}>⚡ Why Now</h3>
-            <p style={{ color: darkMode ? "#fff" : "#000", margin: 0 }}>{briefData.why_now}</p>
+            <p style={{ color: darkMode ? "#fff" : "#000", margin: 0 }}>{intelData.why_now}</p>
           </div>
 
           {/* Achievements */}
           <div style={{ marginBottom: "16px" }}>
             <h3 style={{ color: "#38bdf8", marginBottom: "10px" }}>🏆 Key Achievements</h3>
-            {briefData.achievements?.map((a, i) => (
+            {intelData.achievements?.map((a, i) => (
               <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "8px", background: darkMode ? "#111827" : "#f8fafc", borderRadius: "8px", padding: "10px" }}>
                 <span style={{ color: a.tag === "verified" ? "#4ade80" : "#f59e0b", fontSize: "11px", whiteSpace: "nowrap", marginTop: "2px" }}>{a.tag === "verified" ? "✅ Verified" : "🔵 Inferred"}</span>
                 <div>
@@ -2913,10 +2915,10 @@ Return ONLY the message text. No JSON. No labels.`)
           </div>
 
           {/* Risks */}
-          {briefData.risks?.length > 0 && (
+          {intelData.risks?.length > 0 && (
             <div style={{ marginBottom: "16px" }}>
               <h3 style={{ color: "#f87171", marginBottom: "10px" }}>⚠️ Risk & Sensitivity Flags</h3>
-              {briefData.risks.map((r, i) => (
+              {intelData.risks.map((r, i) => (
                 <div key={i} style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "6px", background: darkMode ? "#1a0a0a" : "#fff1f2", borderRadius: "8px", padding: "10px" }}>
                   <span style={{ color: r.severity === "high" ? "#f87171" : r.severity === "medium" ? "#f59e0b" : "#888", fontSize: "11px" }}>{r.severity?.toUpperCase()}</span>
                   <p style={{ color: darkMode ? "#fff" : "#000", margin: 0, fontSize: "14px" }}>{r.flag}</p>
@@ -2929,24 +2931,24 @@ Return ONLY the message text. No JSON. No labels.`)
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
             <div style={{ background: darkMode ? "#111827" : "#f8fafc", borderRadius: "10px", padding: "14px" }}>
               <h3 style={{ color: "#a78bfa", margin: "0 0 8px", fontSize: "14px" }}>👥 Audience Fit</h3>
-              <p style={{ color: darkMode ? "#ccc" : "#333", margin: 0, fontSize: "13px" }}>{briefData.audience_fit}</p>
+              <p style={{ color: darkMode ? "#ccc" : "#333", margin: 0, fontSize: "13px" }}>{intelData.audience_fit}</p>
             </div>
             <div style={{ background: darkMode ? "#111827" : "#f8fafc", borderRadius: "10px", padding: "14px" }}>
               <h3 style={{ color: "#f59e0b", margin: "0 0 8px", fontSize: "14px" }}>🎬 Best Episode Angle</h3>
-              <p style={{ color: darkMode ? "#ccc" : "#333", margin: 0, fontSize: "13px" }}>{briefData.episode_angle}</p>
+              <p style={{ color: darkMode ? "#ccc" : "#333", margin: 0, fontSize: "13px" }}>{intelData.episode_angle}</p>
             </div>
           </div>
 
           {/* Intro Hook */}
           <div style={{ background: darkMode ? "#0f2027" : "#f0f9ff", borderRadius: "10px", padding: "14px", marginBottom: "16px", border: "1px solid #0369a1" }}>
             <h3 style={{ color: "#38bdf8", margin: "0 0 8px", fontSize: "14px" }}>🎤 Suggested Intro Hook</h3>
-            <p style={{ color: darkMode ? "#ccc" : "#333", margin: 0, fontStyle: "italic" }}>{briefData.intro_hook}</p>
+            <p style={{ color: darkMode ? "#ccc" : "#333", margin: 0, fontStyle: "italic" }}>{intelData.intro_hook}</p>
           </div>
 
           {/* Questions */}
           <div style={{ marginBottom: "16px" }}>
             <h3 style={{ color: "#38bdf8", marginBottom: "10px" }}>❓ Interview Questions</h3>
-            {briefData.questions?.map((q, i) => (
+            {intelData.questions?.map((q, i) => (
               <div key={i} style={{ background: darkMode ? "#111827" : "#f8fafc", borderRadius: "8px", padding: "10px 14px", marginBottom: "6px", color: darkMode ? "#fff" : "#000", fontSize: "14px" }}>
                 {i + 1}. {q}
               </div>
@@ -2956,13 +2958,13 @@ Return ONLY the message text. No JSON. No labels.`)
           {/* Sponsor Fit */}
           <div style={{ background: darkMode ? "#1a1200" : "#fffbeb", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
             <h3 style={{ color: "#f59e0b", margin: "0 0 8px", fontSize: "14px" }}>💰 Sponsor Fit</h3>
-            <p style={{ color: darkMode ? "#ccc" : "#333", margin: 0, fontSize: "13px" }}>{briefData.sponsor_fit}</p>
+            <p style={{ color: darkMode ? "#ccc" : "#333", margin: 0, fontSize: "13px" }}>{intelData.sponsor_fit}</p>
           </div>
 
           {/* Sources */}
           <div style={{ background: darkMode ? "#111827" : "#f8fafc", borderRadius: "10px", padding: "14px" }}>
             <h3 style={{ color: "#888", margin: "0 0 8px", fontSize: "13px" }}>🔗 Sources</h3>
-            {briefData.sources?.map((s, i) => (
+            {intelData.sources?.map((s, i) => (
               <p key={i} style={{ color: "#38bdf8", margin: "2px 0", fontSize: "12px" }}>• {s}</p>
             ))}
           </div>
@@ -3232,23 +3234,23 @@ Return ONLY the message text. No JSON. No labels.`)
       )}
 
       {/* BRIEF OVERLAY */}
-      {showBrief && (
+      {showIntel && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.88)", zIndex: 2000, overflowY: "auto", padding: "24px" }}>
           <div style={{ background: "#111827", borderRadius: "16px", padding: "28px", maxWidth: "750px", margin: "0 auto", border: "1px solid #92400e" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
               <div>
                 <h2 style={{ margin: "0 0 4px", color: "#fbbf24" }}>📄 Pre-Interview Brief</h2>
-                <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>Guest: {briefGuest?.name} • For Raj's eyes only</p>
+                <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>Guest: {intelGuest?.name} • For Raj's eyes only</p>
               </div>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button onClick={() => { navigator.clipboard.writeText(brief); setCopiedBrief(true); setTimeout(() => setCopiedBrief(false), 2000) }} style={{ padding: "8px 16px", borderRadius: "8px", background: copiedBrief ? "#1a3a2a" : "#1e3a5f", color: copiedBrief ? "#4ade80" : "#60a5fa", border: "none", cursor: "pointer", fontSize: "12px" }}>{copiedBrief ? "✅ Copied!" : "📋 Copy Brief"}</button>
-                <button onClick={() => setShowBrief(false)} style={{ padding: "8px 16px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "13px" }}>✕ Close</button>
+                <button onClick={() => setShowIntel(false)} style={{ padding: "8px 16px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "13px" }}>✕ Close</button>
               </div>
             </div>
             {loadingBrief ? <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>⏳ Generating pre-interview brief...</div> : (
               <div>
                 <div style={{ whiteSpace: "pre-wrap", lineHeight: "1.9", color: "#d1d5db", fontSize: "14px", background: "#0d1117", borderRadius: "10px", padding: "20px", border: "1px solid #1f2937", marginBottom: "16px" }}>{brief}</div>
-                <button onClick={() => generateBrief(briefGuest)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "12px" }}>🔄 Regenerate Brief</button>
+                <button onClick={() => generateBrief(intelGuest)} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "12px" }}>🔄 Regenerate Brief</button>
               </div>
             )}
           </div>
