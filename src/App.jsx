@@ -856,64 +856,6 @@ Suggest exactly 6 sponsors ranked by fitScore. ONLY valid JSON. NO MARKDOWN.`, "
     loadGuestHistoryFromSupabase()
     if (user?.email) fetchUserRole(user.email)
 
-      const fetchOutcomes = async () => {
-        const { data } = await supabase
-          .from("episode_outcomes")
-          .select("*")
-          .order("episode_date", { ascending: false })
-        if (data) setEpisodeOutcomes(data)
-      }
-      
-      const saveOutcome = async () => {
-        setOutcomesLoading(true)
-        try {
-          await supabase.from("episode_outcomes").insert({
-            ...outcomeForm,
-            predicted_views: parseInt(outcomeForm.predicted_views) || 0,
-            actual_views: parseInt(outcomeForm.actual_views) || 0,
-            watch_time_pct: parseFloat(outcomeForm.watch_time_pct) || 0,
-            ctr: parseFloat(outcomeForm.ctr) || 0,
-            retention: parseFloat(outcomeForm.retention) || 0,
-            likes: parseInt(outcomeForm.likes) || 0,
-            comments: parseInt(outcomeForm.comments) || 0,
-            shares: parseInt(outcomeForm.shares) || 0,
-            subscriber_lift: parseInt(outcomeForm.subscriber_lift) || 0,
-            clip_count: parseInt(outcomeForm.clip_count) || 0,
-            clip_views: parseInt(outcomeForm.clip_views) || 0,
-            sponsor_value: parseInt(outcomeForm.sponsor_value) || 0,
-            brand_deal: parseInt(outcomeForm.brand_deal) || 0,
-            total_cost: parseInt(outcomeForm.total_cost) || 0,
-            outreach_days: parseInt(outcomeForm.outreach_days) || 0,
-            approval_days: parseInt(outcomeForm.approval_days) || 0,
-            logged_by: user?.email
-          })
-          await fetchOutcomes()
-          setShowOutcomeForm(false)
-          setOutcomeForm({
-            guest_name: "", guest_type: "", episode_date: "", episode_title: "",
-            predicted_views: "", actual_views: "", watch_time_pct: "", ctr: "",
-            retention: "", likes: "", comments: "", shares: "", subscriber_lift: "",
-            clip_count: "", clip_views: "", sponsor_value: "", brand_deal: "",
-            total_cost: "", outreach_days: "", approval_days: "", notes: ""
-          })
-        } catch(e) { alert("Error saving: " + e.message) }
-        setOutcomesLoading(false)
-      }
-      
-      const generateOutcomeInsights = async () => {
-        if (episodeOutcomes.length === 0) return
-        setOutcomesLoading(true)
-        const summary = episodeOutcomes.slice(0, 10).map(e =>
-          `Guest: ${e.guest_name} (${e.guest_type}), Views: ${e.actual_views}, CTR: ${e.ctr}%, Retention: ${e.retention}%, Sponsor: ₹${e.sponsor_value}, ROI: ${e.total_cost > 0 ? ((e.sponsor_value + e.brand_deal) / e.total_cost * 100).toFixed(0) : 0}%`
-        ).join("\n")
-        const prompt = `You are a podcast growth strategist for "Figuring Out" by Raj Shamani. Analyze these episode outcomes and provide 5 specific actionable insights:\n\n${summary}\n\nReturn ONLY a JSON array of 5 objects with: { insight, category, action, impact } where category is one of: Content, Guest, Revenue, Workflow, Growth. No markdown.`
-        try {
-          const result = await callOpenAI(prompt, "outcome_insights")
-          const cleaned = result.replace(/```json|```/g, "").trim()
-          setOutcomeInsights(JSON.parse(cleaned))
-        } catch(e) { alert("Error generating insights") }
-        setOutcomesLoading(false)
-      }
     if (saved && lastDate !== today && key) {
       localStorage.setItem("raj_last_date", today)
       setTimeout(() => generateGuests(key), 1500)
@@ -921,6 +863,65 @@ Suggest exactly 6 sponsors ranked by fitScore. ONLY valid JSON. NO MARKDOWN.`, "
       localStorage.setItem("raj_last_date", today)
     }
   }, [])
+
+  const fetchOutcomes = async () => {
+    const { data } = await supabase
+      .from("episode_outcomes")
+      .select("*")
+      .order("episode_date", { ascending: false })
+    if (data) setEpisodeOutcomes(data)
+  }
+  
+  const saveOutcome = async () => {
+    setOutcomesLoading(true)
+    try {
+      await supabase.from("episode_outcomes").insert({
+        ...outcomeForm,
+        predicted_views: parseInt(outcomeForm.predicted_views) || 0,
+        actual_views: parseInt(outcomeForm.actual_views) || 0,
+        watch_time_pct: parseFloat(outcomeForm.watch_time_pct) || 0,
+        ctr: parseFloat(outcomeForm.ctr) || 0,
+        retention: parseFloat(outcomeForm.retention) || 0,
+        likes: parseInt(outcomeForm.likes) || 0,
+        comments: parseInt(outcomeForm.comments) || 0,
+        shares: parseInt(outcomeForm.shares) || 0,
+        subscriber_lift: parseInt(outcomeForm.subscriber_lift) || 0,
+        clip_count: parseInt(outcomeForm.clip_count) || 0,
+        clip_views: parseInt(outcomeForm.clip_views) || 0,
+        sponsor_value: parseInt(outcomeForm.sponsor_value) || 0,
+        brand_deal: parseInt(outcomeForm.brand_deal) || 0,
+        total_cost: parseInt(outcomeForm.total_cost) || 0,
+        outreach_days: parseInt(outcomeForm.outreach_days) || 0,
+        approval_days: parseInt(outcomeForm.approval_days) || 0,
+        logged_by: user?.email
+      })
+      await fetchOutcomes()
+      setShowOutcomeForm(false)
+      setOutcomeForm({
+        guest_name: "", guest_type: "", episode_date: "", episode_title: "",
+        predicted_views: "", actual_views: "", watch_time_pct: "", ctr: "",
+        retention: "", likes: "", comments: "", shares: "", subscriber_lift: "",
+        clip_count: "", clip_views: "", sponsor_value: "", brand_deal: "",
+        total_cost: "", outreach_days: "", approval_days: "", notes: ""
+      })
+    } catch(e) { alert("Error saving: " + e.message) }
+    setOutcomesLoading(false)
+  }
+  
+  const generateOutcomeInsights = async () => {
+    if (episodeOutcomes.length === 0) return
+    setOutcomesLoading(true)
+    const summary = episodeOutcomes.slice(0, 10).map(e =>
+      `Guest: ${e.guest_name} (${e.guest_type}), Views: ${e.actual_views}, CTR: ${e.ctr}%, Retention: ${e.retention}%, Sponsor: ₹${e.sponsor_value}, ROI: ${e.total_cost > 0 ? ((e.sponsor_value + e.brand_deal) / e.total_cost * 100).toFixed(0) : 0}%`
+    ).join("\n")
+    const prompt = `You are a podcast growth strategist for "Figuring Out" by Raj Shamani. Analyze these episode outcomes and provide 5 specific actionable insights:\n\n${summary}\n\nReturn ONLY a JSON array of 5 objects with: { insight, category, action, impact } where category is one of: Content, Guest, Revenue, Workflow, Growth. No markdown.`
+    try {
+      const result = await callOpenAI(prompt, "outcome_insights")
+      const cleaned = result.replace(/```json|```/g, "").trim()
+      setOutcomeInsights(JSON.parse(cleaned))
+    } catch(e) { alert("Error generating insights") }
+    setOutcomesLoading(false)
+  }
 
   const saveApiKey = (key) => { setApiKey(key); localStorage.setItem("raj_api_key", key) }
 
