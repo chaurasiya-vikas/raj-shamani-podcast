@@ -2870,22 +2870,6 @@ Return ONLY the message text. No JSON. No labels.`)
           </div>
         )}
 
-        {/* RESEARCH VIEW */}
-        {view === "research" && (
-          <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-            <button onClick={() => setView("home")} style={{ marginBottom: "20px", padding: "8px 16px", borderRadius: "8px", background: "#1e1e3f", color: "#a78bfa", border: "1px solid #4c1d95", cursor: "pointer" }}>← Back</button>
-            <h2 style={{ color: "#a78bfa" }}>📋 Research: {selectedGuest?.name}</h2>
-            {loading ? <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>⏳ Generating research...</div>
-              : <div style={{ background: "#111827", borderRadius: "12px", padding: "24px", border: "1px solid #333", whiteSpace: "pre-wrap", lineHeight: "1.8", color: "#d1d5db", fontSize: "14px" }}>
-                {research}
-                <div style={{ marginTop: "20px", display: "flex", gap: "10px", flexWrap: "wrap", borderTop: "1px solid #333", paddingTop: "20px" }}>
-                  <button onClick={() => generateOutreach(selectedGuest)} style={{ padding: "10px 18px", borderRadius: "8px", background: "#1a2e1a", color: "#4ade80", border: "1px solid #166534", cursor: "pointer" }}>✉️ Outreach</button>
-                  <button onClick={() => generateQuestions(selectedGuest)} style={{ padding: "10px 18px", borderRadius: "8px", background: "#2d1a3e", color: "#c084fc", border: "1px solid #6b21a8", cursor: "pointer" }}>❓ Questions</button>
-                  <button onClick={() => { setSelectedGuest(selectedGuest); generateWhatsapp(selectedGuest); setView("whatsapp") }} style={{ padding: "10px 18px", borderRadius: "8px", background: "#1a2e1a", color: "#25d366", border: "1px solid #128c7e", cursor: "pointer" }}>💬 WhatsApp</button>
-                </div>
-              </div>}
-          </div>
-        )}
         {showBrief && (
   <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, overflowY: "auto", padding: "20px" }}>
     <div style={{ maxWidth: "800px", margin: "0 auto", background: darkMode ? "#0f172a" : "#fff", borderRadius: "16px", padding: "28px", border: "1px solid #1e3a5f" }}>
