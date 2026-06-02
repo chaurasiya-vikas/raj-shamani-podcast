@@ -139,6 +139,11 @@ const [perfSponsorAngle, setPerfSponsorAngle] = useState("")
 const [perfPriorityMetric, setPerfPriorityMetric] = useState("")
 const [perfTimeHorizon, setPerfTimeHorizon] = useState("")
 const [perfBenchmarkGuest, setPerfBenchmarkGuest] = useState("")
+const [userRole, setUserRole] = useState("viewer")
+const [teamMembers, setTeamMembers] = useState([])
+const [approvalRequests, setApprovalRequests] = useState([])
+const [activityLog, setActivityLog] = useState([])
+const [pendingCount, setPendingCount] = useState(0)
 // Guest ROI Calculator V2
 const [roiGuestType, setRoiGuestType] = useState("")
 const [roiEpisodeObjective, setRoiEpisodeObjective] = useState("")
@@ -838,6 +843,7 @@ Suggest exactly 6 sponsors ranked by fitScore. ONLY valid JSON. NO MARKDOWN.`, "
     loadPipelineFromSupabase()
     loadNotesFromSupabase()
     loadGuestHistoryFromSupabase()
+    if (user?.email) fetchUserRole(user.email)
     if (saved && lastDate !== today && key) {
       localStorage.setItem("raj_last_date", today)
       setTimeout(() => generateGuests(key), 1500)
@@ -847,6 +853,77 @@ Suggest exactly 6 sponsors ranked by fitScore. ONLY valid JSON. NO MARKDOWN.`, "
   }, [])
 
   const saveApiKey = (key) => { setApiKey(key); localStorage.setItem("raj_api_key", key) }
+
+  const fetchUserRole = async (email) => {
+    const { data } = await supabase
+      .from("team_members")
+      .select("role")
+      .eq("email", email)
+      .eq("is_active", true)
+      .single()
+    if (data) {
+      setUserRole(data.role)
+    } else {
+      setUserRole("viewer")
+    }
+  }
+
+  const requestApproval = async (guestName, approvalType, content = {}) => {
+    const { data, error } = await supabase.from("approval_requests").insert({
+      guest_name: guestName,
+      approval_type: approvalType,
+      status: "pending",
+      requested_by: user?.email,
+      content: content
+    })
+    if (!error) {
+      await logActivity("requested_approval", "guest", guestName, `${approvalType} approval requested`)
+      fetchApprovals()
+    }
+  }
+  
+  const approveItem = async (approvalId, guestName, comment = "") => {
+    await supabase.from("approval_requests").update({
+      status: "approved",
+      reviewed_by: user?.email,
+      comment: comment,
+      updated_at: new Date().toISOString()
+    }).eq("id", approvalId)
+    await logActivity("approved", "guest", guestName, comment)
+    fetchApprovals()
+  }
+  
+  const rejectItem = async (approvalId, guestName, comment = "") => {
+    await supabase.from("approval_requests").update({
+      status: "rejected",
+      reviewed_by: user?.email,
+      comment: comment,
+      updated_at: new Date().toISOString()
+    }).eq("id", approvalId)
+    await logActivity("rejected", "guest", guestName, comment)
+    fetchApprovals()
+  }
+  
+  const logActivity = async (action, targetType, targetName, details = "") => {
+    await supabase.from("activity_log").insert({
+      user_email: user?.email,
+      action: action,
+      target_type: targetType,
+      target_name: targetName,
+      details: details
+    })
+  }
+  
+  const fetchApprovals = async () => {
+    const { data } = await supabase
+      .from("approval_requests")
+      .select("*")
+      .order("created_at", { ascending: false })
+    if (data) {
+      setApprovalRequests(data)
+      setPendingCount(data.filter(a => a.status === "pending").length)
+    }
+  }
 
   const addToPipeline = async (guest, from = "category") => {
     if (pipeline.find(p => p.name === guest.name)) { alert(`${guest.name} is already in pipeline!`); return }
@@ -1170,6 +1247,9 @@ Return ONLY the message text. No JSON. No labels.`)
           <button onClick={() => setView("availability")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "availability" ? "#1c1400" : "#1e1e3f", color: "#fcd34d", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>🗓️ Availability</button>
           <button onClick={() => setView("sponsors")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "sponsors" ? "#1a0533" : "#1e1e3f", color: "#e879f9", border: "1px solid #7e22ce", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>💰 Sponsors</button>
           <button onClick={() => setView("performance")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "performance" ? "#6c63ff" : "transparent", color: "white", border: "1px solid #444", cursor: "pointer", fontSize: "12px" }}>📊 Performance</button>
+          <button onClick={() => { setView("team"); fetchApprovals() }} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "team" ? "#1a6535" : "transparent", color: darkMode ? "#fff" : "#000", border: "1px solid #333", cursor: "pointer", position: "relative" }}>
+  👥 Team {pendingCount > 0 && <span style={{ background: "#e74c3c", color: "#fff", borderRadius: "50%", padding: "1px 5px", fontSize: "10px", marginLeft: "4px" }}>{pendingCount}</span>}
+</button>
           <button onClick={() => setView("roi")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "roi" ? "#f59e0b" : "transparent", color: "white", border: "1px solid #444", cursor: "pointer", fontSize: "12px" }}>💰 ROI Calculator</button>
           <button onClick={() => setDarkMode(!darkMode)} style={{ padding: "7px 12px", borderRadius: "8px", background: "#1e1e3f", color: darkMode ? "#fcd34d" : "#818cf8", border: "1px solid #444", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>{darkMode ? "☀️ Light" : "🌙 Dark"}</button>
           <button onClick={() => setHistoryView(!historyView)} style={{ padding: "7px 12px", borderRadius: "8px", background: historyView ? "#1a1a2e" : "#1e1e3f", color: "#f59e0b", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📜 History</button>
@@ -2207,6 +2287,58 @@ Return ONLY the message text. No JSON. No labels.`)
   </div>
 )}
         {/* PIPELINE VIEW */}
+        {view === "team" && (
+  <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
+    <h2 style={{ color: "#38bdf8", marginBottom: "4px" }}>👥 Team & Approvals</h2>
+    <p style={{ color: "#888", fontSize: "13px", marginBottom: "24px" }}>Role: <strong style={{ color: "#4ade80" }}>{userRole.replace("_", " ").toUpperCase()}</strong></p>
+
+    {/* Pending Approvals */}
+    <div style={{ marginBottom: "32px" }}>
+      <h3 style={{ color: "#f59e0b", marginBottom: "12px" }}>⏳ Pending Approvals ({approvalRequests.filter(a => a.status === "pending").length})</h3>
+      {approvalRequests.filter(a => a.status === "pending").length === 0
+        ? <p style={{ color: "#666" }}>No pending approvals</p>
+        : approvalRequests.filter(a => a.status === "pending").map(req => (
+          <div key={req.id} style={{ background: darkMode ? "#1a1a2e" : "#f0f4f8", borderRadius: "10px", padding: "16px", marginBottom: "12px", border: "1px solid #333" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+              <div>
+                <strong style={{ color: "#fff" }}>{req.guest_name}</strong>
+                <span style={{ marginLeft: "8px", background: "#1e3a5f", color: "#38bdf8", padding: "2px 8px", borderRadius: "20px", fontSize: "11px" }}>{req.approval_type.replace("_", " ")}</span>
+                <p style={{ color: "#888", fontSize: "12px", margin: "4px 0 0" }}>By: {req.requested_by} · {new Date(req.created_at).toLocaleDateString('en-IN')}</p>
+              </div>
+              {(userRole === "admin" || userRole === "lead_producer") && (
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button onClick={() => approveItem(req.id, req.guest_name, "Approved")} style={{ padding: "6px 14px", background: "#166534", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>✅ Approve</button>
+                  <button onClick={() => rejectItem(req.id, req.guest_name, "Rejected")} style={{ padding: "6px 14px", background: "#7f1d1d", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>❌ Reject</button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    {/* All Approvals History */}
+    <div style={{ marginBottom: "32px" }}>
+      <h3 style={{ color: "#38bdf8", marginBottom: "12px" }}>📋 Approval History</h3>
+      {approvalRequests.filter(a => a.status !== "pending").slice(0, 10).map(req => (
+        <div key={req.id} style={{ background: darkMode ? "#0f1a0f" : "#f0f4f8", borderRadius: "8px", padding: "12px", marginBottom: "8px", border: `1px solid ${req.status === "approved" ? "#166534" : "#7f1d1d"}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap" }}>
+            <span style={{ color: "#fff" }}>{req.guest_name} — <span style={{ color: "#888", fontSize: "12px" }}>{req.approval_type.replace("_", " ")}</span></span>
+            <span style={{ color: req.status === "approved" ? "#4ade80" : "#f87171", fontSize: "12px" }}>{req.status.toUpperCase()} by {req.reviewed_by}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* Team Members — Admin only */}
+    {userRole === "admin" && (
+      <div>
+        <h3 style={{ color: "#38bdf8", marginBottom: "12px" }}>🔐 Team Members</h3>
+        <p style={{ color: "#888", fontSize: "12px", marginBottom: "12px" }}>Add members via Supabase → team_members table. Roles: admin, lead_producer, researcher, outreach, viewer</p>
+      </div>
+    )}
+  </div>
+)}
         {view === "pipeline" && (
           <div>
             <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
