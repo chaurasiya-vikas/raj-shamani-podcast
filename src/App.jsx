@@ -3232,7 +3232,7 @@ Return ONLY the message text. No JSON. No labels.`)
       )}
 
       {/* BRIEF OVERLAY */}
-      {showIntel && (
+      {showBrief && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.88)", zIndex: 2000, overflowY: "auto", padding: "24px" }}>
           <div style={{ background: "#111827", borderRadius: "16px", padding: "28px", maxWidth: "750px", margin: "0 auto", border: "1px solid #92400e" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
@@ -3242,7 +3242,7 @@ Return ONLY the message text. No JSON. No labels.`)
               </div>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button onClick={() => { navigator.clipboard.writeText(brief); setCopiedBrief(true); setTimeout(() => setCopiedBrief(false), 2000) }} style={{ padding: "8px 16px", borderRadius: "8px", background: copiedBrief ? "#1a3a2a" : "#1e3a5f", color: copiedBrief ? "#4ade80" : "#60a5fa", border: "none", cursor: "pointer", fontSize: "12px" }}>{copiedBrief ? "✅ Copied!" : "📋 Copy Brief"}</button>
-                <button onClick={() => setShowIntel(false)} style={{ padding: "8px 16px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "13px" }}>✕ Close</button>
+                <button onClick={() => setShowBrief(false)} style={{ padding: "8px 16px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "13px" }}>✕ Close</button>
               </div>
             </div>
             {loadingBrief ? <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>⏳ Generating pre-interview brief...</div> : (
