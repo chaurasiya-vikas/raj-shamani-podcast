@@ -102,6 +102,13 @@ const [intelLoading, setIntelLoading] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [competitors, setCompetitors] = useState([])
   const [loadingCompetitors, setLoadingCompetitors] = useState(false)
+  // Content Gap Finder
+const [gapCompetitors, setGapCompetitors] = useState([])
+const [gapTimeRange, setGapTimeRange] = useState("90")
+const [gapGoal, setGapGoal] = useState("views")
+const [gapResult, setGapResult] = useState(null)
+const [loadingGaps, setLoadingGaps] = useState(false)
+const [selectedGap, setSelectedGap] = useState(null)
   const [syncStatus, setSyncStatus] = useState("")
   // Sentiment Analyzer
   const [sentimentGuest, setSentimentGuest] = useState("")
@@ -467,6 +474,42 @@ ONLY valid JSON. NO MARKDOWN.`)
       setCompetitors(merged)
     } catch (e) { alert("Error: " + e.message) }
     setLoadingCompetitors(false)
+  }
+
+  const generateGapAnalysis = async () => {
+    if (!gapCompetitors.length) { alert("Please select at least one competitor!"); return }
+    setLoadingGaps(true)
+    setGapResult(null)
+    setSelectedGap(null)
+    try {
+      const text = await callOpenAI(`You are a podcast growth intelligence analyst for Raj Shamani's podcast "Figuring Out".
+  Selected competitors: ${gapCompetitors.join(", ")}
+  Time range: Last ${gapTimeRange} days
+  Growth goal: ${gapGoal}
+  Raj's podcast focus: Business, entrepreneurship, mindset, exclusive voices, India growth stories.
+  
+  Analyze these competitors and find content gaps Raj should fill. Return ONLY valid JSON array of 8 gaps:
+  [{
+    "title": "gap title",
+    "type": "Topic|Guest|Format|Audience|Monetization|Seasonal",
+    "priority": "High|Medium|Low",
+    "priorityScore": 1-10,
+    "whyCompetitorsWinning": "explanation",
+    "rajCoverageStatus": "Never Covered|Rarely Covered|Covered Once",
+    "estimatedUpside": "e.g. 2-5M views potential",
+    "suggestedGuest": "specific real person name",
+    "guestFitReason": "why this guest fits",
+    "episodeAngle": "specific episode angle",
+    "sponsorTieIn": "relevant sponsor category",
+    "competitorMomentum": "High|Medium|Low",
+    "evidence": "specific competitor episode or topic example"
+  }]
+  ONLY valid JSON. NO MARKDOWN.`)
+      const cleaned = text.replace(/```json|```/g, "").trim()
+      const parsed = JSON.parse(cleaned)
+      setGapResult(parsed)
+    } catch (e) { alert("Error: " + e.message) }
+    setLoadingGaps(false)
   }
 
   // ─── SENTIMENT ANALYZER ───────────────────────────────────────────────────
@@ -1354,6 +1397,7 @@ Return ONLY the message text. No JSON. No labels.`)
 </button>
           <button onClick={() => setView("roi")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "roi" ? "#f59e0b" : "transparent", color: "white", border: "1px solid #444", cursor: "pointer", fontSize: "12px" }}>💰 ROI Calculator</button>
           <button onClick={() => setDarkMode(!darkMode)} style={{ padding: "7px 12px", borderRadius: "8px", background: "#1e1e3f", color: darkMode ? "#fcd34d" : "#818cf8", border: "1px solid #444", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>{darkMode ? "☀️ Light" : "🌙 Dark"}</button>
+          <button onClick={() => setView("gaps")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "gaps" ? "#a855f7" : "rgba(255,255,255,0.1)", color: "#fff", border: "none", cursor: "pointer", fontSize: "12px" }}>🔍 Gap Finder</button>
           <button onClick={() => setHistoryView(!historyView)} style={{ padding: "7px 12px", borderRadius: "8px", background: historyView ? "#1a1a2e" : "#1e1e3f", color: "#f59e0b", border: "1px solid #92400e", cursor: "pointer", fontSize: isMobile ? "12px" : "13px" }}>📜 History</button>
           {comparedGuests.length >= 2 && <button onClick={() => setView("compare")} style={{ padding: "7px 12px", borderRadius: "8px", background: "linear-gradient(135deg,#4c1d95,#1e3a5f)", color: "#c4b5fd", border: "1px solid #7c3aed", cursor: "pointer", fontSize: isMobile ? "12px" : "13px", fontWeight: "bold" }}>⚖️ Compare ({comparedGuests.length})</button>}
           {user?.email === "chaurasiyavikas1234@gmail.com" && <button onClick={() => setView("admin")} style={{ padding: "7px 12px", borderRadius: "8px", background: view === "admin" ? "#6366f1" : "#1e1e3f", color: "#fff", border: "1px solid #6366f1", cursor: "pointer" }}>🛡️ Admin</button>}
@@ -2174,6 +2218,86 @@ Return ONLY the message text. No JSON. No labels.`)
       </div>
     )}
   </div>
+)}
+
+{view === "gaps" && (
+<div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
+  <h2 style={{ color: "#a855f7", marginBottom: "8px" }}>🔍 Content Gap Finder</h2>
+  <p style={{ color: "#888", marginBottom: "24px" }}>Discover what competitors are winning at — and where Raj should strike next.</p>
+  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "280px 1fr", gap: "24px" }}>
+    <div style={{ background: "#1a1a2e", border: "1px solid #a855f7", borderRadius: "12px", padding: "20px" }}>
+      <h3 style={{ color: "#a855f7", marginBottom: "16px" }}>⚙️ Configure Analysis</h3>
+      <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginBottom: "6px" }}>Select Competitors</label>
+      {["Nikhil Kamath", "Ankur Warikoo", "Ranveer Allahbadia", "Sharan Hegde", "Varun Mayya", "Think School", "Lex Fridman", "My First Million", "Diary of a CEO", "How I Built This"].map(c => (
+        <label key={c} style={{ display: "flex", alignItems: "center", gap: "8px", color: "#ccc", fontSize: "13px", marginBottom: "8px", cursor: "pointer" }}>
+          <input type="checkbox" checked={gapCompetitors.includes(c)} onChange={() => setGapCompetitors(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])} />
+          {c}
+        </label>
+      ))}
+      <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginTop: "16px", marginBottom: "6px" }}>Time Range</label>
+      <select value={gapTimeRange} onChange={e => setGapTimeRange(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+        <option value="30">Last 30 Days</option>
+        <option value="60">Last 60 Days</option>
+        <option value="90">Last 90 Days</option>
+        <option value="180">Last 180 Days</option>
+      </select>
+      <label style={{ color: "#ccc", fontSize: "13px", display: "block", marginTop: "16px", marginBottom: "6px" }}>Growth Goal</label>
+      <select value={gapGoal} onChange={e => setGapGoal(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "8px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+        <option value="views">Maximum Views</option>
+        <option value="sponsors">Sponsor Revenue</option>
+        <option value="authority">Thought Authority</option>
+      </select>
+      <button onClick={generateGapAnalysis} disabled={loadingGaps} style={{ width: "100%", marginTop: "20px", padding: "12px", borderRadius: "8px", background: "#a855f7", color: "#fff", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}>
+        {loadingGaps ? "🔄 Analyzing..." : "🔍 Find Gaps"}
+      </button>
+    </div>
+    <div>
+      {!gapResult && !loadingGaps && (
+        <div style={{ background: "#1a1a2e", borderRadius: "12px", padding: "40px", textAlign: "center", color: "#555" }}>
+          <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔍</div>
+          <p>Select competitors and click Find Gaps to discover content opportunities</p>
+        </div>
+      )}
+      {loadingGaps && (
+        <div style={{ background: "#1a1a2e", borderRadius: "12px", padding: "40px", textAlign: "center", color: "#a855f7" }}>
+          <div style={{ fontSize: "48px", marginBottom: "16px" }}>⏳</div>
+          <p>Analyzing competitor content and finding gaps...</p>
+        </div>
+      )}
+      {gapResult && (
+        <div>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px" }}>
+            {gapResult.map((gap, i) => (
+              <div key={i} onClick={() => setSelectedGap(selectedGap === i ? null : i)} style={{ background: "#1a1a2e", border: `1px solid ${gap.priority === "High" ? "#ef4444" : gap.priority === "Medium" ? "#f59e0b" : "#22c55e"}`, borderRadius: "12px", padding: "16px", cursor: "pointer" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <span style={{ background: gap.priority === "High" ? "#ef444420" : gap.priority === "Medium" ? "#f59e0b20" : "#22c55e20", color: gap.priority === "High" ? "#ef4444" : gap.priority === "Medium" ? "#f59e0b" : "#22c55e", padding: "2px 8px", borderRadius: "4px", fontSize: "11px", fontWeight: "bold" }}>{gap.priority} Priority</span>
+                  <span style={{ background: "#a855f720", color: "#a855f7", padding: "2px 8px", borderRadius: "4px", fontSize: "11px" }}>{gap.type}</span>
+                </div>
+                <h4 style={{ color: "#fff", marginBottom: "8px", fontSize: "14px" }}>{gap.title}</h4>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#888" }}>
+                  <span>📈 Score: {gap.priorityScore}/10</span>
+                  <span>🔥 {gap.competitorMomentum} Momentum</span>
+                </div>
+                {selectedGap === i && (
+                  <div style={{ marginTop: "16px", borderTop: "1px solid #333", paddingTop: "16px" }}>
+                    <p style={{ color: "#f59e0b", fontSize: "12px", marginBottom: "8px" }}>💡 Why Competitors Winning: <span style={{ color: "#ccc" }}>{gap.whyCompetitorsWinning}</span></p>
+                    <p style={{ color: "#f59e0b", fontSize: "12px", marginBottom: "8px" }}>📊 Raj's Coverage: <span style={{ color: "#ccc" }}>{gap.rajCoverageStatus}</span></p>
+                    <p style={{ color: "#f59e0b", fontSize: "12px", marginBottom: "8px" }}>🚀 Upside: <span style={{ color: "#22c55e" }}>{gap.estimatedUpside}</span></p>
+                    <p style={{ color: "#f59e0b", fontSize: "12px", marginBottom: "8px" }}>🎯 Suggested Guest: <span style={{ color: "#a855f7" }}>{gap.suggestedGuest}</span></p>
+                    <p style={{ color: "#f59e0b", fontSize: "12px", marginBottom: "8px" }}>🎙️ Episode Angle: <span style={{ color: "#ccc" }}>{gap.episodeAngle}</span></p>
+                    <p style={{ color: "#f59e0b", fontSize: "12px", marginBottom: "8px" }}>💰 Sponsor Tie-in: <span style={{ color: "#ccc" }}>{gap.sponsorTieIn}</span></p>
+                    <p style={{ color: "#f59e0b", fontSize: "12px", marginBottom: "8px" }}>📌 Evidence: <span style={{ color: "#ccc" }}>{gap.evidence}</span></p>
+                    <button onClick={e => { e.stopPropagation(); setPipelineGuests(prev => [...prev, { name: gap.suggestedGuest, status: "New", notes: gap.episodeAngle, addedAt: new Date().toISOString() }]); alert(gap.suggestedGuest + " added to pipeline!") }} style={{ marginTop: "8px", padding: "8px 16px", borderRadius: "8px", background: "#a855f7", color: "#fff", border: "none", cursor: "pointer", fontSize: "12px" }}>➕ Add to Pipeline</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
 )}
 {/* GUEST ROI CALCULATOR VIEW */}
 {view === "roi" && (
