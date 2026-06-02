@@ -155,10 +155,6 @@ const [outcomeForm, setOutcomeForm] = useState({
   clip_count: "", clip_views: "", sponsor_value: "", brand_deal: "",
   total_cost: "", outreach_days: "", approval_days: "", notes: ""
 })
-const [briefData, setBriefData] = useState(null)
-const [briefGuest, setBriefGuest] = useState(null)
-const [briefLoading, setBriefLoading] = useState(false)
-const [showBrief, setShowBrief] = useState(false)
 // Guest ROI Calculator V2
 const [roiGuestType, setRoiGuestType] = useState("")
 const [roiEpisodeObjective, setRoiEpisodeObjective] = useState("")
