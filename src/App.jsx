@@ -1066,7 +1066,7 @@ Return ONLY valid JSON array of 5 strings. NO MARKDOWN.`)
 
   const generateBrief = async (guest) => {
     if (!apiKey) return
-    setLoadingBrief(true); setintelGuest(guest); setBrief(""); setShowIntel(true)
+    setLoadingBrief(true); setBriefGuest(guest); setBrief(""); setShowBrief(true)
     try {
       const text = await callOpenAI(`Generate a one-page Pre-Interview Brief for Raj Shamani before interviewing ${guest.name} (${guest.category}).
 Include: 1. GUEST SNAPSHOT 2. COMMUNICATION STYLE 3. TOPICS THEY LOVE 4. SENSITIVE TOPICS TO AVOID 5. BEST CONVERSATION OPENERS 6. VIRAL MOMENT TRIGGERS 7. DOs AND DONTs 8. ENERGY LEVEL
