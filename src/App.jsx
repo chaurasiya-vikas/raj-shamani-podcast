@@ -83,6 +83,8 @@ function App() {
   const [loadingBrief, setLoadingBrief] = useState(false)
   const [briefGuest, setBriefGuest] = useState(null)
   const [showBrief, setShowBrief] = useState(false)
+  const [briefData, setBriefData] = useState(null)
+const [briefLoading, setBriefLoading] = useState(false)
   const [copiedBrief, setCopiedBrief] = useState(false)
   const [alignmentData, setAlignmentData] = useState({})
   const [loadingAlignment, setLoadingAlignment] = useState(null)
