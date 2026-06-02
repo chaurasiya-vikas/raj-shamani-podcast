@@ -559,7 +559,7 @@ ONLY valid JSON. NO MARKDOWN.`, "sentiment_analyzer")
   }
 
   // ─── AVAILABILITY PREDICTOR ──────
-  // ──────────────const predictAvailability = async () => {
+  const predictAvailability = async () => {
   if (!availabilityGuest.trim()) { alert("Please enter a guest name!"); return }
   setLoadingAvailability(true); setAvailabilityResult(null)
   try {
@@ -619,7 +619,7 @@ ONLY valid JSON. NO MARKDOWN.`, "availability_predictor")
     setAvailabilityResult(JSON.parse(cleaned))
   } catch (e) { alert("Error: " + e.message) }
   setLoadingAvailability(false)
-}───────────────────────────
+}
 // — EPISODE PERFORMANCE PREDICTOR —
 const predictPerformance = async () => {
   if (!perfGuest.trim()) { alert("Please enter a guest name!"); return }
