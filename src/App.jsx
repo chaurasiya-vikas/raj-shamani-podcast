@@ -255,7 +255,17 @@ const [roiRevBrandLift, setRoiRevBrandLift] = useState("")
   }
 }
 
-  const parseGuests = (text, count) => {
+  const getYouTubeContext = () => {
+  if (!youtubeData || youtubeData.length === 0) return ""
+  const titles = youtubeData.slice(0, 15).map(v => v.snippet?.title || "").filter(Boolean)
+  return "RAJ'S REAL RECENT YOUTUBE EPISODES (" + titles.length + " videos): " + titles.join(" | ")
+}
+
+const getYouTubeTopics = () => {
+  if (!youtubeData || youtubeData.length === 0) return ""
+  return youtubeData.slice(0, 15).map(v => v.snippet?.title || "").filter(Boolean).join(", ")
+}
+const parseGuests = (text, count) => {
     const cleaned = text.replace(/```json|```/g, "").trim()
     const parsed = JSON.parse(cleaned)
     const arr = Array.isArray(parsed) ? parsed : [parsed]
@@ -399,7 +409,7 @@ const [roiRevBrandLift, setRoiRevBrandLift] = useState("")
       ? `VAIBHAV SISINTY: Include him as AI Tools expert. Topic: Latest AI tools for ${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.`
       : `VAIBHAV SISINTY: Do NOT include him (appeared less than 15 days ago).`
     try {
-      const text = await callOpenAI(`You are a podcast guest strategist for "Figuring Out With Raj Shamani" - India's top podcast 500+ episodes. Audience: young Indians 18-35.
+      const text = await callOpenAI(`${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\n\nDo NOT suggest guests or topics that overlap with these recent episodes.\n\n" : ""}You are a podcast guest strategist for "Figuring Out With Raj Shamani" - India's top podcast 500+ episodes. Audience: young Indians 18-35.
 
 CORE PHILOSOPHY: Raj Shamani does NOT chase celebrities or famous names. His belief is "Stop chasing famous names, find exclusive voices no one else has." Suggest guests who are deeply knowledgeable, have unique lived experiences, contrarian perspectives, or untold stories — NOT just whoever is trending on Page 3. Prioritise founders mid-journey, domain experts, unheard voices, niche specialists, and people with transformational stories.
 
@@ -443,6 +453,7 @@ ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, "guest_suggestions")
 CORE PHILOSOPHY: Find exclusive voices, NOT famous celebrities. Raj believes "Stop chasing famous names, find exclusive voices no one else has."
 Category: ${cat.label}. 
 STRICTLY Avoid (past guests): ${PAST_GUESTS}
+${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nAvoid suggesting guests or topics that overlap with these recent episodes." : ""}
 STRICTLY Avoid (shown recently): ${recentGuests.join(", ")}, ${allNames}
 NEVER suggest deceased people. All guests must be alive.
 Suggest EXACTLY 5 best exclusive ${cat.label} voices for ${new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
@@ -457,6 +468,7 @@ ONLY valid JSON. EXACTLY 5 ITEMS. NO MARKDOWN.`)
     setLoadingTrends(true); setTrends([]); setTrendGuests({})
     try {
       const text = await callOpenAI(`You are a trend intelligence analyst for Raj Shamani's podcast "Figuring Out". Today is ${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+      ${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nDo NOT suggest trends Raj already covered. Find fresh angles only.\n" : ""}
   
   Identify 12 high-value trending topics RIGHT NOW — 8 from India, 4 International.
   
@@ -497,6 +509,7 @@ ONLY valid JSON. EXACTLY 5 ITEMS. NO MARKDOWN.`)
       const text = await callOpenAI(`Trending topic: "${trend.topic}" — ${trend.headline} [${trend.scope}]
 Which ONE exclusive podcast guest would be PERFECT for "Figuring Out With Raj Shamani"?
 PHILOSOPHY: NOT a famous celebrity. Find the domain expert, the insider, the person with the real story — someone audiences haven't heard yet.
+${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nDo not suggest anyone already featured in these episodes." : ""}
 Must NOT be from past guests: ${PAST_GUESTS}
 Must be alive. Must be a real person with real expertise on this exact topic.
 Return ONLY valid JSON: { "name": "", "category": "", "whyNow": "", "topicAngle": "", "virality": 1-10, "relevance": 1-10, "value": 1-10, "lastAppeared": "Never", "repeatReason": "", "isAISlot": false }
@@ -512,7 +525,7 @@ ONLY valid JSON. NO MARKDOWN.`)
   const fetchCompetitors = async () => {
     setLoadingCompetitors(true); setCompetitors([])
     try {
-      const text = await callOpenAI("You are a competitive intelligence analyst for Raj Shamani's podcast. Analyze these 6 competitors: Nikhil Kamath, Ankur Warikoo, Ranveer Allahbadia, Sharan Hegde, Prakhar Ke Pravachan, Think School. Return ONLY valid JSON array of 6 objects with these fields: host, positioning, audienceType, momentumScore (1-10), momentumTrend (Rising/Stable/Declining), contentPillars (array of 3), mainFormats (array of 2), guestDiversity, sponsorThemes (array of 2), recentGuests (array of 3 with name/category/performance), betterThanRaj, weakerThanRaj, topicGaps (array of 2), guestGaps (array of 2). NO MARKDOWN.", "competitor_intel")
+      const text = await callOpenAI("" + (getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + " Use this to understand what topics Raj already covers when finding gaps. " : "") + "You are a competitive intelligence analyst for Raj Shamani's podcast. Analyze these 6 competitors: Nikhil Kamath, Ankur Warikoo, Ranveer Allahbadia, Sharan Hegde, Prakhar Ke Pravachan, Think School. Return ONLY valid JSON array of 6 objects with these fields: host, positioning, audienceType, momentumScore (1-10), momentumTrend (Rising/Stable/Declining), contentPillars (array of 3), mainFormats (array of 2), guestDiversity, sponsorThemes (array of 2), recentGuests (array of 3 with name/category/performance), betterThanRaj, weakerThanRaj, topicGaps (array of 2), guestGaps (array of 2). NO MARKDOWN.", "competitor_intel")
       const cleaned = text.replace(/```json|```/g, "").trim()
       setCompetitors(JSON.parse(cleaned))
     } catch (e) { alert("Error: " + e.message) }
@@ -526,6 +539,7 @@ ONLY valid JSON. NO MARKDOWN.`)
       const selected = competitors.filter(c => selectedCompetitors.includes(c.host))
       const text = await callOpenAI(`You are a competitive strategy analyst for Raj Shamani's podcast.
   Based on these competitor profiles: ${JSON.stringify(selected.map(c => ({ host: c.host, contentPillars: c.contentPillars, topicGaps: c.topicGaps, guestGaps: c.guestGaps })))}
+  ${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nRaj already covered these topics — only suggest gaps he has NOT covered yet." : ""}
   
   Find the top 8 gaps Raj should fill. Return ONLY valid JSON array:
   [{
@@ -554,6 +568,7 @@ ONLY valid JSON. NO MARKDOWN.`)
     try {
       const text = await callOpenAI(`You are an editorial strategy analyst for Raj Shamani's podcast "Figuring Out".
   Here are the planned episodes: ${JSON.stringify(calendarEpisodes.map(e => ({ guest: e.guest, topic: e.topic, category: e.category, publishDate: e.publishDate, status: e.status, priority: e.priority })))}
+  ${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nUse this real data to assess topic overlap, pacing, and content diversity." : ""}
   
   Analyze this content calendar and return ONLY valid JSON:
   {
@@ -587,6 +602,7 @@ ONLY valid JSON. NO MARKDOWN.`)
   Time range: Last ${gapTimeRange} days
   Growth goal: ${gapGoal}
   Raj's podcast focus: Business, entrepreneurship, mindset, exclusive voices, India growth stories.
+  ${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nThese are Raj's ACTUAL recent episodes. Only suggest gaps he has NOT covered." : ""}
   
   Analyze these competitors and find content gaps Raj should fill. Return ONLY valid JSON array of 8 gaps:
   [{
@@ -619,6 +635,7 @@ ONLY valid JSON. NO MARKDOWN.`)
     try {
       const text = await callOpenAI(`You are a reputation intelligence analyst for Raj Shamani's podcast "Figuring Out".
   Guest: ${sentimentGuest}
+  ${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nIf this guest appeared in any of these episodes, factor in actual audience reception." : ""}
   Analysis Focus: ${sentimentFocus}
   Time Range: Last ${sentimentTimeRange} days
   Region: ${sentimentRegion}
@@ -673,6 +690,7 @@ ONLY valid JSON. NO MARKDOWN.`)
   try {
     const text = await callOpenAI(`You are an enterprise podcast booking strategist for Raj Shamani's "Figuring Out".
 Guest: ${availabilityGuest}
+${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nIf this guest type appeared recently, factor that into availability advice." : ""}
 Category: ${availabilityCategory}
 Region/Timezone: ${availabilityRegion}
 Priority: ${availabilityPriority}
@@ -742,6 +760,7 @@ const predictPerformance = async () => {
       ? `Benchmark against this past episode guest: ${perfBenchmarkGuest}.`
       : "Benchmark against Raj Shamani's top 5 performing episodes."
     const text = await callOpenAI(`You are a senior YouTube podcast performance strategist for "Figuring Out" by Raj Shamani. Raj's channel averages 2-5M views per episode. Audience is Indian, 18-35, entrepreneurship/finance/lifestyle focused.
+      ${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nUse these actual recent episodes as benchmarks. Base view predictions on real patterns." : ""}
 
 EPISODE CONTEXT:
 - Guest: ${perfGuest}
@@ -836,7 +855,8 @@ const calculateROI = async () => {
 
     const text = await callOpenAI(`You are a senior podcast business strategist for "Figuring Out" by Raj Shamani.
 
-EPISODE INPUTS:
+${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nUse these actual episodes to calibrate revenue estimates based on real patterns." : ""}
+      EPISODE INPUTS:
 - Guest: ${roiGuest}
 - Guest Type: ${roiGuestType}
 - Episode Objective: ${roiEpisodeObjective}
@@ -972,7 +992,8 @@ const matchSponsors = async () => {
       : ""
     const text = await callOpenAI(`You are a senior podcast monetization strategist for India's top business podcast "Figuring Out" by Raj Shamani.
 
-EPISODE DETAILS:
+${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nUse these actual recent episodes to understand what content themes perform best." : ""}
+      EPISODE DETAILS:
 - Guest: ${sponsorGuest}
 - Guest Type: ${sponsorGuestType}
 - Content Theme: ${sponsorTheme}
@@ -1103,6 +1124,7 @@ Suggest exactly 6 sponsors ranked by fitScore. ONLY valid JSON. NO MARKDOWN.`, "
       `Guest: ${e.guest_name} (${e.guest_type}), Views: ${e.actual_views}, CTR: ${e.ctr}%, Retention: ${e.retention}%, Sponsor: ₹${e.sponsor_value}, ROI: ${e.total_cost > 0 ? ((e.sponsor_value + e.brand_deal) / e.total_cost * 100).toFixed(0) : 0}%`
     ).join("\n")
     const prompt = `You are a podcast growth strategist for "Figuring Out" by Raj Shamani. Analyze these episode outcomes and provide 5 specific actionable insights:\n\n${summary}\n\nReturn ONLY a JSON array of 5 objects with: { insight, category, action, impact } where category is one of: Content, Guest, Revenue, Workflow, Growth. No markdown.`
+    ${getYouTubeContext() ? "\nREAL DATA - " + getYouTubeContext() + "\nCross-reference these real recent episodes with the outcome data above." : ""}
     try {
       const result = await callOpenAI(prompt, "outcome_insights")
       const cleaned = result.replace(/```json|```/g, "").trim()
@@ -1240,6 +1262,7 @@ Suggest exactly 6 sponsors ranked by fitScore. ONLY valid JSON. NO MARKDOWN.`, "
     try {
       const text = await callOpenAI(`Viral YouTube/podcast title expert for "Figuring Out With Raj Shamani".
 Guest: ${guest.name} (${guest.category}), Topic: ${guest.topicAngle}, Why Now: ${guest.whyNow}
+${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nStudy these real episode title patterns and match Raj's proven style." : ""}
 Generate 5 viral episode titles. Under 70 chars each. Curiosity-driven, emotional.
 Return ONLY valid JSON array of 5 strings. NO MARKDOWN.`)
       const cleaned = text.replace(/```json|```/g, "").trim()
@@ -1253,6 +1276,7 @@ Return ONLY valid JSON array of 5 strings. NO MARKDOWN.`)
     setLoadingBrief(true); setBriefGuest(guest); setBrief(""); setShowBrief(true)
     try {
       const text = await callOpenAI(`Generate a one-page Pre-Interview Brief for Raj Shamani before interviewing ${guest.name} (${guest.category}).
+        ${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nIf this guest or similar category appeared recently, find a fresh angle." : ""}
 Include: 1. GUEST SNAPSHOT 2. COMMUNICATION STYLE 3. TOPICS THEY LOVE 4. SENSITIVE TOPICS TO AVOID 5. BEST CONVERSATION OPENERS 6. VIRAL MOMENT TRIGGERS 7. DOs AND DONTs 8. ENERGY LEVEL
 Be specific to ${guest.name}. Factual and practical.`)
       setBrief(text)
@@ -1300,6 +1324,7 @@ ONLY valid JSON. NO MARKDOWN.`)
     try {
       const text = await callOpenAI(`Suggest 1 fresh exclusive podcast guest for "Figuring Out With Raj Shamani".
 PHILOSOPHY: NOT a celebrity. Find an exclusive voice — domain expert, insider, someone with a unique untold story.
+${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nDo NOT suggest topics or guests that overlap with these recent episodes." : ""}
 Avoid: ${PAST_GUESTS}, ${existingNames}, ${recentGuests.join(", ")}
 Must be alive. Must NOT be a deceased person.
 Return JSON: name, category, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared, repeatReason, isAISlot(false)
@@ -1321,7 +1346,8 @@ ONLY valid JSON. NO MARKDOWN.`)
     setIntelData(null)
     try {
       const prompt = `You are a senior research analyst for "Figuring Out" podcast by Raj Shamani. Raj's philosophy: "stop chasing famous names, find exclusive voices no one else has."
-  
+      ${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nIf this guest or similar topic appeared in recent episodes, find a fresh unique angle." : ""}
+
   Create a sourced intelligence brief for: ${guest.name} (${guest.category})
   
   Return ONLY a JSON object with these exact keys:
