@@ -94,6 +94,11 @@ const [intelLoading, setIntelLoading] = useState(false)
   const [globalSearchResult, setGlobalSearchResult] = useState(null)
   const [loadingGlobalSearch, setLoadingGlobalSearch] = useState(false)
   const [plannerMonth, setPlannerMonth] = useState(new Date())
+  const [calendarEpisodes, setCalendarEpisodes] = useState([])
+const [showAddEpisode, setShowAddEpisode] = useState(false)
+const [calendarIntel, setCalendarIntel] = useState(null)
+const [loadingCalendarIntel, setLoadingCalendarIntel] = useState(false)
+const [newEpisode, setNewEpisode] = useState({ guest: "", topic: "", category: "", recordDate: "", publishDate: "", status: "Booked", priority: "Medium", sponsor: "", owner: "", notes: "" })
   const [comparedGuests, setComparedGuests] = useState([])
   const [trends, setTrends] = useState([])
   const [loadingTrends, setLoadingTrends] = useState(false)
@@ -512,6 +517,35 @@ ONLY valid JSON. NO MARKDOWN.`)
       setCompetitorGaps(JSON.parse(cleaned))
     } catch (e) { alert("Error: " + e.message) }
     setLoadingCompetitorGaps(false)
+  }
+
+  const generateCalendarIntelligence = async () => {
+    if (!calendarEpisodes.length) { alert("Please add some episodes first!"); return }
+    setLoadingCalendarIntel(true); setCalendarIntel(null)
+    try {
+      const text = await callOpenAI(`You are an editorial strategy analyst for Raj Shamani's podcast "Figuring Out".
+  Here are the planned episodes: ${JSON.stringify(calendarEpisodes.map(e => ({ guest: e.guest, topic: e.topic, category: e.category, publishDate: e.publishDate, status: e.status, priority: e.priority })))}
+  
+  Analyze this content calendar and return ONLY valid JSON:
+  {
+    "contentMixScore": 0-100,
+    "topicDiversityScore": 0-100,
+    "guestPacingScore": 0-100,
+    "sponsorAlignmentScore": 0-100,
+    "overallHealthScore": 0-100,
+    "alerts": [{"type": "warning|danger|success", "message": "alert message"}],
+    "bestPublishSequence": ["episode order recommendation 1", "episode order recommendation 2", "episode order recommendation 3"],
+    "growthOpportunities": ["opportunity 1", "opportunity 2", "opportunity 3"],
+    "topicBalanceReport": "2-3 lines on topic balance",
+    "guestMixReport": "2-3 lines on guest diversity",
+    "conflictWarnings": ["any scheduling conflicts or empty slot warnings"],
+    "monthlyRecommendation": "3-4 lines strategic recommendation for this month"
+  }
+  ONLY valid JSON. NO MARKDOWN.`, "calendar_intel")
+      const cleaned = text.replace(/```json|```/g, "").trim()
+      setCalendarIntel(JSON.parse(cleaned))
+    } catch (e) { alert("Error: " + e.message) }
+    setLoadingCalendarIntel(false)
   }
   const generateGapAnalysis = async () => {
     if (!gapCompetitors.length) { alert("Please select at least one competitor!"); return }
@@ -2972,98 +3006,119 @@ Return ONLY the message text. No JSON. No labels.`)
 
         {/* PLANNER VIEW */}
         {view === "planner" && (
-          <div>
-            <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-              <div>
-                <h2 style={{ margin: "0 0 4px", color: "#4ade80" }}>📅 Episode Planner</h2>
-                <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>All booked guests and recording dates in one view</p>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                <button onClick={() => setPlannerMonth(new Date(plannerMonth.getFullYear(), plannerMonth.getMonth() - 1, 1))} style={{ padding: "7px 12px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #333", cursor: "pointer" }}>← Prev</button>
-                <span style={{ fontSize: "15px", fontWeight: "bold", color: "#fff", minWidth: "150px", textAlign: "center" }}>{plannerMonth.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</span>
-                <button onClick={() => setPlannerMonth(new Date(plannerMonth.getFullYear(), plannerMonth.getMonth() + 1, 1))} style={{ padding: "7px 12px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #333", cursor: "pointer" }}>Next →</button>
-                <button onClick={() => setPlannerMonth(new Date())} style={{ padding: "7px 12px", borderRadius: "8px", background: "#1e3a5f", color: "#60a5fa", border: "1px solid #1e40af", cursor: "pointer", fontSize: "12px" }}>Today</button>
-              </div>
-            </div>
-            {(() => {
-              const year = plannerMonth.getFullYear()
-              const month = plannerMonth.getMonth()
-              const firstDay = new Date(year, month, 1).getDay()
-              const daysInMonth = new Date(year, month + 1, 0).getDate()
-              const todayStr = new Date().toISOString().split("T")[0]
-              const bookedByDate = {}
-              pipeline.filter(g => g.status === "Booked" && g.recordingDate).forEach(g => {
-                if (!bookedByDate[g.recordingDate]) bookedByDate[g.recordingDate] = []
-                bookedByDate[g.recordingDate].push(g)
-              })
-              const cells = []
-              const startOffset = firstDay === 0 ? 6 : firstDay - 1
-              for (let i = 0; i < startOffset; i++) cells.push(null)
-              for (let d = 1; d <= daysInMonth; d++) cells.push(d)
-              while (cells.length % 7 !== 0) cells.push(null)
-              return (
-                <div style={{ background: "#0d0d1a", borderRadius: "12px", border: "1px solid #1f2937", overflow: "hidden", marginBottom: "24px" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", background: "#111827", borderBottom: "1px solid #1f2937" }}>
-                    {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => <div key={d} style={{ padding: "8px", textAlign: "center", fontSize: "11px", color: "#6b7280", fontWeight: "600" }}>{d}</div>)}
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
-                    {cells.map((day, idx) => {
-                      if (!day) return <div key={idx} style={{ minHeight: isMobile ? "60px" : "90px", borderRight: "1px solid #1a1a2e", borderBottom: "1px solid #1a1a2e", background: "#080810" }} />
-                      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-                      const guestsOnDay = bookedByDate[dateStr] || []
-                      const isToday = dateStr === todayStr
-                      const isDouble = guestsOnDay.length > 1
-                      return (
-                        <div key={idx} style={{ minHeight: isMobile ? "60px" : "90px", padding: "4px", borderRight: "1px solid #1a1a2e", borderBottom: "1px solid #1a1a2e", background: isToday ? "#0d1f0d" : "#0d0d1a" }}>
-                          <div style={{ fontSize: "12px", fontWeight: isToday ? "bold" : "normal", color: isToday ? "#4ade80" : "#4b5563", marginBottom: "3px", width: "20px", height: "20px", borderRadius: "50%", background: isToday ? "#14532d" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>{day}</div>
-                          {isDouble && <div style={{ fontSize: "8px", color: "#f87171", background: "#2a1a1a", padding: "1px 4px", borderRadius: "3px", marginBottom: "2px" }}>Double!</div>}
-                          {guestsOnDay.map((g, gi) => (
-                            <div key={gi} onClick={() => generateResearch(g)} title={g.name}
-                              style={{ fontSize: "9px", padding: "2px 4px", borderRadius: "3px", marginBottom: "2px", background: isDouble ? "#2a1a1a" : "#1a2e1a", color: isDouble ? "#f87171" : "#4ade80", border: `1px solid ${isDouble ? "#7f1d1d" : "#166534"}`, cursor: "pointer", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", fontWeight: "600" }}>
-                              {g.name}
-                            </div>
-                          ))}
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })()}
-            <h3 style={{ color: "#9ca3af", fontSize: "14px", marginBottom: "12px" }}>📋 Upcoming Recordings</h3>
-            {pipeline.filter(g => g.status === "Booked" && g.recordingDate).length === 0 ? (
-              <div style={{ textAlign: "center", padding: "30px", color: "#555", fontSize: "13px", background: "#111827", borderRadius: "12px", border: "1px solid #1f2937" }}>
-                No booked guests with recording dates yet.
-                <button onClick={() => setView("pipeline")} style={{ marginTop: "12px", display: "block", margin: "12px auto 0", padding: "8px 20px", borderRadius: "8px", background: "#1e3a5f", color: "#60a5fa", border: "1px solid #1e40af", cursor: "pointer", fontSize: "13px" }}>Go to Pipeline</button>
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {pipeline.filter(g => g.status === "Booked" && g.recordingDate).sort((a, b) => new Date(a.recordingDate) - new Date(b.recordingDate)).map((g, i) => {
-                  const rDate = new Date(g.recordingDate)
-                  const isPast = rDate < new Date(new Date().toDateString())
-                  return (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "12px 16px", borderRadius: "10px", background: "#111827", border: `1px solid ${isPast ? "#1f2937" : "#166534"}`, opacity: isPast ? 0.6 : 1 }}>
-                      <div style={{ textAlign: "center", minWidth: "50px", background: isPast ? "#1f2937" : "#14532d", padding: "8px", borderRadius: "8px" }}>
-                        <div style={{ fontSize: "18px", fontWeight: "bold", color: isPast ? "#6b7280" : "#4ade80" }}>{rDate.getDate()}</div>
-                        <div style={{ fontSize: "10px", color: isPast ? "#4b5563" : "#86efac" }}>{rDate.toLocaleDateString('en-IN', { month: 'short' })}</div>
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: "bold", color: isPast ? "#9ca3af" : "#fff", fontSize: "14px" }}>{g.name}</div>
-                        <div style={{ fontSize: "12px", color: "#6b7280" }}>{g.category} • Score: {g.total} • {isPast ? "Recorded" : "Upcoming"}</div>
-                      </div>
-                      <div style={{ display: "flex", gap: "5px" }}>
-                        <button onClick={() => generateResearch(g)} style={{ padding: "5px 8px", borderRadius: "6px", background: "#1e3a5f", color: "#60a5fa", border: "none", cursor: "pointer", fontSize: "11px" }}>📋</button>
-                        <button onClick={() => generateOutreach(g)} style={{ padding: "5px 8px", borderRadius: "6px", background: "#1a2e1a", color: "#4ade80", border: "none", cursor: "pointer", fontSize: "11px" }}>✉️</button>
-                        <button onClick={() => { setSelectedGuest(g); generateWhatsapp(g); setView("whatsapp") }} style={{ padding: "5px 8px", borderRadius: "6px", background: "#1a2e1a", color: "#25d366", border: "none", cursor: "pointer", fontSize: "11px" }}>💬</button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+<div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
+  <h2 style={{ color: "#4ade80", marginBottom: "8px" }}>📅 Content Calendar Intelligence</h2>
+  <p style={{ color: "#888", marginBottom: "24px" }}>Editorial command center — plan, track, and optimize your content schedule.</p>
+  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "12px", marginBottom: "24px" }}>
+    {[["📅 Month", new Date(plannerMonth).toLocaleString("default", { month: "long", year: "numeric" })], ["🎙️ Episodes", calendarEpisodes.length], ["✅ Published", calendarEpisodes.filter(e => e.status === "Published").length], ["⚠️ Empty Slots", Math.max(0, 8 - calendarEpisodes.length)]].map(([label, val]) => (
+      <div key={label} style={{ background: "#1a1a2e", borderRadius: "10px", padding: "16px", textAlign: "center", border: "1px solid #333" }}>
+        <div style={{ fontSize: "20px", fontWeight: "bold", color: "#4ade80" }}>{val}</div>
+        <div style={{ color: "#888", fontSize: "12px", marginTop: "4px" }}>{label}</div>
+      </div>
+    ))}
+  </div>
+  <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap", alignItems: "center" }}>
+    <button onClick={() => setPlannerMonth(new Date(plannerMonth.getFullYear(), plannerMonth.getMonth() - 1, 1))} style={{ padding: "8px 16px", borderRadius: "8px", background: "#1a1a2e", color: "#fff", border: "1px solid #333", cursor: "pointer" }}>← Prev</button>
+    <span style={{ color: "#fff", fontWeight: "bold", fontSize: "16px" }}>{plannerMonth.toLocaleString("default", { month: "long", year: "numeric" })}</span>
+    <button onClick={() => setPlannerMonth(new Date(plannerMonth.getFullYear(), plannerMonth.getMonth() + 1, 1))} style={{ padding: "8px 16px", borderRadius: "8px", background: "#1a1a2e", color: "#fff", border: "1px solid #333", cursor: "pointer" }}>Next →</button>
+    <button onClick={() => setShowAddEpisode(!showAddEpisode)} style={{ padding: "8px 16px", borderRadius: "8px", background: "#4ade80", color: "#000", border: "none", cursor: "pointer", fontWeight: "bold" }}>+ Add Episode</button>
+    {calendarEpisodes.length > 0 && <button onClick={generateCalendarIntelligence} disabled={loadingCalendarIntel} style={{ padding: "8px 16px", borderRadius: "8px", background: "#7c3aed", color: "#fff", border: "none", cursor: "pointer", fontWeight: "bold" }}>{loadingCalendarIntel ? "⏳ Analyzing..." : "🧠 Get Intelligence"}</button>}
+  </div>
+  {showAddEpisode && (
+    <div style={{ background: "#1a1a2e", border: "1px solid #4ade80", borderRadius: "12px", padding: "20px", marginBottom: "24px" }}>
+      <h3 style={{ color: "#4ade80", marginBottom: "16px" }}>➕ Add New Episode</h3>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "12px" }}>
+        {[["Guest Name", "guest", "text", "e.g. Deepinder Goyal"], ["Topic", "topic", "text", "e.g. Building Zomato"], ["Category", "category", "text", "e.g. Entrepreneurship"], ["Record Date", "recordDate", "date", ""], ["Publish Date", "publishDate", "date", ""], ["Sponsor", "sponsor", "text", "e.g. Zepto"], ["Team Owner", "owner", "text", "e.g. Priya"], ["Notes", "notes", "text", "Any notes"]].map(([label, field, type, placeholder]) => (
+          <div key={field}>
+            <label style={{ color: "#ccc", fontSize: "12px", display: "block", marginBottom: "4px" }}>{label}</label>
+            <input type={type} value={newEpisode[field]} onChange={e => setNewEpisode(prev => ({ ...prev, [field]: e.target.value }))} placeholder={placeholder} style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "#0d0900", color: "#fff", border: "1px solid #333", boxSizing: "border-box" }} />
           </div>
-        )}
-
+        ))}
+        <div>
+          <label style={{ color: "#ccc", fontSize: "12px", display: "block", marginBottom: "4px" }}>Status</label>
+          <select value={newEpisode.status} onChange={e => setNewEpisode(prev => ({ ...prev, status: e.target.value }))} style={{ width: "100%", padding: "8px", borderRadius: "6px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+            {["Booked", "Recorded", "Editing", "Ready", "Published"].map(s => <option key={s}>{s}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ color: "#ccc", fontSize: "12px", display: "block", marginBottom: "4px" }}>Priority</label>
+          <select value={newEpisode.priority} onChange={e => setNewEpisode(prev => ({ ...prev, priority: e.target.value }))} style={{ width: "100%", padding: "8px", borderRadius: "6px", background: "#0d0900", color: "#fff", border: "1px solid #333" }}>
+            {["High", "Medium", "Low"].map(s => <option key={s}>{s}</option>)}
+          </select>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
+        <button onClick={() => { if (!newEpisode.guest) { alert("Guest name required!"); return } setCalendarEpisodes(prev => [...prev, { ...newEpisode, id: Date.now() }]); setNewEpisode({ guest: "", topic: "", category: "", recordDate: "", publishDate: "", status: "Booked", priority: "Medium", sponsor: "", owner: "", notes: "" }); setShowAddEpisode(false) }} style={{ padding: "10px 24px", borderRadius: "8px", background: "#4ade80", color: "#000", border: "none", cursor: "pointer", fontWeight: "bold" }}>Save Episode</button>
+        <button onClick={() => setShowAddEpisode(false)} style={{ padding: "10px 24px", borderRadius: "8px", background: "#333", color: "#fff", border: "none", cursor: "pointer" }}>Cancel</button>
+      </div>
+    </div>
+  )}
+  {calendarEpisodes.length === 0 && !showAddEpisode && (
+    <div style={{ textAlign: "center", padding: "60px", background: "#1a1a2e", borderRadius: "12px", color: "#555" }}>
+      <div style={{ fontSize: "48px", marginBottom: "16px" }}>📅</div>
+      <p>No episodes planned yet. Click + Add Episode to start building your calendar.</p>
+    </div>
+  )}
+  {calendarEpisodes.length > 0 && (
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px", marginBottom: "24px" }}>
+      {calendarEpisodes.map((ep, i) => (
+        <div key={ep.id} style={{ background: "#1a1a2e", border: `1px solid ${ep.status === "Published" ? "#4ade80" : ep.status === "Ready" ? "#60a5fa" : ep.status === "Recorded" ? "#a78bfa" : "#f59e0b"}44`, borderRadius: "10px", padding: "14px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+            <span style={{ fontWeight: "bold", color: "#fff", fontSize: "14px" }}>{ep.guest}</span>
+            <div style={{ display: "flex", gap: "6px" }}>
+              <span style={{ background: ep.status === "Published" ? "#4ade8020" : ep.status === "Ready" ? "#60a5fa20" : ep.status === "Recorded" ? "#a78bfa20" : "#f59e0b20", color: ep.status === "Published" ? "#4ade80" : ep.status === "Ready" ? "#60a5fa" : ep.status === "Recorded" ? "#a78bfa" : "#f59e0b", padding: "2px 8px", borderRadius: "4px", fontSize: "11px" }}>{ep.status}</span>
+              <span style={{ background: ep.priority === "High" ? "#ef444420" : "#33333320", color: ep.priority === "High" ? "#ef4444" : "#888", padding: "2px 8px", borderRadius: "4px", fontSize: "11px" }}>{ep.priority}</span>
+            </div>
+          </div>
+          <p style={{ color: "#888", fontSize: "12px", marginBottom: "6px" }}>🎯 {ep.topic} • {ep.category}</p>
+          {ep.recordDate && <p style={{ color: "#666", fontSize: "11px", marginBottom: "2px" }}>🎙️ Record: {ep.recordDate}</p>}
+          {ep.publishDate && <p style={{ color: "#666", fontSize: "11px", marginBottom: "2px" }}>📢 Publish: {ep.publishDate}</p>}
+          {ep.sponsor && <p style={{ color: "#666", fontSize: "11px", marginBottom: "2px" }}>💰 Sponsor: {ep.sponsor}</p>}
+          {ep.owner && <p style={{ color: "#666", fontSize: "11px", marginBottom: "6px" }}>👤 Owner: {ep.owner}</p>}
+          <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+            <select value={ep.status} onChange={e => setCalendarEpisodes(prev => prev.map((x, xi) => xi === i ? { ...x, status: e.target.value } : x))} style={{ flex: 1, padding: "4px", borderRadius: "4px", background: "#0d0900", color: "#fff", border: "1px solid #333", fontSize: "11px" }}>
+              {["Booked", "Recorded", "Editing", "Ready", "Published"].map(s => <option key={s}>{s}</option>)}
+            </select>
+            <button onClick={() => setCalendarEpisodes(prev => prev.filter((_, xi) => xi !== i))} style={{ padding: "4px 10px", borderRadius: "4px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer", fontSize: "11px" }}>Remove</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+  {calendarIntel && (
+    <div>
+      <h3 style={{ color: "#4ade80", marginBottom: "16px" }}>🧠 Monthly Intelligence Report</h3>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(5, 1fr)", gap: "12px", marginBottom: "16px" }}>
+        {[["Content Mix", calendarIntel.contentMixScore], ["Topic Diversity", calendarIntel.topicDiversityScore], ["Guest Pacing", calendarIntel.guestPacingScore], ["Sponsor Align", calendarIntel.sponsorAlignmentScore], ["Overall Health", calendarIntel.overallHealthScore]].map(([label, score]) => (
+          <div key={label} style={{ background: "#1a1a2e", borderRadius: "10px", padding: "14px", textAlign: "center", border: `1px solid ${score >= 70 ? "#4ade80" : score >= 50 ? "#f59e0b" : "#ef4444"}44` }}>
+            <div style={{ fontSize: "24px", fontWeight: "bold", color: score >= 70 ? "#4ade80" : score >= 50 ? "#f59e0b" : "#ef4444" }}>{score}</div>
+            <div style={{ color: "#888", fontSize: "11px", marginTop: "4px" }}>{label}</div>
+          </div>
+        ))}
+      </div>
+      {calendarIntel.alerts?.length > 0 && (
+        <div style={{ marginBottom: "16px" }}>
+          {calendarIntel.alerts.map((a, i) => <div key={i} style={{ background: a.type === "danger" ? "#ef444415" : a.type === "warning" ? "#f59e0b15" : "#4ade8015", border: `1px solid ${a.type === "danger" ? "#ef4444" : a.type === "warning" ? "#f59e0b" : "#4ade80"}44`, borderRadius: "8px", padding: "10px 14px", marginBottom: "8px", color: a.type === "danger" ? "#ef4444" : a.type === "warning" ? "#f59e0b" : "#4ade80", fontSize: "13px" }}>{a.type === "danger" ? "🔴" : a.type === "warning" ? "⚠️" : "✅"} {a.message}</div>)}
+        </div>
+      )}
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#4ade80", marginBottom: "12px" }}>📋 Best Publish Sequence</h4>
+          {calendarIntel.bestPublishSequence?.map((s, i) => <div key={i} style={{ display: "flex", gap: "10px", marginBottom: "8px" }}><span style={{ background: "#4ade8020", color: "#4ade80", padding: "2px 8px", borderRadius: "4px", fontSize: "11px" }}>#{i + 1}</span><span style={{ color: "#ccc", fontSize: "12px" }}>{s}</span></div>)}
+        </div>
+        <div style={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: "12px", padding: "20px" }}>
+          <h4 style={{ color: "#4ade80", marginBottom: "12px" }}>🚀 Growth Opportunities</h4>
+          {calendarIntel.growthOpportunities?.map((o, i) => <div key={i} style={{ background: "#4ade8010", padding: "8px 12px", borderRadius: "6px", marginBottom: "8px", color: "#ccc", fontSize: "12px" }}>💡 {o}</div>)}
+        </div>
+      </div>
+      <div style={{ background: "#1a1a2e", border: "2px solid #4ade80", borderRadius: "12px", padding: "20px" }}>
+        <h4 style={{ color: "#4ade80", marginBottom: "8px" }}>📊 Monthly Strategy Recommendation</h4>
+        <p style={{ color: "#ccc", fontSize: "13px", lineHeight: "1.7" }}>{calendarIntel.monthlyRecommendation}</p>
+      </div>
+    </div>
+  )}
+</div>
+)}
         {/* COMPARE VIEW */}
         {view === "compare" && (
           <div>
