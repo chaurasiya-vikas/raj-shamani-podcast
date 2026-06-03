@@ -221,6 +221,7 @@ const [roiRevBrandLift, setRoiRevBrandLift] = useState("")
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
+    fetchYouTubeData()
     window.addEventListener("resize", check)
     return () => window.removeEventListener("resize", check)
   }, [])
