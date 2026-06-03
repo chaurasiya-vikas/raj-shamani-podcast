@@ -439,28 +439,42 @@ ONLY valid JSON. EXACTLY 5 ITEMS. NO MARKDOWN.`)
   }
 
   const fetchTrends = async () => {
-    if (!apiKey) { alert("Please enter your OpenAI API key first!"); return }
     setLoadingTrends(true); setTrends([]); setTrendGuests({})
     try {
-      const text = await callOpenAI(`You are a senior news analyst. Today is ${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
-
-List the TOP 10 most significant trending topics RIGHT NOW — EXACTLY 6 from India and EXACTLY 4 International.
-
-INDIA topics must cover: politics, cricket, business/startups, Bollywood/entertainment, social issues, technology — pick whichever 6 are genuinely trending with real news hooks today.
-
-INTERNATIONAL topics must cover: global geopolitics, world economy, international sports, global tech/AI — pick the 4 most relevant to Indian audiences.
-
-Each topic must have a REAL, SPECIFIC headline — not generic. Example: "SEBI tightens F&O rules amid retail losses" not just "Stock Market."
-
-Return ONLY valid JSON array of EXACTLY 10 items:
-{ "topic": "", "headline": "", "category": "", "heat": 1-10, "scope": "India" or "International" }
-ONLY valid JSON. NO MARKDOWN.`, "trending_topics")
+      const text = await callOpenAI(`You are a trend intelligence analyst for Raj Shamani's podcast "Figuring Out". Today is ${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+  
+  Identify 12 high-value trending topics RIGHT NOW — 8 from India, 4 International.
+  
+  Categories: Business/Startups, Tech/AI, Culture/Society, Creator Economy, Macro/Policy, Seasonal, Controversial, Evergreen Opportunity.
+  
+  Return ONLY valid JSON array of 12 items:
+  [{
+    "topic": "specific trend title",
+    "headline": "1 specific real headline driving this trend",
+    "category": "Business|Tech|Culture|Creator|Macro|Seasonal|Controversial|Evergreen",
+    "scope": "India|International",
+    "heat": 1-10,
+    "momentumDirection": "Rising|Stable|Declining",
+    "longevity": "Temporary|Durable|Evergreen",
+    "audienceRelevance": 1-10,
+    "opportunityScore": 1-10,
+    "firstMoverAlert": true|false,
+    "saturationWarning": "Low|Medium|High",
+    "peakWindow": "Act Now|2-4 Weeks|Low Urgency",
+    "suggestedGuest": "specific real person name",
+    "guestFitReason": "why this guest owns this trend",
+    "episodeAngle": "specific episode angle for Raj",
+    "sponsorFit": "sponsor category that fits",
+    "hook": "compelling opening hook for the episode",
+    "riskLevel": "Low|Medium|High",
+    "platformSources": ["platform1", "platform2"]
+  }]
+  ONLY valid JSON. NO MARKDOWN.`, "trending_topics")
       const cleaned = text.replace(/```json|```/g, "").trim()
       setTrends(JSON.parse(cleaned))
     } catch (e) { alert("Error fetching trends: " + e.message) }
     setLoadingTrends(false)
   }
-
   const findGuestForTrend = async (trend) => {
     if (!apiKey) return
     setLoadingTrendGuest(trend.topic)
@@ -1657,61 +1671,100 @@ Return ONLY the message text. No JSON. No labels.`)
 
         {/* TRENDING VIEW */}
         {view === "trending" && (
-          <div>
-            <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-              <div>
-                <h2 style={{ margin: "0 0 4px", color: "#fb923c" }}>🔥 Trending Topics Dashboard</h2>
-                <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>6 India + 4 International — AI suggests the perfect exclusive guest for each trend</p>
+<div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
+  <h2 style={{ color: "#fb923c", marginBottom: "8px" }}>🔥 Trend Intelligence Engine</h2>
+  <p style={{ color: "#888", marginBottom: "24px" }}>Real-time trend analysis — momentum, opportunity, guest fit, and sponsor match.</p>
+  <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap", alignItems: "center" }}>
+    <button onClick={fetchTrends} disabled={loadingTrends} style={{ padding: "10px 24px", borderRadius: "8px", background: "#fb923c", color: "#000", border: "none", cursor: "pointer", fontWeight: "bold" }}>
+      {loadingTrends ? "⏳ Fetching..." : "🔥 Refresh Trends"}
+    </button>
+    {trends.length > 0 && (
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+        {[["All", "all"], ["India 🇮🇳", "India"], ["Global 🌍", "International"]].map(([label, val]) => (
+          <button key={val} onClick={() => setActiveCategory(val)} style={{ padding: "6px 14px", borderRadius: "20px", background: activeCategory === val ? "#fb923c" : "#1a1a2e", color: activeCategory === val ? "#000" : "#ccc", border: `1px solid ${activeCategory === val ? "#fb923c" : "#333"}`, cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>{label}</button>
+        ))}
+      </div>
+    )}
+    {trends.length > 0 && (
+      <div style={{ display: "flex", gap: "12px", marginLeft: "auto" }}>
+        <div style={{ background: "#1a1a2e", padding: "6px 12px", borderRadius: "8px", fontSize: "12px" }}>
+          <span style={{ color: "#888" }}>Trends: </span><span style={{ color: "#fb923c", fontWeight: "bold" }}>{trends.length}</span>
+        </div>
+        <div style={{ background: "#1a1a2e", padding: "6px 12px", borderRadius: "8px", fontSize: "12px" }}>
+          <span style={{ color: "#888" }}>High Opportunity: </span><span style={{ color: "#22c55e", fontWeight: "bold" }}>{trends.filter(t => t.opportunityScore >= 8).length}</span>
+        </div>
+        <div style={{ background: "#1a1a2e", padding: "6px 12px", borderRadius: "8px", fontSize: "12px" }}>
+          <span style={{ color: "#888" }}>First Mover: </span><span style={{ color: "#f59e0b", fontWeight: "bold" }}>{trends.filter(t => t.firstMoverAlert).length}</span>
+        </div>
+      </div>
+    )}
+  </div>
+  {loadingTrends && <div style={{ textAlign: "center", padding: "60px", color: "#fb923c" }}><div style={{ fontSize: "48px", marginBottom: "16px" }}>🔥</div><p>Analyzing trends...</p></div>}
+  {!loadingTrends && trends.length === 0 && (
+    <div style={{ textAlign: "center", padding: "60px", background: "#1a1a2e", borderRadius: "12px", color: "#555" }}>
+      <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔥</div>
+      <p>Click Refresh Trends to load intelligence</p>
+    </div>
+  )}
+  {trends.length > 0 && (
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(340px, 1fr))", gap: "16px" }}>
+      {trends.filter(t => activeCategory === "all" || t.scope === activeCategory).map((trend, ti) => (
+        <div key={ti} style={{ background: "#1a1a2e", borderRadius: "12px", border: `1px solid ${trend.opportunityScore >= 8 ? "#fb923c" : trend.opportunityScore >= 6 ? "#f59e0b" : "#333"}44`, overflow: "hidden" }}>
+          <div style={{ padding: "16px", background: "#0d0d1a" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "6px" }}>
+                  <span style={{ background: trend.scope === "India" ? "#7c2d1220" : "#1e1b4b", color: trend.scope === "India" ? "#fb923c" : "#818cf8", padding: "2px 8px", borderRadius: "10px", fontSize: "10px", fontWeight: "bold" }}>{trend.scope === "India" ? "🇮🇳" : "🌍"} {trend.scope}</span>
+                  <span style={{ background: "#1e1e3f", color: "#a78bfa", padding: "2px 8px", borderRadius: "10px", fontSize: "10px" }}>{trend.category}</span>
+                  {trend.firstMoverAlert && <span style={{ background: "#f59e0b20", color: "#f59e0b", padding: "2px 8px", borderRadius: "10px", fontSize: "10px", fontWeight: "bold" }}>⚡ First Mover</span>}
+                </div>
+                <h3 style={{ color: "#fff", margin: 0, fontSize: "14px", lineHeight: "1.4" }}>{trend.topic}</h3>
               </div>
-              <button onClick={fetchTrends} disabled={loadingTrends} style={{ padding: "10px 20px", borderRadius: "8px", background: loadingTrends ? "#333" : "linear-gradient(135deg,#9a3412,#7c2d12)", color: "#fb923c", border: "1px solid #9a3412", cursor: loadingTrends ? "not-allowed" : "pointer", fontSize: "13px", fontWeight: "bold" }}>
-                {loadingTrends ? "⏳ Fetching Trends..." : "🔄 Refresh Trends"}
-              </button>
+              <div style={{ textAlign: "center", minWidth: "50px" }}>
+                <div style={{ fontSize: "24px", fontWeight: "bold", color: trend.opportunityScore >= 8 ? "#fb923c" : trend.opportunityScore >= 6 ? "#f59e0b" : "#888" }}>{trend.opportunityScore}</div>
+                <div style={{ fontSize: "9px", color: "#666" }}>OPPORTUNITY</div>
+              </div>
             </div>
-            {loadingTrends && <div style={{ textAlign: "center", padding: "60px", color: "#666" }}><div style={{ fontSize: "40px", marginBottom: "16px" }}>📡</div><p>Analyzing trending topics — India & International...</p></div>}
-            {!loadingTrends && trends.length === 0 && (
-              <div style={{ textAlign: "center", padding: "60px 20px" }}>
-                <div style={{ fontSize: "50px", marginBottom: "16px" }}>🔥</div>
-                <h3 style={{ color: "#555" }}>No trends loaded yet</h3>
-                <button onClick={fetchTrends} style={{ marginTop: "16px", padding: "10px 24px", borderRadius: "8px", background: "linear-gradient(135deg,#9a3412,#7c2d12)", color: "#fb923c", border: "none", cursor: "pointer" }}>🔥 Load Trends</button>
-              </div>
-            )}
-            {trends.length > 0 && (
-              <div>
-                {/* India Trends */}
-                {trends.filter(t => t.scope === "India").length > 0 && (
-                  <div style={{ marginBottom: "32px" }}>
-                    <h3 style={{ color: "#fb923c", fontSize: "15px", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
-                      🇮🇳 India Trending
-                      <span style={{ fontSize: "11px", background: "#7c2d12", color: "#fb923c", padding: "2px 8px", borderRadius: "10px" }}>{trends.filter(t => t.scope === "India").length} topics</span>
-                    </h3>
-                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(420px,1fr))", gap: "16px" }}>
-                      {trends.filter(t => t.scope === "India").map((trend, ti) => renderTrendCard(trend, ti))}
-                    </div>
+            <p style={{ color: "#888", fontSize: "12px", marginBottom: "10px", lineHeight: "1.4" }}>{trend.headline}</p>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
+              <span style={{ fontSize: "11px", color: trend.momentumDirection === "Rising" ? "#22c55e" : trend.momentumDirection === "Declining" ? "#ef4444" : "#f59e0b" }}>{trend.momentumDirection === "Rising" ? "↑" : trend.momentumDirection === "Declining" ? "↓" : "→"} {trend.momentumDirection}</span>
+              <span style={{ fontSize: "11px", color: "#888" }}>• {trend.longevity}</span>
+              <span style={{ fontSize: "11px", color: trend.peakWindow === "Act Now" ? "#ef4444" : trend.peakWindow === "2-4 Weeks" ? "#f59e0b" : "#888" }}>• ⏰ {trend.peakWindow}</span>
+              <span style={{ fontSize: "11px", color: trend.saturationWarning === "High" ? "#ef4444" : trend.saturationWarning === "Medium" ? "#f59e0b" : "#22c55e" }}>• Saturation: {trend.saturationWarning}</span>
+            </div>
+            <div style={{ background: "#ffffff08", borderRadius: "8px", padding: "10px", marginBottom: "10px" }}>
+              <p style={{ color: "#a78bfa", fontSize: "11px", marginBottom: "4px", fontWeight: "bold" }}>🎯 Suggested Guest: <span style={{ color: "#fff" }}>{trend.suggestedGuest}</span></p>
+              <p style={{ color: "#888", fontSize: "11px", marginBottom: "4px" }}>🎙️ {trend.episodeAngle}</p>
+              <p style={{ color: "#888", fontSize: "11px", marginBottom: "4px" }}>💰 Sponsor: {trend.sponsorFit}</p>
+              <p style={{ color: "#fb923c", fontSize: "11px" }}>🪝 Hook: {trend.hook}</p>
+            </div>
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              <button onClick={() => findGuestForTrend(trend)} style={{ flex: 1, padding: "7px", borderRadius: "7px", background: "#1a2e1a", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "11px", fontWeight: "bold" }}>🎯 Find Guest</button>
+              <button onClick={() => setCalendarEpisodes(prev => [...prev, { guest: trend.suggestedGuest, topic: trend.topic, category: trend.category, recordDate: "", publishDate: "", status: "Booked", priority: trend.opportunityScore >= 8 ? "High" : "Medium", sponsor: trend.sponsorFit, owner: "", notes: trend.episodeAngle, id: Date.now() }])} style={{ flex: 1, padding: "7px", borderRadius: "7px", background: "#1a1a2e", color: "#fb923c", border: "1px solid #fb923c44", cursor: "pointer", fontSize: "11px" }}>📅 Add to Calendar</button>
+            </div>
+            {trendGuests[trend.topic] && (() => {
+              const g = trendGuests[trend.topic]
+              return (
+                <div style={{ marginTop: "10px", background: "#0d1117", borderRadius: "8px", padding: "12px", border: "1px solid #22c55e44" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <span style={{ color: "#fff", fontWeight: "bold", fontSize: "13px" }}>{g.name}</span>
+                    <span style={{ color: "#22c55e", fontWeight: "bold" }}>{g.total}</span>
                   </div>
-                )}
-                {/* International Trends */}
-                {trends.filter(t => t.scope === "International").length > 0 && (
-                  <div>
-                    <h3 style={{ color: "#60a5fa", fontSize: "15px", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
-                      🌍 International Trending
-                      <span style={{ fontSize: "11px", background: "#1e3a5f", color: "#60a5fa", padding: "2px 8px", borderRadius: "10px" }}>{trends.filter(t => t.scope === "International").length} topics</span>
-                    </h3>
-                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(420px,1fr))", gap: "16px" }}>
-                      {trends.filter(t => t.scope === "International").map((trend, ti) => renderTrendCard(trend, ti))}
-                    </div>
+                  <p style={{ color: "#888", fontSize: "11px", margin: "0 0 8px" }}>{g.whyNow}</p>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button onClick={() => addToPipeline(g, "trending")} style={{ flex: 1, padding: "6px", borderRadius: "6px", background: "#1a2e3f", color: "#38bdf8", border: "1px solid #0369a1", cursor: "pointer", fontSize: "11px" }}>+ Pipeline</button>
+                    <button onClick={() => generateOutreach(g)} style={{ flex: 1, padding: "6px", borderRadius: "6px", background: "#1a2e1a", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontSize: "11px" }}>Outreach</button>
                   </div>
-                )}
-                {/* Fallback if scope not set */}
-                {trends.filter(t => !t.scope).length > 0 && (
-                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(420px,1fr))", gap: "16px" }}>
-                    {trends.filter(t => !t.scope).map((trend, ti) => renderTrendCard(trend, ti))}
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )
+            })()}
           </div>
-        )}
-
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+)}
         {/* SENTIMENT ANALYZER VIEW */}
         {view === "sentiment" && (
 <div style={{ padding: "24px", maxWidth: "1100px", margin: "0 auto" }}>
