@@ -105,6 +105,8 @@ const [newEpisode, setNewEpisode] = useState({ guest: "", topic: "", category: "
   const [trendGuests, setTrendGuests] = useState({})
   const [loadingTrendGuest, setLoadingTrendGuest] = useState(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [youtubeData, setYoutubeData] = useState([])
+const [loadingYoutube, setLoadingYoutube] = useState(false)
   const [competitors, setCompetitors] = useState([])
 const [loadingCompetitors, setLoadingCompetitors] = useState(false)
 const [selectedCompetitors, setSelectedCompetitors] = useState(["Nikhil Kamath", "Ankur Warikoo", "Ranveer Allahbadia"])
@@ -238,7 +240,19 @@ const [roiRevBrandLift, setRoiRevBrandLift] = useState("")
     })
     const data = await res.json()
     return data.choices[0].message.content
+    
   }
+  const fetchYouTubeData = async () => {
+  try {
+    const res = await fetch("/api/youtube")
+    const data = await res.json()
+    if (data.items) {
+      setYoutubeData(data.items)
+    }
+  } catch (error) {
+    console.error("YouTube fetch error:", error)
+  }
+}
 
   const parseGuests = (text, count) => {
     const cleaned = text.replace(/```json|```/g, "").trim()
