@@ -1123,8 +1123,7 @@ Suggest exactly 6 sponsors ranked by fitScore. ONLY valid JSON. NO MARKDOWN.`, "
     const summary = episodeOutcomes.slice(0, 10).map(e =>
       `Guest: ${e.guest_name} (${e.guest_type}), Views: ${e.actual_views}, CTR: ${e.ctr}%, Retention: ${e.retention}%, Sponsor: ₹${e.sponsor_value}, ROI: ${e.total_cost > 0 ? ((e.sponsor_value + e.brand_deal) / e.total_cost * 100).toFixed(0) : 0}%`
     ).join("\n")
-    const prompt = `You are a podcast growth strategist for "Figuring Out" by Raj Shamani. Analyze these episode outcomes and provide 5 specific actionable insights:\n\n${summary}\n\nReturn ONLY a JSON array of 5 objects with: { insight, category, action, impact } where category is one of: Content, Guest, Revenue, Workflow, Growth. No markdown.`
-    ${getYouTubeContext() ? "\nREAL DATA - " + getYouTubeContext() + "\nCross-reference these real recent episodes with the outcome data above." : ""}
+    const prompt = `You are a podcast growth strategist for "Figuring Out" by Raj Shamani. Analyze these episode outcomes and provide 5 specific actionable insights:\n\n${summary}${getYouTubeContext() ? "\nREAL DATA - " + getYouTubeContext() + "\nCross-reference these real recent episodes with the outcome data above." : ""}\n\nReturn ONLY a JSON array of 5 objects with: { insight, category, action, impact } where category is one of: Content, Guest, Revenue, Workflow, Growth. No markdown.`
     try {
       const result = await callOpenAI(prompt, "outcome_insights")
       const cleaned = result.replace(/```json|```/g, "").trim()
