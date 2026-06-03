@@ -1288,6 +1288,7 @@ Be specific to ${guest.name}. Factual and practical.`)
     setLoadingAlignment(guest.name)
     try {
       const text = await callOpenAI(`Analyse audience alignment between "${guest.name}" (${guest.category}) and "Figuring Out With Raj Shamani". Raj's audience: Young Indians 18-35.
+${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nUse these real recent episodes to understand what guest types and topics Raj's audience currently responds to. Score alignment based on actual patterns." : ""}
 Score 1-10: ageMatch, interestMatch, aspirational, controversy, shareability, overall
 Return ONLY valid JSON: { "ageMatch": 0, "interestMatch": 0, "aspirational": 0, "controversy": 0, "shareability": 0, "overall": 0, "verdict": "", "recommendation": "BOOK NOW or CONSIDER or SKIP" }
 ONLY valid JSON. NO MARKDOWN.`)
@@ -1307,6 +1308,7 @@ ONLY valid JSON. NO MARKDOWN.`)
     const inRecent = recentGuests.find(n => n.toLowerCase().includes(globalSearch.toLowerCase()))
     try {
       const text = await callOpenAI(`Complete profile for: "${globalSearch}"
+${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nIf this person appeared in any recent episode, note it. If not, highlight that as a fresh opportunity for Raj." : ""}
 Return ONLY valid JSON: { "fullName": "", "age": "", "category": "", "tagline": "", "background": "", "achievements": ["","","",""], "currentStatus": "", "socialFollowing": "", "netWorth": "", "whyNowForRaj": "", "bestAngle": "", "audienceMatch": 0, "controversies": "", "audienceDemographics": "", "viralPotential": 0, "recommendation": "BOOK NOW or CONSIDER or SKIP", "recommendationReason": "" }
 ONLY valid JSON. NO MARKDOWN.`)
       const cleaned = text.replace(/```json|```/g, "").trim()
@@ -1378,6 +1380,7 @@ ONLY valid JSON. NO MARKDOWN.`)
       const text = await callOpenAI(`20 powerful interview questions for Raj Shamani's podcast: ${guest.name} (${guest.category})
 Style: Raw, honest, value-driven. Audience: young Indians 18-35.
 3 HOOK, 5 STORY, 5 DEEP VALUE, 4 CONTROVERSIAL BUT FAIR, 3 VIRAL CLIP questions.
+${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nStudy these real episodes and make sure questions cover angles Raj has NOT explored yet." : ""}
 Specific to ${guest.name}, not generic.`)
       setQuestions(text)
     } catch (e) { alert("Error: " + e.message) }
@@ -1391,6 +1394,7 @@ Specific to ${guest.name}, not generic.`)
     try {
       const text = await callOpenAI(`Professional outreach email from Raj Shamani's team to ${guest.name} (${guest.category}).
 Show: India's top podcast, 500+ episodes, young Indians 18-35. Under 200 words.
+${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nReference a relevant recent episode topic in the email to show Raj's credibility and relevance to this guest." : ""}
 Return ONLY valid JSON: { "subject": "", "body": "" }
 ONLY valid JSON. NO markdown.`)
       const cleaned = text.replace(/```json|```/g, "").trim()
@@ -1406,6 +1410,7 @@ ONLY valid JSON. NO markdown.`)
     try {
       const text = await callOpenAI(`Casual WhatsApp message from Raj Shamani's team to ${guest.name} (${guest.category}) inviting them on the podcast.
 Max 100 words, very casual and warm, 2-3 emojis, end with a question.
+${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nMention a relevant recent episode to make the message feel personal and credible." : ""}
 Return ONLY the message text. No JSON. No labels.`)
       setWhatsappMsg(text.trim())
     } catch (e) { alert("Error: " + e.message) }
