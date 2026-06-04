@@ -428,7 +428,7 @@ STRICT RULES:
 ${vaibhavRule}
 
 Suggest EXACTLY 15 guests for ${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
-Please ensure at least 3 guests live outside India. Add the word [INTL] in brackets before their name.
+At least 3 guests MUST be real, verifiable people currently based outside India — they must be high-impact world-class personalities such as: Fortune 500 CEOs, global founders, world-renowned authors, Nobel/Pulitzer laureates, top diplomats, UN officials, Olympic champions, globally recognized doctors or scientists, PhD researchers making world impact, or domain experts with global influence. Examples of the caliber: Elon Musk, Simon Sinek, Alex Hormozi, Naval Ravikant, Ray Dalio, Yuval Noah Harari. Do NOT tag any Indian-origin or India-based person as INTL. Only add [INTL] after their name if they are genuinely based and working outside India at world-class level.
 Return JSON array EXACTLY 15 items each with: name, category, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared("Never" or year), repeatReason, isAISlot(true only for Vaibhav)
 ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, "guest_suggestions")
       const withScores = parseGuests(text, 15).sort((a, b) => {
