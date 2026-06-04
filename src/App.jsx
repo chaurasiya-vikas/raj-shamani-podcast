@@ -266,18 +266,23 @@ const getYouTubeTopics = () => {
   return youtubeData.slice(0, 15).map(v => v.snippet?.title || "").filter(Boolean).join(", ")
 }
 const parseGuests = (text, count) => {
+  try {
     const cleaned = text.replace(/```json|```/g, "").trim()
     const parsed = JSON.parse(cleaned)
     const arr = Array.isArray(parsed) ? parsed : [parsed]
     return arr.slice(0, count).map(g => ({
       ...g,
-      total: ((g.virality + g.relevance + g.value) / 3).toFixed(1),
-      priority: ((g.virality + g.relevance + g.value) / 3) >= 8 ? "High" : ((g.virality + g.relevance + g.value) / 3) >= 6 ? "Medium" : "Low",
+      total: (((g.virality || 7) + (g.relevance || 7) + (g.value || 7)) / 3).toFixed(1),
+      priority: (((g.virality || 7) + (g.relevance || 7) + (g.value || 7)) / 3) >= 8 ? "High" : (((g.virality || 7) + (g.relevance || 7) + (g.value || 7)) / 3) >= 6 ? "Medium" : "Low",
       status: "New",
       addedDate: new Date().toLocaleDateString('en-IN')
     }))
+  } catch (e) {
+    console.error("parseGuests failed:", e, text)
+    alert("AI returned an unexpected response. Please try refreshing again.")
+    return []
   }
-
+}
   const savePipelineToSupabase = async (pipelineData) => {
     try {
       setSyncStatus("Syncing...")
