@@ -29,7 +29,7 @@ const INJECTION_PATTERNS = [
   /javascript:/i,
 ]
 
-const MAX_PROMPT_LENGTH = 8000 // ~2000 tokens input max
+const MAX_PROMPT_LENGTH = 15000 // ~2000 tokens input max
 
 function sanitizeInput(prompt) {
   if (!prompt || typeof prompt !== 'string') {
