@@ -423,6 +423,7 @@ STRICT RULES:
 ${vaibhavRule}
 
 Suggest EXACTLY 15 guests for ${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
+MANDATORY COMPOSITION: At least 3 of the 15 MUST be guests who are currently based and living outside India (regardless of origin or nationality). This includes NRIs, Indian-origin people abroad, and foreign nationals. Mark each such guest with 🌍 at the start of their name.
 Return JSON array EXACTLY 15 items each with: name, category, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared("Never" or year), repeatReason, isAISlot(true only for Vaibhav)
 ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, "guest_suggestions")
       const withScores = parseGuests(text, 15)
