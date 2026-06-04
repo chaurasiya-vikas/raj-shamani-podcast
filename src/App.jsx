@@ -428,10 +428,14 @@ STRICT RULES:
 ${vaibhavRule}
 
 Suggest EXACTLY 15 guests for ${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
-Please ensure at least 3 guests live outside India. Add the word INTL in brackets before their name.
+Please ensure at least 3 guests live outside India. Add the word [INTL] in brackets before their name.
 Return JSON array EXACTLY 15 items each with: name, category, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared("Never" or year), repeatReason, isAISlot(true only for Vaibhav)
 ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, "guest_suggestions")
-      const withScores = parseGuests(text, 15)
+      const withScores = parseGuests(text, 15).sort((a, b) => {
+  const aIntl = a.name.includes('[INTL]') ? 1 : 0
+  const bIntl = b.name.includes('[INTL]') ? 1 : 0
+  return aIntl - bIntl
+})
       if (includeVaibhav) localStorage.setItem("raj_vaibhav_last", new Date().toISOString())
       const newRecentGuests = [...withScores.map(g => g.name), ...recentGuests].slice(0, 225)
       localStorage.setItem("raj_recent_guests", JSON.stringify(newRecentGuests))
