@@ -274,7 +274,9 @@ const handlePreApprove = async () => {
   setPreApproveEmail("")
   fetchPendingRequests()
   alert("✅ Pre-approved: " + preApproveEmail)
-}const callOpenAI = async (prompt, feature = "unknown") => {
+}
+
+const callOpenAI = async (prompt, feature = "unknown") => {
     const res = await fetch("/api/openai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
