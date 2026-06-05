@@ -23,7 +23,7 @@ const CATEGORIES = [
   { id:"intellectual", label:"Intellectual/Author", color:"#8b5cf6" },
   { id:"lawyer", label:"Lawyer/Legal", color:"#6b7280" },
   { id:"comedian", label:"Comedian", color:"#f59e0b" },
-  { id:"military", label:"Military/Defence", color:"#64748b" },
+{ id:"military", label:"Military/Defence", color:"#64748b" },
   { id:"spirituality", label:"Spirituality", color:"#a78bfa" },
   { id:"educator", label:"Educator/IAS", color:"#16a34a" },
   { id:"athlete", label:"Athlete", color:"#ea580c" },
@@ -43,9 +43,14 @@ const COMPETITORS = [
   { name: "Lex Fridman", aka: "Lex Fridman Podcast", type: "Global", edge: "Intellectual depth + high-quality conversations", color: "#6366f1" },
   { name: "Jay Shetty", aka: "On Purpose", type: "Global", edge: "Global relatability + personal development", color: "#84cc16" },
 ]
-
 function App() {
   const { user, logout } = useAuth()
+  const [accessStatus, setAccessStatus] = useState(null)
+const [accessRole, setAccessRole] = useState(null)
+const [preApproveEmail, setPreApproveEmail] = useState("")
+const [preApproveRole, setPreApproveRole] = useState("Researcher")
+const [pendingRequests, setPendingRequests] = useState([])
+const [loadingAccess, setLoadingAccess] = useState(true)
   const [guests, setGuests] = useState([])
   const [categoryGuests, setCategoryGuests] = useState([])
   const [activeCategory, setActiveCategory] = useState("all")
@@ -222,6 +227,7 @@ const [roiRevBrandLift, setRoiRevBrandLift] = useState("")
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
     fetchYouTubeData()
+    if (user) { checkAccess(); fetchPendingRequests() }
     window.addEventListener("resize", check)
     return () => window.removeEventListener("resize", check)
   }, [])
@@ -233,7 +239,42 @@ const [roiRevBrandLift, setRoiRevBrandLift] = useState("")
     return diffDays >= 15
   }
 
-  const callOpenAI = async (prompt, feature = "unknown") => {
+  const checkAccess = async () => {
+  if (!user) { setLoadingAccess(false); return }
+  const adminEmail = "chaurasiyavikas1234@gmail.com"
+  if (user.email === adminEmail) { setAccessStatus("approved"); setAccessRole("Admin"); setLoadingAccess(false); return }
+  const { data } = await supabase.from("approval_requests").select("*").eq("email", user.email).single()
+  if (data?.status === "approved") { setAccessStatus("approved"); setAccessRole(data.role || "Viewer"); setLoadingAccess(false); return }
+  if (data?.status === "rejected") { setAccessStatus("rejected"); setLoadingAccess(false); return }
+  if (data?.status === "pending") { setAccessStatus("pending"); setLoadingAccess(false); return }
+  await supabase.from("approval_requests").insert({ email: user.email, name: user.user_metadata?.full_name || user.email, avatar_url: user.user_metadata?.avatar_url || "", status: "pending" })
+  await fetch("/api/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: user.email, name: user.user_metadata?.full_name || user.email }) })
+  setAccessStatus("pending")
+  setLoadingAccess(false)
+}
+
+const fetchPendingRequests = async () => {
+  const { data } = await supabase.from("approval_requests").select("*").order("created_at", { ascending: false })
+  if (data) setPendingRequests(data)
+}
+
+const handleApproveUser = async (email, role) => {
+  await supabase.from("approval_requests").update({ status: "approved", role, updated_at: new Date().toISOString() }).eq("email", email)
+  fetchPendingRequests()
+}
+
+const handleRejectUser = async (email) => {
+  await supabase.from("approval_requests").update({ status: "rejected", updated_at: new Date().toISOString() }).eq("email", email)
+  fetchPendingRequests()
+}
+
+const handlePreApprove = async () => {
+  if (!preApproveEmail) return
+  await supabase.from("approval_requests").upsert({ email: preApproveEmail, name: preApproveEmail, status: "approved", role: preApproveRole, updated_at: new Date().toISOString() })
+  setPreApproveEmail("")
+  fetchPendingRequests()
+  alert("✅ Pre-approved: " + preApproveEmail)
+}const callOpenAI = async (prompt, feature = "unknown") => {
     const res = await fetch("/api/openai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1539,7 +1580,34 @@ Return ONLY the message text. No JSON. No labels.`)
     )
   }
 
-  return (
+  if (loadingAccess) return (
+  <div style={{ minHeight: "100vh", background: "#0a0a0f", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ textAlign: "center", color: "#a78bfa" }}><div style={{ fontSize: "40px", marginBottom: "16px" }}>🎙️</div><p>Checking access...</p></div>
+  </div>
+)
+
+if (accessStatus === "pending") return (
+  <div style={{ minHeight: "100vh", background: "#0a0a0f", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+    <div style={{ textAlign: "center", background: "#111827", borderRadius: "16px", padding: "40px", maxWidth: "480px", border: "1px solid #a78bfa" }}>
+      <div style={{ fontSize: "48px", marginBottom: "16px" }}>⏳</div>
+      <h2 style={{ color: "#a78bfa", marginBottom: "12px" }}>Access Pending Approval</h2>
+      <p style={{ color: "#cbd5e1", marginBottom: "8px" }}>Your request has been sent to the admin.</p>
+      <p style={{ color: "#64748b", fontSize: "13px", marginBottom: "24px" }}>You'll be able to access the app once approved. Please check back later.</p>
+      <button onClick={logout} style={{ padding: "10px 24px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer" }}>Sign Out</button>
+    </div>
+  </div>
+)
+
+if (accessStatus === "rejected") return (
+  <div style={{ minHeight: "100vh", background: "#0a0a0f", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+    <div style={{ textAlign: "center", background: "#111827", borderRadius: "16px", padding: "40px", maxWidth: "480px", border: "1px solid #ef4444" }}>
+      <div style={{ fontSize: "48px", marginBottom: "16px" }}>❌</div>
+      <h2 style={{ color: "#ef4444", marginBottom: "12px" }}>Access Denied</h2>
+      <p style={{ color: "#cbd5e1", marginBottom: "24px" }}>Your access request was not approved. Contact the admin for more information.</p>
+      <button onClick={logout} style={{ padding: "10px 24px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer" }}>Sign Out</button>
+    </div>
+  </div>
+)return (
     <div style={{ minHeight: "100vh", background: darkMode ? "#0a0a0f" : "#f0f4f8", color: darkMode ? "#fff" : "#111", fontFamily: "'Segoe UI',sans-serif" }}>
 
       {/* Header */}
@@ -1599,8 +1667,64 @@ Return ONLY the message text. No JSON. No labels.`)
           </div>
         </div>
       )}
-      {view === "admin" && user?.email === "chaurasiyavikas1234@gmail.com" && <AdminDashboard />}
-
+{view === "admin" && user?.email === "chaurasiyavikas1234@gmail.com" && (
+  <div>
+    <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
+      <h2 style={{ color: "#a78bfa", marginBottom: "24px" }}>🔐 Access Management</h2>
+      <div style={{ background: "#111827", borderRadius: "12px", padding: "20px", marginBottom: "24px", border: "1px solid #1f2937" }}>
+        <h3 style={{ color: "#4ade80", marginBottom: "16px" }}>➕ Pre-Approve a Member</h3>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <input placeholder="Email address" value={preApproveEmail} onChange={e => setPreApproveEmail(e.target.value)}
+            style={{ flex: 1, minWidth: "200px", padding: "10px 14px", borderRadius: "8px", background: "#1f2937", color: "#fff", border: "1px solid #374151", fontSize: "13px" }} />
+          <select value={preApproveRole} onChange={e => setPreApproveRole(e.target.value)}
+            style={{ padding: "10px 14px", borderRadius: "8px", background: "#1f2937", color: "#fff", border: "1px solid #374151", fontSize: "13px" }}>
+            <option>Admin</option><option>Lead Producer</option><option>Researcher</option><option>Outreach</option><option>Viewer</option>
+          </select>
+          <button onClick={handlePreApprove}
+            style={{ padding: "10px 20px", borderRadius: "8px", background: "linear-gradient(135deg,#22c55e,#16a34a)", color: "#fff", border: "none", cursor: "pointer", fontWeight: "bold" }}>
+            ✅ Pre-Approve
+          </button>
+        </div>
+      </div>
+      <div style={{ background: "#111827", borderRadius: "12px", padding: "20px", border: "1px solid #1f2937" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <h3 style={{ color: "#f59e0b", margin: 0 }}>📋 All Access Requests</h3>
+          <button onClick={fetchPendingRequests} style={{ padding: "6px 14px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "12px" }}>🔄 Refresh</button>
+        </div>
+        {pendingRequests.length === 0 ? (
+          <p style={{ color: "#555", textAlign: "center", padding: "20px" }}>No requests yet.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {pendingRequests.map((req, i) => (
+              <div key={i} style={{ background: "#0d1117", borderRadius: "10px", padding: "14px 16px", border: `1px solid ${req.status === "approved" ? "#166534" : req.status === "rejected" ? "#7f1d1d" : "#92400e"}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                <div>
+                  <p style={{ margin: "0 0 4px", color: "#fff", fontWeight: "bold" }}>{req.name || req.email}</p>
+                  <p style={{ margin: "0 0 4px", color: "#64748b", fontSize: "12px" }}>{req.email}</p>
+                  <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "10px", background: req.status === "approved" ? "#14532d" : req.status === "rejected" ? "#7f1d1d" : "#78350f", color: req.status === "approved" ? "#4ade80" : req.status === "rejected" ? "#f87171" : "#fbbf24" }}>
+                    {req.status === "approved" ? `✅ Approved — ${req.role}` : req.status === "rejected" ? "❌ Rejected" : "⏳ Pending"}
+                  </span>
+                </div>
+                {req.status === "pending" && (
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                    <select defaultValue="Researcher" id={`role-${i}`}
+                      style={{ padding: "7px 10px", borderRadius: "8px", background: "#1f2937", color: "#fff", border: "1px solid #374151", fontSize: "12px" }}>
+                      <option>Admin</option><option>Lead Producer</option><option>Researcher</option><option>Outreach</option><option>Viewer</option>
+                    </select>
+                    <button onClick={() => handleApproveUser(req.email, document.getElementById(`role-${i}`).value)}
+                      style={{ padding: "7px 16px", borderRadius: "8px", background: "#14532d", color: "#4ade80", border: "1px solid #166534", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>✅ Approve</button>
+                    <button onClick={() => handleRejectUser(req.email)}
+                      style={{ padding: "7px 16px", borderRadius: "8px", background: "#7f1d1d", color: "#f87171", border: "1px solid #991b1b", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>❌ Reject</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+    <AdminDashboard />
+  </div>
+)}
       <div style={{ padding: isMobile ? "14px" : "24px", maxWidth: "1300px", margin: "0 auto" }}>
 
         {/* Search & Filter Bar */}
