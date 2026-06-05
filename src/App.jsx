@@ -1609,7 +1609,9 @@ if (accessStatus === "rejected") return (
       <button onClick={logout} style={{ padding: "10px 24px", borderRadius: "8px", background: "#2a1a1a", color: "#f87171", border: "1px solid #7f1d1d", cursor: "pointer" }}>Sign Out</button>
     </div>
   </div>
-)return (
+)
+
+return (
     <div style={{ minHeight: "100vh", background: darkMode ? "#0a0a0f" : "#f0f4f8", color: darkMode ? "#fff" : "#111", fontFamily: "'Segoe UI',sans-serif" }}>
 
       {/* Header */}
