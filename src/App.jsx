@@ -263,7 +263,8 @@ const handleApproveUser = async (email, role) => {
   fetchPendingRequests()
 }
 
-const handleRejectUser = async (email) => {
+const handleRemoveUser = async (email) => {
+  if (!window.confirm(`Are you sure you want to remove access for ${email}? They will be logged out on next visit.`)) return
   await supabase.from("approval_requests").update({ status: "rejected", updated_at: new Date().toISOString() }).eq("email", email)
   fetchPendingRequests()
 }
@@ -1706,8 +1707,15 @@ return (
                   <p style={{ margin: "0 0 4px", color: "#64748b", fontSize: "12px" }}>{req.email}</p>
                   <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "10px", background: req.status === "approved" ? "#14532d" : req.status === "rejected" ? "#7f1d1d" : "#78350f", color: req.status === "approved" ? "#4ade80" : req.status === "rejected" ? "#f87171" : "#fbbf24" }}>
                     {req.status === "approved" ? `✅ Approved — ${req.role}` : req.status === "rejected" ? "❌ Rejected" : "⏳ Pending"}
-                  </span>
-                </div>
+                    </span>
+              </div>
+              {req.status === "approved" && (
+                <button onClick={() => handleRemoveUser(req.email)}
+                  style={{ padding: "7px 16px", borderRadius: "8px", background: "#7f1d1d", color: "#f87171", border: "1px solid #991b1b", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
+                  🗑️ Remove Access
+                </button>
+              )}
+              
                 {req.status === "pending" && (
                   <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                     <select defaultValue="Researcher" id={`role-${i}`}
