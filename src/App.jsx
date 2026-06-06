@@ -230,7 +230,7 @@ const [roiRevBrandLift, setRoiRevBrandLift] = useState("")
     if (user) { checkAccess(); fetchPendingRequests() }
     window.addEventListener("resize", check)
     return () => window.removeEventListener("resize", check)
-  }, [])
+    }, [user])
 
   const shouldIncludeVaibhav = () => {
     const lastVaibhav = localStorage.getItem("raj_vaibhav_last")
