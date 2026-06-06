@@ -1691,6 +1691,36 @@ return (
           </button>
         </div>
       </div>
+    <div style={{ background: "#111827", borderRadius: "12px", padding: "20px", marginBottom: "24px", border: "1px solid #1f2937" }}>
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+    <h3 style={{ color: "#22c55e", margin: 0 }}>👥 Active Members ({pendingRequests.filter(r => r.status === "approved").length})</h3>
+    <button onClick={fetchPendingRequests} style={{ padding: "6px 14px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "12px" }}>🔄 Refresh</button>
+  </div>
+  {pendingRequests.filter(r => r.status === "approved").length === 0 ? (
+    <p style={{ color: "#555", textAlign: "center", padding: "20px" }}>No active members yet.</p>
+  ) : (
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+      {pendingRequests.filter(r => r.status === "approved").map((req, i) => (
+        <div key={i} style={{ background: "#0d1117", borderRadius: "10px", padding: "14px 16px", border: "1px solid #166534", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {req.avatar_url && <img src={req.avatar_url} style={{ width: "36px", height: "36px", borderRadius: "50%", border: "2px solid #22c55e" }} />}
+            <div>
+              <p style={{ margin: "0 0 4px", color: "#fff", fontWeight: "bold" }}>{req.name || req.email}</p>
+              <p style={{ margin: "0 0 4px", color: "#64748b", fontSize: "12px" }}>{req.email}</p>
+              <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "10px", background: "#1e3a5f", color: "#60a5fa" }}>
+                {req.role || "Viewer"}
+              </span>
+            </div>
+          </div>
+          <button onClick={() => handleRemoveUser(req.email)}
+            style={{ padding: "7px 16px", borderRadius: "8px", background: "#7f1d1d", color: "#f87171", border: "1px solid #991b1b", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
+            🗑️ Remove
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+</div>  
       <div style={{ background: "#111827", borderRadius: "12px", padding: "20px", border: "1px solid #1f2937" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <h3 style={{ color: "#f59e0b", margin: 0 }}>📋 All Access Requests</h3>
@@ -1715,7 +1745,7 @@ return (
                   🗑️ Remove Access
                 </button>
               )}
-              
+
                 {req.status === "pending" && (
                   <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                     <select defaultValue="Researcher" id={`role-${i}`}
