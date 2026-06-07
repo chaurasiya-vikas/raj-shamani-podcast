@@ -1,11 +1,11 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   const { email, action } = req.query;
 
   if (!email || !action) {
@@ -26,7 +26,6 @@ module.exports = async (req, res) => {
               <h1 style="color: #22c55e;">✅ Access Approved!</h1>
               <p style="color: #cbd5e1;">${email} has been granted access.</p>
               <p style="color: #64748b;">They can now log in to the app.</p>
-              <p style="color: #64748b; font-size: 12px; margin-top: 20px;">You can assign their role from the Admin Dashboard.</p>
             </div>
           </body>
         </html>
@@ -45,7 +44,6 @@ module.exports = async (req, res) => {
             <div style="text-align: center; padding: 40px; background: #1e293b; border-radius: 12px;">
               <h1 style="color: #ef4444;">❌ Access Rejected</h1>
               <p style="color: #cbd5e1;">${email} has been denied access.</p>
-              <p style="color: #64748b;">They will see an Access Denied screen.</p>
             </div>
           </body>
         </html>
@@ -58,4 +56,4 @@ module.exports = async (req, res) => {
     console.error('Approve error:', err);
     return res.status(500).send('Server error');
   }
-};
+}
