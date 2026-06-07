@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
   try {
     await resend.emails.send({
       from: 'onboarding@resend.dev',
-      to: adminEmail,
+      to: 'chaurasiyavikas1234@gmail.com',
       subject: `🔔 New Access Request - ${name || email}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #0f172a; color: #ffffff; border-radius: 12px;">
