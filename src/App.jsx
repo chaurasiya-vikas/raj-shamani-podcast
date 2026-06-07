@@ -249,7 +249,7 @@ const [roiRevBrandLift, setRoiRevBrandLift] = useState("")
   if (data?.status === "pending") { setAccessStatus("pending"); setLoadingAccess(false); return }
   const { data: insertData, error: insertError } = await supabase
   .from("approval_requests")
-  .insert({ email: user.email, name: user.user_metadata?.full_name || user.email, avatar_url: user.user_metadata?.avatar_url || "", status: "pending" })
+  .upsert({ email: user.email, name: user.user_metadata?.full_name || user.email, avatar_url: user.user_metadata?.avatar_url || "", status: "pending" }, { onConflict: "email" })
 console.log("INSERT RESULT:", insertData, "ERROR:", insertError)
 const notifyRes = await fetch("/api/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: user.email, name: user.user_metadata?.full_name || user.email }) })
 console.log("NOTIFY RESULT:", notifyRes.status)
