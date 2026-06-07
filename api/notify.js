@@ -1,12 +1,10 @@
-const { Resend } = require('resend');
+import { Resend } from 'resend';
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { email, name } = req.body;
-  const adminEmail = process.env.ADMIN_EMAIL || 'chaurasiyavikas1234@gmail.com';
   const appUrl = 'https://raj-shamani-podcast.vercel.app';
-
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
@@ -35,10 +33,9 @@ module.exports = async (req, res) => {
         </div>
       `
     });
-
     res.status(200).json({ success: true });
   } catch (err) {
     console.error('Resend error:', err);
     res.status(500).json({ error: 'Failed to send email' });
   }
-};
+}
