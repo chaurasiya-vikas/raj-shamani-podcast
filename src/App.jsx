@@ -464,21 +464,35 @@ const parseGuests = (text, count) => {
     try {
       const text = await callOpenAI(`${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\n\nDo NOT suggest guests or topics that overlap with these recent episodes.\n\n" : ""}You are a podcast guest strategist for "Figuring Out With Raj Shamani" - India's top podcast 500+ episodes. Audience: young Indians 18-35.
 
-CORE PHILOSOPHY: Raj Shamani does NOT chase celebrities or famous names. His belief is "Stop chasing famous names, find exclusive voices no one else has." Suggest guests who are deeply knowledgeable, have unique lived experiences, contrarian perspectives, or untold stories — NOT just whoever is trending on Page 3. Prioritise founders mid-journey, domain experts, unheard voices, niche specialists, and people with transformational stories.
+CORE PHILOSOPHY: Raj Shamani's podcast "Figuring Out" follows a 70/30 booking pattern — 70% exclusive voices (domain experts, insiders, niche specialists) and 30% semi-famous recognizable names (NOT Bollywood A-listers, but niche icons like Avadh Ojha, Vikas Divyakirti, Praggnanandhaa). Find guests with untold stories, insider knowledge, contrarian perspectives, and transformational experiences.
 
 STRICT RULES:
-1. NEVER suggest anyone from this PAST GUESTS list: ${PAST_GUESTS}
-2. NEVER suggest anyone who appeared in the last 15 days: ${recentGuests.join(", ")} — ZERO exceptions unless a major national/global emergency directly involves them (war, terrorist attack, national economic crisis, etc.)
-3. NEVER suggest any deceased person. All guests must be alive today.
-4. Do NOT suggest mainstream Bollywood A-listers, cricketers with 10M+ followers, or politicians already overexposed on all podcasts.
-5. Focus on exclusive, underrepresented voices — the guest who makes the audience say "I've never heard this person on a podcast before."
+1. NEVER suggest anyone from this PAST GUESTS list who appeared in the last 6-12 months: ${PAST_GUESTS}
+2. NEVER suggest anyone who appeared in the last 15 days: ${recentGuests.join(", ")} — ZERO exceptions unless a major national/global emergency directly involves them.
+3. NEVER suggest any deceased person. All guests must be confirmed alive today.
+4. NEVER suggest mainstream Bollywood A-listers (SRK, Deepika, Ranveer etc), overexposed cricketers (Kohli, Rohit, Bumrah), or politicians overexposed on all podcasts.
+5. NEVER suggest anyone with 10M+ Instagram followers who is already on every podcast.
+6. Guests who appeared MORE than 1 year ago CAN be suggested again if they have a fresh new story/achievement.
 
 ${vaibhavRule}
 
-Suggest EXACTLY 15 guests for ${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
-Include exactly 3 guests based outside India. They must be world-class personalities like top CEOs, Olympic Champions, global founders, renowned authors, diplomats, or leading scientists. Add [INTL] after their name. Do not tag any India-based person as INTL.
+Suggest EXACTLY 15 guests for ${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })} following this EXACT MIX:
+
+DOMESTIC INDIA (12 guests total):
+- 3-4 DOMAIN EXPERTS: Deep specialists with untold stories — forensic experts, cancer doctors, AI researchers, stock traders, criminal psychologists, space scientists. People audiences have NEVER heard on a podcast.
+- 3-4 INDUSTRY INSIDERS: People with exclusive insider access — ex-military officers, investigative journalists, Amazon/Google business analysts, RBI insiders, intelligence analysts, top lawyers on landmark cases.
+- 2-3 NICHE CREATORS tagged [SF]: Semi-famous but NOT overexposed — like Avadh Ojha (geopolitics), Vikas Divyakirti (UPSC), Khan Sir (education), niche sport stars, regional icons with national relevance. Known in their niche (1M-5M followers), NOT mainstream celebrities.
+- 1-2 WORLD-CLASS INDIANS tagged [SF]: Recognizable achievers NOT from Bollywood — like Praggnanandhaa (chess), startup founders with $10M+ exit, Olympic medallists, world record holders, IAS toppers with unique stories.
+
+INTERNATIONAL (exactly 3 guests tagged [INTL]):
+- Must be world-class: Fortune 500 CEOs, Nobel nominees, NASA/ISRO scientists, UN diplomats, global bestselling authors, Olympic champions.
+- Must be based OUTSIDE India (NRIs included if based abroad).
+- Must bring a story Indian audiences have NEVER heard on any Indian podcast.
+
+SORTING: Return domestic guests first (Domain Experts → Industry Insiders → [SF] Niche Creators → [SF] World-class Indians), then [INTL] guests last.
+
 Return JSON array EXACTLY 15 items each with: name, category, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared("Never" or year), repeatReason, isAISlot(true only for Vaibhav)
-ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, "guest_suggestions")
+ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.      
       const withScores = parseGuests(text, 15).sort((a, b) => {
   const aIntl = a.name.includes('[INTL]') ? 1 : 0
   const bIntl = b.name.includes('[INTL]') ? 1 : 0
