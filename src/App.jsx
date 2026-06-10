@@ -1745,11 +1745,11 @@ return (
           <h3 style={{ color: "#f59e0b", margin: 0 }}>📋 All Access Requests</h3>
           <button onClick={fetchPendingRequests} style={{ padding: "6px 14px", borderRadius: "8px", background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", cursor: "pointer", fontSize: "12px" }}>🔄 Refresh</button>
         </div>
-        {pendingRequests.length === 0 ? (
-          <p style={{ color: "#555", textAlign: "center", padding: "20px" }}>No requests yet.</p>
+        {pendingRequests.filter(r => r.status === "pending").length === 0 ? (
+          <p style={{ color: "#555", textAlign: "center", padding: "20px" }}>No pending requests.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {pendingRequests.map((req, i) => (
+            {pendingRequests.filter(r => r.status === "pending").map((req, i) => (
               <div key={i} style={{ background: "#0d1117", borderRadius: "10px", padding: "14px 16px", border: `1px solid ${req.status === "approved" ? "#166534" : req.status === "rejected" ? "#7f1d1d" : "#92400e"}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
                 <div>
                   <p style={{ margin: "0 0 4px", color: "#fff", fontWeight: "bold" }}>{req.name || req.email}</p>
