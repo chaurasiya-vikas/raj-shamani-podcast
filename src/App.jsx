@@ -522,7 +522,7 @@ ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.
     const recentGuests = await loadRecentGuestsFromSupabase()
     try {
       const text = await callOpenAI(`Podcast guest strategist for "Figuring Out With Raj Shamani".
-      CORE PHILOSOPHY: Raj Shamani podcast follows a 70/30 pattern — 70% exclusive voices (domain experts, insiders, niche specialists) and 30% semi-famous recognizable names (NOT Bollywood A-listers, but niche icons like Avadh Ojha, Vikas Divyakirti, Praggnanandhaa). Find guests with untold stories, insider knowledge, and transformational experiences.
+      CORE PHILOSOPHY: Raj Shamani podcast follows a 70/30 pattern - 70% exclusive voices (domain experts, insiders, niche specialists) and 30% semi-famous recognizable names (NOT Bollywood A-listers, but niche icons like Avadh Ojha, Vikas Divyakirti, Praggnanandhaa). Find guests with untold stories, insider knowledge, and transformational experiences.
 Category: ${cat.label}. 
 STRICTLY Avoid (past guests): ${PAST_GUESTS}
 ${getYouTubeContext() ? "REAL DATA - " + getYouTubeContext() + "\nAvoid suggesting guests or topics that overlap with these recent episodes." : ""}
