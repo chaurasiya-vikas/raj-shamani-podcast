@@ -320,6 +320,7 @@ const parseGuests = (text, count) => {
     const arr = Array.isArray(parsed) ? parsed : [parsed]
     return arr.slice(0, count).map(g => ({
       ...g,
+      field: g.field || "",
       total: (((g.virality || 7) + (g.relevance || 7) + (g.value || 7)) / 3).toFixed(1),
       priority: (((g.virality || 7) + (g.relevance || 7) + (g.value || 7)) / 3) >= 8 ? "High" : (((g.virality || 7) + (g.relevance || 7) + (g.value || 7)) / 3) >= 6 ? "Medium" : "Low",
       status: "New",
@@ -481,17 +482,17 @@ Suggest EXACTLY 15 guests for ${today.toLocaleDateString('en-IN', { month: 'long
 DOMESTIC INDIA (12 guests total):
 - 3-4 DOMAIN EXPERTS: Deep specialists with untold stories — forensic experts, cancer doctors, AI researchers, stock traders, criminal psychologists, space scientists. People audiences have NEVER heard on a podcast.
 - 3-4 INDUSTRY INSIDERS: People with exclusive insider access — ex-military officers, investigative journalists, Amazon/Google business analysts, RBI insiders, intelligence analysts, top lawyers on landmark cases.
-- 2-3 NICHE CREATORS tagged [SF]: Semi-famous but NOT overexposed — like Avadh Ojha (geopolitics), Vikas Divyakirti (UPSC), Khan Sir (education), niche sport stars, regional icons with national relevance. Known in their niche (1M-5M followers), NOT mainstream celebrities.
-- 1-2 WORLD-CLASS INDIANS tagged [SF]: Recognizable achievers NOT from Bollywood — like Praggnanandhaa (chess), startup founders with $10M+ exit, Olympic medallists, world record holders, IAS toppers with unique stories.
+- 2-3 NICHE CREATORS: Semi-famous but NOT overexposed — like Avadh Ojha (geopolitics), Vikas Divyakirti (UPSC), Khan Sir (education), niche sport stars, regional icons with national relevance. Known in their niche (1M-5M followers), NOT mainstream celebrities.
+- 1-2 WORLD-CLASS INDIANS: Recognizable achievers NOT from Bollywood — like Praggnanandhaa (chess), startup founders with $10M+ exit, Olympic medallists, world record holders, IAS toppers with unique stories.
 
 INTERNATIONAL (exactly 3 guests tagged [INTL]):
 - Must be world-class: Fortune 500 CEOs, Nobel nominees, NASA/ISRO scientists, UN diplomats, global bestselling authors, Olympic champions.
 - Must be based OUTSIDE India (NRIs included if based abroad).
 - Must bring a story Indian audiences have NEVER heard on any Indian podcast.
 
-SORTING: Return domestic guests first (Domain Experts → Industry Insiders → [SF] Niche Creators → [SF] World-class Indians), then [INTL] guests last.
+SORTING: Return domestic guests first (Domain Experts → Industry Insiders → Niche Creators → World-class Indians), then [INTL] guests last.
 
-Return JSON array EXACTLY 15 items each with: name, category, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared("Never" or year), repeatReason, isAISlot(true only for Vaibhav)
+Return JSON array EXACTLY 15 items each with: name, category, field, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared("Never" or year), repeatReason, isAISlot(true only for Vaibhav)
 ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, "guest_suggestions")
       const withScores = parseGuests(text, 15).sort((a, b) => {
   const aIntl = a.name.includes('[INTL]') ? 1 : 0
@@ -1544,7 +1545,7 @@ Return ONLY the message text. No JSON. No labels.`)
               {g.isAISlot && <span style={{ fontSize: "10px", background: "#7c3aed", color: "#fff", padding: "2px 7px", borderRadius: "10px" }}>AI Expert</span>}
             </div>
             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
-              <span style={{ fontSize: "12px", background: "#1e1e3f", color: "#a78bfa", padding: "2px 8px", borderRadius: "20px" }}>{g.category}</span>
+              <span style={{ fontSize: "12px", background: "#1e1e3f", color: "#a78bfa", padding: "2px 8px", borderRadius: "20px" }}>{g.category}{g.field ? ` • ${g.field}` : ""}</span>
               {g.lastAppeared === "Never" || g.lastAppeared === "First appearance"
                 ? <span style={{ fontSize: "11px", color: "#00ff88" }}>First Time</span>
                 : <span style={{ fontSize: "11px", color: "#f59e0b" }}>Repeat ({g.lastAppeared})</span>}
