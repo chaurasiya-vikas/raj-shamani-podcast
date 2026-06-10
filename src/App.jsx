@@ -492,7 +492,7 @@ INTERNATIONAL (exactly 3 guests tagged [INTL]):
 SORTING: Return domestic guests first (Domain Experts → Industry Insiders → [SF] Niche Creators → [SF] World-class Indians), then [INTL] guests last.
 
 Return JSON array EXACTLY 15 items each with: name, category, whyNow, topicAngle, virality(1-10), relevance(1-10), value(1-10), lastAppeared("Never" or year), repeatReason, isAISlot(true only for Vaibhav)
-ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.      
+ONLY valid JSON. EXACTLY 15 ITEMS. NO MARKDOWN.`, "guest_suggestions")
       const withScores = parseGuests(text, 15).sort((a, b) => {
   const aIntl = a.name.includes('[INTL]') ? 1 : 0
   const bIntl = b.name.includes('[INTL]') ? 1 : 0
