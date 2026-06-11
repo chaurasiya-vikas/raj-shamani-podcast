@@ -274,7 +274,8 @@ const handleRemoveUser = async (email) => {
 }
 
 const handleRejectUser = async (email) => {
-  await supabase.from("approval_requests").update({ status: "rejected", updated_at: new Date().toISOString() }).eq("email", email)
+  if (!window.confirm(`Are you sure you want to reject ${email}?`)) return
+  await supabase.from("approval_requests").delete().eq("email", email)
   fetchPendingRequests()
 }
 
