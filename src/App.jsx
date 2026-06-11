@@ -273,6 +273,11 @@ const handleRemoveUser = async (email) => {
   fetchPendingRequests()
 }
 
+const handleRejectUser = async (email) => {
+  await supabase.from("approval_requests").update({ status: "rejected", updated_at: new Date().toISOString() }).eq("email", email)
+  fetchPendingRequests()
+}
+
 const handlePreApprove = async () => {
   if (!preApproveEmail) return
   await supabase.from("approval_requests").upsert({ email: preApproveEmail, name: preApproveEmail, status: "approved", role: preApproveRole, updated_at: new Date().toISOString() })
