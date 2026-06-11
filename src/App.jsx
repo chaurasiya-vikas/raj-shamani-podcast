@@ -269,7 +269,7 @@ const handleApproveUser = async (email, role) => {
 
 const handleRemoveUser = async (email) => {
   if (!window.confirm(`Are you sure you want to remove access for ${email}? They will be logged out on next visit.`)) return
-  await supabase.from("approval_requests").update({ status: "rejected", updated_at: new Date().toISOString() }).eq("email", email)
+  await supabase.from("approval_requests").delete().eq("email", email)
   fetchPendingRequests()
 }
 
