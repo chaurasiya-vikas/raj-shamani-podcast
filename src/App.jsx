@@ -3119,7 +3119,7 @@ return (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
               <div>
                 <strong style={{ color: "#fff" }}>{req.guest_name}</strong>
-                <span style={{ marginLeft: "8px", background: "#1e3a5f", color: "#38bdf8", padding: "2px 8px", borderRadius: "20px", fontSize: "11px" }}>{req.guest_name} — <span style={{ color: "#888", fontSize: "12px" }}>{(req.approval_type || "").replace("_", " ")}</span>
+                <span style={{ marginLeft: "8px", background: "#1e3a5f", color: "#38bdf8", padding: "2px 8px", borderRadius: "20px", fontSize: "11px" }}>{(req.approval_type || "").replace("_", " ")}</span>
                 <p style={{ color: "#888", fontSize: "12px", margin: "4px 0 0" }}>By: {req.requested_by} · {new Date(req.created_at).toLocaleDateString('en-IN')}</p>
               </div>
               {(userRole === "admin" || userRole === "lead_producer") && (
@@ -3140,7 +3140,7 @@ return (
       {approvalRequests.filter(a => a.status !== "pending").slice(0, 10).map(req => (
         <div key={req.id} style={{ background: darkMode ? "#0f1a0f" : "#f0f4f8", borderRadius: "8px", padding: "12px", marginBottom: "8px", border: `1px solid ${req.status === "approved" ? "#166534" : "#7f1d1d"}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap" }}>
-            <span style={{ color: "#fff" }}>{req.guest_name} — <span style={{ color: "#888", fontSize: "12px" }}>{req.guest_name} — <span style={{ color: "#888", fontSize: "12px" }}>{(req.approval_type || "").replace("_", " ")}</span></span>
+            <span style={{ color: "#fff" }}>{req.guest_name} — <span style={{ color: "#888", fontSize: "12px" }}>{(req.approval_type || "").replace("_", " ")}</span></span>
             <span style={{ color: req.status === "approved" ? "#4ade80" : "#f87171", fontSize: "12px" }}>{req.status.toUpperCase()} by {req.reviewed_by}</span>
           </div>
         </div>
